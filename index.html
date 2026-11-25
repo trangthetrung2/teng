@@ -100,11 +100,11 @@
       font-size: 0.78rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600;
     }
     .fx-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
     }
     .fx-btn {
-      padding: 8px 4px; border-radius: 8px; border: 1px solid #334155;
-      background: #1e293b; color: #cbd5e1; font-size: 0.78rem; font-weight: 600;
+      padding: 9px 6px; border-radius: 9px; border: 1px solid #334155;
+      background: #1e293b; color: #cbd5e1; font-size: 0.82rem; font-weight: 600;
       cursor: pointer; transition: 0.15s; text-align: center;
     }
     .fx-btn:hover { border-color: #60a5fa; }
@@ -118,10 +118,10 @@
       background: #0284c7; border-color: #38bdf8; color: #fff;
     }
     .monitor-toggle {
-      display: flex; align-items: center; gap: 6px; margin-top: 8px;
+      display: flex; align-items: center; gap: 6px; margin-top: 9px;
       font-size: 0.76rem; color: #94a3b8; cursor: pointer; user-select: none;
     }
-    .monitor-toggle input { accent-color: #8b5cf6; cursor: pointer; }
+    .monitor-toggle input { accent-color: #ec4899; cursor: pointer; }
 
     .members-box {
       background: #0f172a; border: 1px solid #334155; border-radius: 12px;
@@ -157,7 +157,7 @@
 <body>
   <div class="card">
     <h1>Phòng Gọi Thoại Nhóm</h1>
-    <p class="sub">v3.2 • 2–4 người • Giọng Nam / Nữ chuẩn</p>
+    <p class="sub">v3.3 • 2–4 người • Giọng Nữ & Nam tự nhiên</p>
 
     <!-- Màn hình chính -->
     <div id="homeView">
@@ -206,17 +206,14 @@
       <!-- Bộ chọn hiệu ứng biến âm -->
       <div class="fx-box">
         <div class="fx-header">
-          <span>HIỆU ỨNG BIẾN ÂM</span>
-          <span id="fxLabel" style="color: #a78bfa;">Bình thường</span>
+          <span>CHẾ ĐỘ GIỌNG NÓI</span>
+          <span id="fxLabel" style="color: #f472b6;">Bình thường</span>
         </div>
         <div class="fx-grid" id="fxGrid">
           <button type="button" class="fx-btn active" data-fx="normal">Bình thường</button>
           <button type="button" class="fx-btn female" data-fx="female">Giọng Nữ</button>
           <button type="button" class="fx-btn male" data-fx="male">Giọng Nam</button>
-          <button type="button" class="fx-btn" data-fx="deep">Trầm (Quái vật)</button>
           <button type="button" class="fx-btn" data-fx="high">Cao (Trẻ con)</button>
-          <button type="button" class="fx-btn" data-fx="robot">Robot</button>
-          <button type="button" class="fx-btn" data-fx="radio">Bộ đàm</button>
         </div>
         <label class="monitor-toggle">
           <input id="selfMonitorChk" type="checkbox" />
@@ -334,7 +331,7 @@
     let memberCounter = 1;
 
     // =========================================================================
-    // BỘ XỬ LÝ BIẾN ÂM THỜI GIAN THỰC (DỊCH CAO ĐỘ + CỘNG HƯỞNG FORMANT EQ)
+    // BỘ XỬ LÝ BIẾN ÂM TỰ NHIÊN (DỊCH CAO ĐỘ + MÔ PHỎNG THANH QUẢN FORMANT EQ)
     // =========================================================================
     function createVoiceProcessor(ctx, stream) {
       const source = ctx.createMediaStreamSource(stream);
@@ -347,62 +344,84 @@
       dryGain.gain.value = 1.0;
       inputGain.connect(dryGain);
 
-      // 2. Nhánh đổi cao độ (Pitch Shifter) + Bộ lọc Formant mô phỏng thanh quản Nam / Nữ
-      const lowCutFilter = ctx.createBiquadFilter();
-      lowCutFilter.type = 'highpass';
-      lowCutFilter.frequency.value = 60;
+      // 2. Bộ lọc cắt trầm 2 tầng (24 dB/oct) để triệt tiêu tiếng ồm vùng ngực
+      const hp1 = ctx.createBiquadFilter();
+      hp1.type = 'highpass';
+      hp1.frequency.value = 70;
+      hp1.Q.value = 0.75;
 
+      const hp2 = ctx.createBiquadFilter();
+      hp2.type = 'highpass';
+      hp2.frequency.value = 70;
+      hp2.Q.value = 0.75;
+
+      // 3. Bộ dịch cao độ (Pitch Shifter) cửa sổ ngắn giúp giữ nguyên độ rõ phụ âm
       const delayA = ctx.createDelay(0.5);
       const delayB = ctx.createDelay(0.5);
-      delayA.delayTime.value = 0.055;
-      delayB.delayTime.value = 0.055;
+      delayA.delayTime.value = 0.04;
+      delayB.delayTime.value = 0.04;
 
       const winGainA = ctx.createGain();
       const winGainB = ctx.createGain();
       winGainA.gain.value = 0;
       winGainB.gain.value = 0;
 
-      // 3 tầng lọc Formant EQ tạo màu giọng Nam / Nữ tự nhiên
-      const formantLow = ctx.createBiquadFilter();
-      formantLow.type = 'lowshelf';
-      formantLow.frequency.value = 200;
-      formantLow.gain.value = 0;
+      // 4. Chuỗi 5 tầng Formant & Air EQ định hình chất giọng Nữ / Nam
+      const fundamentalWarmth = ctx.createBiquadFilter();
+      fundamentalWarmth.type = 'peaking';
+      fundamentalWarmth.frequency.value = 215;
+      fundamentalWarmth.Q.value = 1.3;
+      fundamentalWarmth.gain.value = 0;
 
-      const formantMid = ctx.createBiquadFilter();
-      formantMid.type = 'peaking';
-      formantMid.frequency.value = 1200;
-      formantMid.Q.value = 1.1;
-      formantMid.gain.value = 0;
+      const formant1 = ctx.createBiquadFilter();
+      formant1.type = 'peaking';
+      formant1.frequency.value = 680;
+      formant1.Q.value = 1.3;
+      formant1.gain.value = 0;
 
-      const formantHigh = ctx.createBiquadFilter();
-      formantHigh.type = 'peaking';
-      formantHigh.frequency.value = 3000;
-      formantHigh.Q.value = 1.2;
-      formantHigh.gain.value = 0;
+      const formant2 = ctx.createBiquadFilter();
+      formant2.type = 'peaking';
+      formant2.frequency.value = 1950;
+      formant2.Q.value = 1.4;
+      formant2.gain.value = 0;
+
+      const formant3 = ctx.createBiquadFilter();
+      formant3.type = 'peaking';
+      formant3.frequency.value = 3250;
+      formant3.Q.value = 1.5;
+      formant3.gain.value = 0;
+
+      const airShelf = ctx.createBiquadFilter();
+      airShelf.type = 'highshelf';
+      airShelf.frequency.value = 5800;
+      airShelf.gain.value = 0;
 
       const pitchWetGain = ctx.createGain();
       pitchWetGain.gain.value = 0;
 
-      inputGain.connect(lowCutFilter);
-      lowCutFilter.connect(delayA);
-      lowCutFilter.connect(delayB);
+      inputGain.connect(hp1);
+      hp1.connect(hp2);
+      hp2.connect(delayA);
+      hp2.connect(delayB);
       delayA.connect(winGainA);
       delayB.connect(winGainB);
 
-      winGainA.connect(formantLow);
-      winGainB.connect(formantLow);
-      formantLow.connect(formantMid);
-      formantMid.connect(formantHigh);
-      formantHigh.connect(pitchWetGain);
+      winGainA.connect(fundamentalWarmth);
+      winGainB.connect(fundamentalWarmth);
+      fundamentalWarmth.connect(formant1);
+      formant1.connect(formant2);
+      formant2.connect(formant3);
+      formant3.connect(airShelf);
+      airShelf.connect(pitchWetGain);
 
       const lfo = ctx.createOscillator();
       lfo.type = 'sawtooth';
-      lfo.frequency.value = 3.2;
+      lfo.frequency.value = 7.29;
 
       const depthGainA = ctx.createGain();
       const depthGainB = ctx.createGain();
-      depthGainA.gain.value = 0.035;
-      depthGainB.gain.value = 0.035;
+      depthGainA.gain.value = -0.024;
+      depthGainB.gain.value = -0.024;
 
       const phaseShiftShaper = ctx.createWaveShaper();
       const shiftCurve = new Float32Array(2048);
@@ -438,72 +457,18 @@
       winShaperB.connect(winGainB.gain);
       lfo.start();
 
-      // 3. Nhánh Robot (Ring Modulator 48Hz)
-      const robotFilter = ctx.createBiquadFilter();
-      robotFilter.type = 'bandpass';
-      robotFilter.frequency.value = 850;
-      robotFilter.Q.value = 1.1;
-
-      const ringModGain = ctx.createGain();
-      ringModGain.gain.value = 0;
-
-      const robotOsc = ctx.createOscillator();
-      robotOsc.type = 'sine';
-      robotOsc.frequency.value = 48;
-
-      const robotOscDepth = ctx.createGain();
-      robotOscDepth.gain.value = 0.95;
-
-      const robotWetGain = ctx.createGain();
-      robotWetGain.gain.value = 0;
-
-      inputGain.connect(robotFilter);
-      robotFilter.connect(ringModGain);
-      robotOsc.connect(robotOscDepth);
-      robotOscDepth.connect(ringModGain.gain);
-      ringModGain.connect(robotWetGain);
-      robotOsc.start();
-
-      // 4. Nhánh Bộ đàm
-      const radioHP = ctx.createBiquadFilter();
-      radioHP.type = 'highpass';
-      radioHP.frequency.value = 550;
-
-      const radioLP = ctx.createBiquadFilter();
-      radioLP.type = 'lowpass';
-      radioLP.frequency.value = 2500;
-
-      const radioDrive = ctx.createWaveShaper();
-      const driveCurve = new Float32Array(2048);
-      const k = 18;
-      for (let i = 0; i < 2048; i++) {
-        const x = (i / 1023.5) - 1;
-        driveCurve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
-      }
-      radioDrive.curve = driveCurve;
-
-      const radioWetGain = ctx.createGain();
-      radioWetGain.gain.value = 0;
-
-      inputGain.connect(radioHP);
-      radioHP.connect(radioLP);
-      radioLP.connect(radioDrive);
-      radioDrive.connect(radioWetGain);
-
-      // Tổng hợp & nén âm lượng chống vỡ tiếng
+      // Tổng hợp & nén nhẹ giữ âm lượng đều đặn, tự nhiên
       const sumNode = ctx.createGain();
       sumNode.gain.value = 1.0;
       dryGain.connect(sumNode);
       pitchWetGain.connect(sumNode);
-      robotWetGain.connect(sumNode);
-      radioWetGain.connect(sumNode);
 
       const compressor = ctx.createDynamicsCompressor();
       compressor.threshold.value = -18;
-      compressor.knee.value = 12;
-      compressor.ratio.value = 4;
-      compressor.attack.value = 0.005;
-      compressor.release.value = 0.15;
+      compressor.knee.value = 14;
+      compressor.ratio.value = 3.5;
+      compressor.attack.value = 0.006;
+      compressor.release.value = 0.16;
       sumNode.connect(compressor);
 
       const analyser = ctx.createAnalyser();
@@ -521,67 +486,80 @@
       function setMode(mode) {
         currentFxMode = mode;
         const now = ctx.currentTime;
-        const isPitchMode = ['female', 'male', 'deep', 'high'].includes(mode);
+        const isNormal = mode === 'normal';
 
-        dryGain.gain.setTargetAtTime(mode === 'normal' ? 1.0 : 0, now, 0.02);
-        pitchWetGain.gain.setTargetAtTime(isPitchMode ? 1.15 : 0, now, 0.02);
-        robotWetGain.gain.setTargetAtTime(mode === 'robot' ? 1.6 : 0, now, 0.02);
-        radioWetGain.gain.setTargetAtTime(mode === 'radio' ? 1.1 : 0, now, 0.02);
+        dryGain.gain.setTargetAtTime(isNormal ? 1.0 : 0, now, 0.02);
+        pitchWetGain.gain.setTargetAtTime(isNormal ? 0 : 1.15, now, 0.02);
 
         if (mode === 'female') {
-          // +4 nửa cung (~1.26x) + Cắt trầm ngực + Nâng formant sáng giọng nữ
-          lfo.frequency.setTargetAtTime(4.06, now, 0.02);
-          depthGainA.gain.setTargetAtTime(-0.032, now, 0.02);
-          depthGainB.gain.setTargetAtTime(-0.032, now, 0.02);
-          lowCutFilter.frequency.setTargetAtTime(165, now, 0.02);
+          // Cao độ +5.2 nửa cung (~1.35x) + Cắt sạch trầm ngực dưới 175Hz + Formant Nữ thanh & mềm
+          lfo.frequency.setTargetAtTime(7.29, now, 0.02);
+          depthGainA.gain.setTargetAtTime(-0.024, now, 0.02);
+          depthGainB.gain.setTargetAtTime(-0.024, now, 0.02);
 
-          formantLow.frequency.setTargetAtTime(240, now, 0.02);
-          formantLow.gain.setTargetAtTime(-7, now, 0.02);
+          hp1.frequency.setTargetAtTime(175, now, 0.02);
+          hp2.frequency.setTargetAtTime(175, now, 0.02);
 
-          formantMid.frequency.setTargetAtTime(1150, now, 0.02);
-          formantMid.gain.setTargetAtTime(3.5, now, 0.02);
+          fundamentalWarmth.frequency.setTargetAtTime(215, now, 0.02);
+          fundamentalWarmth.gain.setTargetAtTime(3.5, now, 0.02);
 
-          formantHigh.frequency.setTargetAtTime(3100, now, 0.02);
-          formantHigh.gain.setTargetAtTime(5.5, now, 0.02);
+          formant1.frequency.setTargetAtTime(680, now, 0.02);
+          formant1.gain.setTargetAtTime(3.5, now, 0.02);
+
+          formant2.frequency.setTargetAtTime(1950, now, 0.02);
+          formant2.gain.setTargetAtTime(5.0, now, 0.02);
+
+          formant3.frequency.setTargetAtTime(3250, now, 0.02);
+          formant3.gain.setTargetAtTime(4.5, now, 0.02);
+
+          airShelf.frequency.setTargetAtTime(5800, now, 0.02);
+          airShelf.gain.setTargetAtTime(4.0, now, 0.02);
         } else if (mode === 'male') {
-          // -3.8 nửa cung (~0.80x) + Tăng ấm vùng ngực + Giảm dải chói
-          lfo.frequency.setTargetAtTime(2.86, now, 0.02);
-          depthGainA.gain.setTargetAtTime(0.035, now, 0.02);
-          depthGainB.gain.setTargetAtTime(0.035, now, 0.02);
-          lowCutFilter.frequency.setTargetAtTime(65, now, 0.02);
+          // Cao độ -4.1 nửa cung (~0.79x) + Giữ trầm ấm vùng ngực + Giảm dải sáng
+          lfo.frequency.setTargetAtTime(3.75, now, 0.02);
+          depthGainA.gain.setTargetAtTime(0.028, now, 0.02);
+          depthGainB.gain.setTargetAtTime(0.028, now, 0.02);
 
-          formantLow.frequency.setTargetAtTime(135, now, 0.02);
-          formantLow.gain.setTargetAtTime(6.5, now, 0.02);
+          hp1.frequency.setTargetAtTime(65, now, 0.02);
+          hp2.frequency.setTargetAtTime(65, now, 0.02);
 
-          formantMid.frequency.setTargetAtTime(950, now, 0.02);
-          formantMid.gain.setTargetAtTime(1.5, now, 0.02);
+          fundamentalWarmth.frequency.setTargetAtTime(125, now, 0.02);
+          fundamentalWarmth.gain.setTargetAtTime(7.0, now, 0.02);
 
-          formantHigh.frequency.setTargetAtTime(2500, now, 0.02);
-          formantHigh.gain.setTargetAtTime(-4.5, now, 0.02);
-        } else if (mode === 'deep') {
-          // -6 nửa cung (Trầm sâu kiểu quái vật)
-          lfo.frequency.setTargetAtTime(3.2, now, 0.02);
-          depthGainA.gain.setTargetAtTime(0.045, now, 0.02);
-          depthGainB.gain.setTargetAtTime(0.045, now, 0.02);
-          lowCutFilter.frequency.setTargetAtTime(50, now, 0.02);
+          formant1.frequency.setTargetAtTime(480, now, 0.02);
+          formant1.gain.setTargetAtTime(2.5, now, 0.02);
 
-          formantLow.frequency.setTargetAtTime(120, now, 0.02);
-          formantLow.gain.setTargetAtTime(8, now, 0.02);
-          formantMid.gain.setTargetAtTime(-2, now, 0.02);
-          formantHigh.gain.setTargetAtTime(-6, now, 0.02);
+          formant2.frequency.setTargetAtTime(1100, now, 0.02);
+          formant2.gain.setTargetAtTime(-2.0, now, 0.02);
+
+          formant3.frequency.setTargetAtTime(2600, now, 0.02);
+          formant3.gain.setTargetAtTime(-5.0, now, 0.02);
+
+          airShelf.frequency.setTargetAtTime(4500, now, 0.02);
+          airShelf.gain.setTargetAtTime(-3.0, now, 0.02);
         } else if (mode === 'high') {
-          // +6.2 nửa cung (Cao kiểu trẻ con / hoạt hình)
-          lfo.frequency.setTargetAtTime(4.8, now, 0.02);
-          depthGainA.gain.setTargetAtTime(-0.045, now, 0.02);
-          depthGainB.gain.setTargetAtTime(-0.045, now, 0.02);
-          lowCutFilter.frequency.setTargetAtTime(200, now, 0.02);
+          // Cao độ +6.4 nửa cung (~1.45x) kiểu giọng trẻ con
+          lfo.frequency.setTargetAtTime(9.0, now, 0.02);
+          depthGainA.gain.setTargetAtTime(-0.025, now, 0.02);
+          depthGainB.gain.setTargetAtTime(-0.025, now, 0.02);
 
-          formantLow.frequency.setTargetAtTime(280, now, 0.02);
-          formantLow.gain.setTargetAtTime(-9, now, 0.02);
-          formantMid.frequency.setTargetAtTime(1500, now, 0.02);
-          formantMid.gain.setTargetAtTime(4, now, 0.02);
-          formantHigh.frequency.setTargetAtTime(3400, now, 0.02);
-          formantHigh.gain.setTargetAtTime(6, now, 0.02);
+          hp1.frequency.setTargetAtTime(220, now, 0.02);
+          hp2.frequency.setTargetAtTime(220, now, 0.02);
+
+          fundamentalWarmth.frequency.setTargetAtTime(270, now, 0.02);
+          fundamentalWarmth.gain.setTargetAtTime(2.0, now, 0.02);
+
+          formant1.frequency.setTargetAtTime(850, now, 0.02);
+          formant1.gain.setTargetAtTime(4.0, now, 0.02);
+
+          formant2.frequency.setTargetAtTime(2300, now, 0.02);
+          formant2.gain.setTargetAtTime(5.5, now, 0.02);
+
+          formant3.frequency.setTargetAtTime(3600, now, 0.02);
+          formant3.gain.setTargetAtTime(5.0, now, 0.02);
+
+          airShelf.frequency.setTargetAtTime(6200, now, 0.02);
+          airShelf.gain.setTargetAtTime(3.0, now, 0.02);
         }
       }
 
@@ -595,7 +573,6 @@
 
       function destroy() {
         try { lfo.stop(); } catch {}
-        try { robotOsc.stop(); } catch {}
         try { source.disconnect(); } catch {}
         try { dest.disconnect(); } catch {}
       }
@@ -616,10 +593,7 @@
       normal: 'Bình thường',
       female: 'Giọng Nữ',
       male: 'Giọng Nam',
-      deep: 'Trầm (Quái vật)',
-      high: 'Cao (Trẻ con)',
-      robot: 'Robot',
-      radio: 'Bộ đàm'
+      high: 'Cao (Trẻ con)'
     };
 
     fxGrid.addEventListener('click', (e) => {
