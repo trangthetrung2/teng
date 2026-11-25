@@ -118,8 +118,27 @@
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-          // Dán thêm cấu hình TURN của Metered Open Relay vào đây để gọi qua 4G/5G
+          { urls: 'stun:stun.relay.metered.ca:80' },
+          {
+            urls: 'turn:global.relay.metered.ca:80',
+            username: '2f50aac419dcb5e14ea6161f',
+            credential: 'pdjLgii+aijstW2B'
+          },
+          {
+            urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+            username: '2f50aac419dcb5e14ea6161f',
+            credential: 'pdjLgii+aijstW2B'
+          },
+          {
+            urls: 'turn:global.relay.metered.ca:443',
+            username: '2f50aac419dcb5e14ea6161f',
+            credential: 'pdjLgii+aijstW2B'
+          },
+          {
+            urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+            username: '2f50aac419dcb5e14ea6161f',
+            credential: 'pdjLgii+aijstW2B'
+          }
         ]
       }
     };
@@ -151,7 +170,6 @@
     let audioCtx = null;
     let seconds = 0;
 
-    // Mở khóa loa ngay khi bấm nút (bắt buộc trên iOS Safari)
     function unlockAudio() {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -196,7 +214,6 @@
       micBar.style.width = '0%';
     }
 
-    // Giám sát dữ liệu âm thanh thực tế & tự ngắt sau 15s nếu 0 KB tăng thêm
     function startStatsMonitor(pc) {
       stopStatsMonitor();
       let lastBytes = 0;
