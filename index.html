@@ -3,256 +3,422 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Phòng Gọi Thoại Nhóm & Biến Âm</title>
+  <title>Roleplay Voice Studio • Luyện Nói Tiếng Anh 1-1</title>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: #0f172a; color: #f8fafc; padding: 20px;
+      min-height: 100vh; display: flex; align-items: flex-start; justify-content: center;
+      background: #0f172a; color: #f8fafc; padding: 16px 12px 40px;
     }
-    .card {
-      width: 100%; max-width: 430px; background: #1e293b; border: 1px solid #334155;
-      border-radius: 20px; padding: 24px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      text-align: center;
+    .app-wrap {
+      width: 100%; max-width: 540px; background: #1e293b; border: 1px solid #334155;
+      border-radius: 20px; padding: 20px 18px; box-shadow: 0 20px 45px rgba(0,0,0,0.45);
     }
-    h1 { font-size: 1.35rem; margin-bottom: 4px; }
-    .sub { color: #94a3b8; font-size: 0.82rem; margin-bottom: 18px; }
+    .header-top { text-align: center; margin-bottom: 16px; }
+    h1 { font-size: 1.3rem; font-weight: 800; color: #f8fafc; }
+    .sub { color: #94a3b8; font-size: 0.8rem; margin-top: 3px; }
+
+    /* Buttons & Inputs */
     .btn {
-      width: 100%; padding: 13px; border: none; border-radius: 12px;
-      font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.15s;
+      width: 100%; padding: 12px 14px; border: none; border-radius: 12px;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: 0.15s;
     }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
     .btn-primary { background: #3b82f6; color: #fff; }
-    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:hover:not(:disabled) { background: #2563eb; }
     .btn-success { background: #10b981; color: #fff; }
-    .btn-success:hover { background: #059669; }
+    .btn-success:hover:not(:disabled) { background: #059669; }
     .btn-danger { background: #ef4444; color: #fff; }
-    .btn-danger:hover { background: #dc2626; }
+    .btn-danger:hover:not(:disabled) { background: #dc2626; }
     .btn-muted { background: #334155; color: #e2e8f0; }
     .btn-muted.active { background: #f59e0b; color: #0f172a; }
-    .btn-warn { background: #f59e0b; color: #0f172a; margin-bottom: 10px; font-size: 0.9rem; padding: 10px; }
-    .btn-sm {
-      padding: 8px 12px; font-size: 0.8rem; border-radius: 8px;
-      background: #0f172a; color: #94a3b8; border: 1px solid #334155;
-      cursor: pointer; margin-top: 12px; width: 100%;
+    .btn-warn { background: #f59e0b; color: #0f172a; margin-bottom: 10px; font-size: 0.88rem; padding: 10px; }
+    .btn-outline {
+      background: #0f172a; color: #cbd5e1; border: 1px solid #334155;
+      padding: 9px 12px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
     }
-    .btn-sm:hover { color: #fff; border-color: #475569; }
+    .btn-outline:hover:not(:disabled) { border-color: #60a5fa; color: #fff; }
+
     .divider {
-      display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #64748b; font-size: 0.85rem;
+      display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #64748b; font-size: 0.82rem;
     }
     .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #334155; }
-    .host-group { display: flex; flex-direction: column; gap: 10px; }
-    .cap-row {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      background: #0f172a; padding: 8px 12px; border-radius: 12px; border: 1px solid #334155;
-      font-size: 0.85rem; color: #cbd5e1;
+
+    .box {
+      background: #0f172a; border: 1px solid #334155; border-radius: 14px;
+      padding: 12px; margin-bottom: 12px;
     }
-    .cap-btns { display: flex; gap: 6px; }
-    .cap-btn {
-      padding: 6px 12px; border-radius: 8px; border: 1px solid #475569;
-      background: #1e293b; color: #94a3b8; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+    .box-title {
+      font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
     }
-    .cap-btn.selected {
-      background: #3b82f6; border-color: #3b82f6; color: #fff;
+
+    select, input[type="text"] {
+      width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid #475569;
+      background: #1e293b; color: #fff; font-size: 0.92rem; outline: none;
     }
-    .join-row { display: flex; gap: 8px; }
-    input[type="text"] {
-      width: 100%; flex: 1; padding: 13px 12px; border-radius: 12px; border: 1px solid #475569;
-      background: #0f172a; color: #fff; font-size: 1rem; text-align: center;
-      letter-spacing: 2px; text-transform: uppercase; outline: none;
+    select:focus, input[type="text"]:focus { border-color: #3b82f6; }
+    .code-input {
+      text-align: center; letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
     }
-    input[type="text"]::placeholder {
-      font-size: 0.82rem; letter-spacing: 0.5px; color: #64748b;
+
+    .row-gap { display: flex; gap: 8px; align-items: center; }
+    .role-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .role-pill {
+      padding: 9px; border-radius: 10px; border: 1px solid #334155; background: #1e293b;
+      color: #94a3b8; font-size: 0.84rem; font-weight: 600; cursor: pointer; text-align: center;
     }
-    input[type="text"]:focus { border-color: #3b82f6; }
+    .role-pill.selected { background: #2563eb; border-color: #60a5fa; color: #fff; }
+
     .opt-row {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 14px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer; user-select: none;
+      margin-top: 12px; font-size: 0.82rem; color: #cbd5e1; cursor: pointer; user-select: none;
     }
-    .opt-row input { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; }
-    .turn-test-res {
-      margin-top: 8px; font-size: 0.8rem; color: #94a3b8; min-height: 18px; line-height: 1.4;
-    }
-    .turn-test-res.ok { color: #34d399; }
-    .turn-test-res.err { color: #f87171; }
-    .code-box {
-      background: #0f172a; border: 2px dashed #3b82f6; border-radius: 14px;
-      padding: 12px; margin: 10px 0; cursor: pointer;
-    }
-    .code-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: 2px; }
-    .code-value { font-size: 1.7rem; font-weight: 800; letter-spacing: 4px; color: #60a5fa; word-break: break-all; }
-    .copy-hint { font-size: 0.72rem; color: #64748b; margin-top: 3px; }
-    .status {
-      margin: 10px 0 8px; padding: 9px 12px; border-radius: 10px;
-      background: #0f172a; font-size: 0.86rem; color: #cbd5e1;
-    }
-    .status.ok { color: #34d399; border: 1px solid #065f46; }
-    .status.warn { color: #fbbf24; border: 1px solid #78350f; }
-    .status.err { color: #f87171; border: 1px solid #7f1d1d; }
+    .opt-row input { width: 15px; height: 15px; accent-color: #3b82f6; }
 
-    /* Khu vực biến âm */
-    .fx-box {
+    /* Room top bar */
+    .room-topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .code-pill {
+      cursor: pointer; display: flex; flex-direction: column;
+    }
+    .code-pill small { font-size: 0.68rem; color: #94a3b8; }
+    .code-pill strong { font-size: 1.25rem; letter-spacing: 3px; color: #60a5fa; }
+    .call-meta { text-align: right; }
+    .timer { font-size: 1.1rem; font-weight: 700; color: #34d399; font-variant-numeric: tabular-nums; }
+    .conn-badge {
+      display: inline-block; font-size: 0.72rem; padding: 2px 8px; border-radius: 99px;
+      background: #1e293b; color: #94a3b8; margin-top: 2px;
+    }
+    .conn-badge.ok { background: #064e3b; color: #34d399; }
+    .conn-badge.warn { background: #78350f; color: #fbbf24; }
+
+    /* Collapsible Voice FX drawer */
+    details.fx-drawer {
       background: #0f172a; border: 1px solid #334155; border-radius: 12px;
-      padding: 10px 12px; margin: 10px 0; text-align: left;
+      padding: 9px 12px; margin-bottom: 10px;
     }
-    .fx-header {
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 0.78rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600;
+    details.fx-drawer summary {
+      list-style: none; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+      color: #cbd5e1; display: flex; justify-content: space-between; align-items: center;
     }
-    .fx-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
-    }
+    details.fx-drawer summary::-webkit-details-marker { display: none; }
+    .fx-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
     .fx-btn {
-      padding: 9px 6px; border-radius: 9px; border: 1px solid #334155;
-      background: #1e293b; color: #cbd5e1; font-size: 0.82rem; font-weight: 600;
-      cursor: pointer; transition: 0.15s; text-align: center;
+      padding: 7px 4px; border-radius: 8px; border: 1px solid #334155;
+      background: #1e293b; color: #cbd5e1; font-size: 0.75rem; font-weight: 600; cursor: pointer;
     }
-    .fx-btn:hover { border-color: #60a5fa; }
-    .fx-btn.active {
-      background: #8b5cf6; border-color: #a78bfa; color: #fff;
-    }
-    .fx-btn.female.active {
-      background: #ec4899; border-color: #f472b6; color: #fff;
-    }
-    .fx-btn.male.active {
-      background: #0284c7; border-color: #38bdf8; color: #fff;
-    }
-    .pitch-slider-wrap {
-      margin-top: 10px; padding-top: 8px; border-top: 1px solid #1e293b;
-    }
-    .pitch-slider-head {
-      display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px;
-    }
-    .pitch-slider-wrap input[type="range"] {
-      width: 100%; accent-color: #ec4899; cursor: pointer;
-    }
-    .monitor-toggle {
-      display: flex; align-items: center; gap: 6px; margin-top: 9px;
-      font-size: 0.76rem; color: #94a3b8; cursor: pointer; user-select: none;
-    }
-    .monitor-toggle input { accent-color: #ec4899; cursor: pointer; }
+    .fx-btn.active { background: #8b5cf6; border-color: #a78bfa; color: #fff; }
+    .fx-btn.female.active { background: #ec4899; border-color: #f472b6; }
+    .fx-btn.male.active { background: #0284c7; border-color: #38bdf8; }
+    .pitch-slider-wrap { margin-top: 8px; padding-top: 8px; border-top: 1px solid #1e293b; }
+    .pitch-slider-head { display: flex; justify-content: space-between; font-size: 0.73rem; color: #94a3b8; margin-bottom: 4px; }
+    .pitch-slider-wrap input[type="range"] { width: 100%; accent-color: #ec4899; }
 
-    .members-box {
-      background: #0f172a; border: 1px solid #334155; border-radius: 12px;
-      padding: 10px 12px; margin: 10px 0; text-align: left;
+    /* Study Modes Bar */
+    .study-bar {
+      display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
     }
-    .members-title {
-      font-size: 0.76rem; color: #94a3b8; margin-bottom: 6px;
-      display: flex; justify-content: space-between; font-weight: 600;
+    .role-tag {
+      font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+      background: #1d4ed8; color: #dbeafe;
     }
-    .member-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 5px 0; border-top: 1px solid #1e293b; font-size: 0.83rem;
+    .mode-toggles { display: flex; gap: 6px; }
+    .toggle-chip {
+      font-size: 0.73rem; padding: 4px 9px; border-radius: 8px; border: 1px solid #475569;
+      background: #0f172a; color: #94a3b8; cursor: pointer; font-weight: 600;
     }
-    .member-item:first-of-type { border-top: none; }
-    .badge {
-      font-size: 0.7rem; padding: 2px 8px; border-radius: 99px;
-      background: #1e293b; color: #94a3b8;
+    .toggle-chip.on { background: #7c3aed; border-color: #a78bfa; color: #fff; }
+
+    /* Scenario Stage */
+    .stage-box {
+      background: #0f172a; border: 1px solid #334155; border-radius: 14px;
+      padding: 12px; margin-bottom: 10px;
     }
-    .badge.ok { background: #064e3b; color: #34d399; }
-    .badge.turn { background: #1e3a8a; color: #93c5fd; }
+    .stage-breadcrumb {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.72rem; color: #64748b; margin-bottom: 8px; padding-bottom: 6px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+    .ctx-tag {
+      font-size: 0.68rem; padding: 2px 7px; border-radius: 6px;
+      background: #1e293b; color: #38bdf8; border: 1px solid #0369a1;
+    }
+
+    /* Partner Last Bubble */
+    .partner-bubble {
+      background: #1e293b; border-left: 3px solid #10b981; border-radius: 10px;
+      padding: 10px 12px; margin-bottom: 12px; position: relative;
+    }
+    .partner-bubble .who {
+      font-size: 0.72rem; font-weight: 700; color: #34d399; margin-bottom: 4px;
+      display: flex; justify-content: space-between;
+    }
+    .partner-bubble .en { font-size: 0.96rem; font-weight: 600; color: #f8fafc; line-height: 1.4; }
+    .partner-bubble .ipa { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+    .partner-bubble .vi { font-size: 0.8rem; color: #cbd5e1; margin-top: 3px; font-style: italic; }
+    .blurred-text {
+      filter: blur(6px); user-select: none; cursor: pointer; transition: filter 0.2s;
+    }
+    .blurred-text.revealed { filter: none; }
+
+    .system-notice {
+      background: #451a03; border: 1px solid #92400e; color: #fde68a;
+      font-size: 0.8rem; padding: 8px 10px; border-radius: 9px; margin-bottom: 10px;
+    }
+
+    /* Choice Cards */
+    .turn-prompt {
+      font-size: 0.82rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .choices-list { display: flex; flex-direction: column; gap: 9px; }
+    .choice-card {
+      background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+      padding: 11px 12px; text-align: left; transition: 0.15s;
+    }
+    .choice-card:hover { border-color: #3b82f6; background: #1e293b; }
+    .choice-img {
+      width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px;
+      background: #020617; margin-bottom: 8px; border: 1px solid #334155;
+    }
+    .choice-en { font-size: 0.96rem; font-weight: 700; color: #f8fafc; line-height: 1.4; }
+    .choice-ipa { font-size: 0.79rem; color: #38bdf8; margin-top: 3px; }
+    .choice-vi { font-size: 0.82rem; color: #cbd5e1; margin-top: 4px; }
+    .choice-actions {
+      display: flex; gap: 8px; margin-top: 9px; align-items: center;
+    }
+    .btn-speak-select {
+      flex: 1; padding: 8px 10px; border-radius: 8px; border: none;
+      background: #2563eb; color: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-speak-select:hover { background: #1d4ed8; }
+    .btn-peek {
+      padding: 8px 10px; border-radius: 8px; border: 1px solid #475569;
+      background: #0f172a; color: #cbd5e1; font-size: 0.78rem; cursor: pointer;
+    }
+
+    .wait-box {
+      text-align: center; padding: 22px 12px; color: #94a3b8; font-size: 0.88rem;
+      background: #1e293b; border-radius: 12px; border: 1px dashed #334155;
+    }
+
+    /* Remedy Phrases Bar (UNDO / REPEAT / EARLY_END) */
+    .remedy-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px;
+    }
+    .remedy-btn {
+      padding: 8px 6px; border-radius: 9px; border: 1px solid #334155;
+      background: #0f172a; color: #cbd5e1; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      text-align: center;
+    }
+    .remedy-btn:hover:not(:disabled) { border-color: #f59e0b; color: #fbbf24; }
+    .remedy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Modal / Drawer for Common Phrases */
+    .phrase-picker {
+      background: #1e293b; border: 1px solid #f59e0b; border-radius: 12px;
+      padding: 10px; margin-bottom: 10px;
+    }
+    .phrase-picker-head {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.78rem; font-weight: 700; color: #fbbf24; margin-bottom: 8px;
+    }
+    .phrase-opt {
+      width: 100%; text-align: left; background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; color: #f8fafc; cursor: pointer;
+    }
+    .phrase-opt:hover { border-color: #fbbf24; }
+    .phrase-opt small { display: block; color: #94a3b8; font-size: 0.74rem; margin-top: 2px; }
+
+    /* Debrief Summary */
+    .debrief-box {
+      background: #0f172a; border: 1px solid #10b981; border-radius: 14px; padding: 14px; margin-bottom: 10px;
+    }
+    .debrief-title { font-size: 1rem; font-weight: 800; color: #34d399; margin-bottom: 6px; }
+    .history-list {
+      max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 10px 0;
+    }
+    .hist-item {
+      background: #1e293b; border-radius: 9px; padding: 8px 10px; font-size: 0.82rem;
+    }
+    .hist-item .h-role { font-size: 0.7rem; font-weight: 700; color: #60a5fa; }
+    .hist-item .h-en { color: #f8fafc; font-weight: 600; margin-top: 2px; }
+    .hist-item .h-ipa { color: #94a3b8; font-size: 0.74rem; }
+
+    /* Mic & Bottom Controls */
     .mic-wrap {
-      background: #0f172a; border-radius: 99px; height: 7px; overflow: hidden;
-      margin: 6px 0 12px; border: 1px solid #334155;
+      background: #0f172a; border-radius: 99px; height: 6px; overflow: hidden;
+      margin: 6px 0 10px; border: 1px solid #334155;
     }
-    .mic-bar {
-      height: 100%; width: 0%; background: #10b981; transition: width 0.08s linear;
-    }
-    .timer { font-size: 1.55rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 6px 0; color: #34d399; }
-    .controls { display: flex; gap: 10px; margin-top: 8px; }
+    .mic-bar { height: 100%; width: 0%; background: #10b981; transition: width 0.08s linear; }
+    .controls { display: flex; gap: 8px; }
     .hidden { display: none !important; }
+    .small-note { font-size: 0.75rem; color: #94a3b8; margin-top: 6px; line-height: 1.4; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Phòng Gọi Thoại Nhóm</h1>
-    <p class="sub">v3.4 • 2–4 người • Giọng Nữ & Nam mượt</p>
+  <div class="app-wrap">
+    <div class="header-top">
+      <h1>Roleplay Voice Studio</h1>
+      <p class="sub">v4.0 • Luyện Nói Tiếng Anh 1-1 Theo Cây Kịch Bản</p>
+    </div>
 
-    <!-- Màn hình chính -->
+    <!-- ==================== MÀN HÌNH CHÍNH ==================== -->
     <div id="homeView">
-      <div class="host-group">
-        <div class="cap-row">
-          <span>Số người tối đa:</span>
-          <div class="cap-btns" id="capBtns">
-            <button type="button" class="cap-btn selected" data-cap="2">2</button>
-            <button type="button" class="cap-btn" data-cap="3">3</button>
-            <button type="button" class="cap-btn" data-cap="4">4</button>
-          </div>
+      <div class="box">
+        <div class="box-title">
+          <span>1. Chọn địa điểm & vai nhập vai (Host)</span>
+          <button type="button" id="refreshDriveBtn" class="btn-outline" style="padding:3px 8px; font-size:0.72rem;">Tải lại Drive</button>
         </div>
-        <input id="customCodeInput" type="text" maxlength="12" placeholder="Tự đặt mã (bỏ trống = ngẫu nhiên)" autocomplete="off" />
-        <button id="createBtn" class="btn btn-primary">Tạo phòng (Host)</button>
+
+        <select id="scenarioSelect">
+          <option value="BUILTIN_HOSPITAL">Hospital (Mẫu tích hợp sẵn - Khám Đau Ngực)</option>
+        </select>
+        <div id="driveStatus" class="small-note">Đang kiểm tra thư mục Google Drive...</div>
+
+        <div style="margin-top:10px; font-size:0.78rem; color:#cbd5e1; font-weight:600;">Bạn muốn đóng vai nào trước?</div>
+        <div class="role-pills" id="hostRolePills">
+          <div class="role-pill selected" data-role="ROLE_A">Vai 1 (VD: Doctor)</div>
+          <div class="role-pill" data-role="ROLE_B">Vai 2 (VD: Patient)</div>
+        </div>
+
+        <div class="row-gap" style="margin-top:10px;">
+          <input id="customCodeInput" class="code-input" type="text" maxlength="12" placeholder="MÃ PHÒNG (TÙY CHỌN)" autocomplete="off" />
+          <button id="createBtn" class="btn btn-primary" style="flex:1.3;">Tạo phòng</button>
+        </div>
       </div>
 
-      <div class="divider">hoặc vào phòng có sẵn</div>
+      <div class="divider">hoặc vào phòng của bạn học</div>
 
-      <div class="join-row">
-        <input id="codeInput" type="text" maxlength="12" placeholder="NHẬP MÃ PHÒNG" autocomplete="off" />
-        <button id="joinBtn" class="btn btn-success" style="width:auto; padding: 0 20px;">Vào</button>
+      <div class="box">
+        <div class="box-title"><span>2. Nhập mã phòng để tham gia (Guest)</span></div>
+        <div class="row-gap">
+          <input id="codeInput" class="code-input" type="text" maxlength="12" placeholder="NHẬP MÃ PHÒNG" autocomplete="off" />
+          <button id="joinBtn" class="btn btn-success" style="width:auto; padding:11px 22px;">Vào</button>
+        </div>
       </div>
 
-      <label class="opt-row" title="Bật khi gọi giữa 4G/5G hoặc Wi-Fi công ty bị chặn">
+      <label class="opt-row">
         <input id="forceRelayChk" type="checkbox" />
         <span>Ép qua TURN (bật nếu gọi 4G khó nối)</span>
       </label>
-
-      <button id="testTurnBtn" class="btn-sm">Kiểm tra kết nối máy chủ TURN</button>
-      <div id="turnTestRes" class="turn-test-res"></div>
     </div>
 
-    <!-- Màn hình trong phòng -->
+    <!-- ==================== MÀN HÌNH TRONG PHÒNG ==================== -->
     <div id="roomView" class="hidden">
-      <div id="codeBox" class="code-box" title="Bấm để sao chép">
-        <div class="code-label">MÃ PHÒNG HIỆN TẠI</div>
-        <div id="codeDisplay" class="code-value">------</div>
-        <div id="copyHint" class="copy-hint">Bấm vào mã để sao chép</div>
+      <div class="room-topbar">
+        <div id="codeBox" class="code-pill" title="Bấm để sao chép">
+          <small id="copyHint">MÃ PHÒNG (BẤM COPY)</small>
+          <strong id="codeDisplay">------</strong>
+        </div>
+        <div class="call-meta">
+          <div id="timer" class="timer">00:00</div>
+          <div id="connBadge" class="conn-badge">Đang chờ bạn học...</div>
+        </div>
       </div>
 
       <button id="resumeAudioBtn" class="btn btn-warn hidden">Chạm để mở lại loa (iOS)</button>
 
-      <div id="timer" class="timer hidden">00:00</div>
-      <div id="status" class="status">Đang khởi tạo...</div>
-
-      <!-- Bộ chọn hiệu ứng biến âm -->
-      <div class="fx-box">
-        <div class="fx-header">
-          <span>CHẾ ĐỘ GIỌNG NÓI</span>
-          <span id="fxLabel" style="color: #f472b6;">Bình thường</span>
-        </div>
+      <!-- Ngăn xếp chỉnh giọng nói (thu gọn cho đỡ chiếm màn hình học) -->
+      <details class="fx-drawer">
+        <summary>
+          <span>Chế độ giọng nói: <strong id="fxLabel" style="color:#f472b6;">Bình thường</strong></span>
+          <span style="color:#64748b; font-size:0.74rem;">Mở chỉnh giọng ▼</span>
+        </summary>
         <div class="fx-grid" id="fxGrid">
-          <button type="button" class="fx-btn active" data-fx="normal">Bình thường</button>
-          <button type="button" class="fx-btn female" data-fx="female">Giọng Nữ</button>
-          <button type="button" class="fx-btn male" data-fx="male">Giọng Nam</button>
-          <button type="button" class="fx-btn" data-fx="high">Cao (Trẻ con)</button>
+          <button type="button" class="fx-btn active" data-fx="normal">Gốc</button>
+          <button type="button" class="fx-btn female" data-fx="female">Nữ</button>
+          <button type="button" class="fx-btn male" data-fx="male">Nam</button>
+          <button type="button" class="fx-btn" data-fx="high">Trẻ con</button>
         </div>
-
         <div id="pitchSliderWrap" class="pitch-slider-wrap hidden">
           <div class="pitch-slider-head">
-            <span>Tinh chỉnh độ thanh / trầm (khớp giọng gốc):</span>
+            <span>Độ thanh / trầm:</span>
             <span id="semitoneVal" style="color:#f8fafc; font-weight:600;">+4.6</span>
           </div>
           <input id="semitoneSlider" type="range" min="2.0" max="7.5" step="0.1" value="4.6" />
         </div>
-
-        <label class="monitor-toggle">
+        <label class="opt-row" style="justify-content:flex-start; margin-top:8px; font-size:0.76rem;">
           <input id="selfMonitorChk" type="checkbox" />
           <span>Nghe thử giọng biến âm (nên đeo tai nghe)</span>
         </label>
-      </div>
+      </details>
 
-      <div class="members-box">
-        <div class="members-title">
-          <span>THÀNH VIÊN TRONG PHÒNG</span>
-          <span id="memberCount">1/2</span>
+      <!-- Thanh vai trò & chế độ luyện tập -->
+      <div class="study-bar">
+        <span id="myRoleBadge" class="role-tag">Vai của bạn: ---</span>
+        <div class="mode-toggles">
+          <button type="button" id="challengeToggle" class="toggle-chip" title="Ẩn tiếng Anh, chỉ hiện gợi ý tiếng Việt">Phản xạ (Ẩn EN)</button>
+          <button type="button" id="listenToggle" class="toggle-chip" title="Làm mờ câu đối phương vừa nói">Luyện nghe</button>
         </div>
-        <div id="membersList"></div>
       </div>
 
-      <div style="font-size: 0.74rem; color: #64748b; text-align: left;">Âm lượng micro đầu ra:</div>
-      <div class="mic-wrap"><div id="micBar" class="mic-bar"></div></div>
+      <!-- Khu vực cây kịch bản chính -->
+      <div id="scenarioStage" class="stage-box">
+        <div class="stage-breadcrumb">
+          <span id="crumbSheet">Chủ đề: ---</span>
+          <span id="crumbStep">Lượt #1</span>
+        </div>
 
+        <div id="ctxTagsBar" class="tag-list hidden"></div>
+        <div id="systemNotice" class="system-notice hidden"></div>
+
+        <!-- Câu đối phương vừa nói -->
+        <div id="partnerBubble" class="partner-bubble hidden">
+          <div class="who">
+            <span id="partnerWho">Đối phương vừa nói:</span>
+            <span id="blurHint" class="hidden" style="color:#a78bfa; cursor:pointer;">Chạm vào chữ để xem</span>
+          </div>
+          <div id="partnerTextWrap">
+            <div id="partnerEn" class="en"></div>
+            <div id="partnerIpa" class="ipa"></div>
+            <div id="partnerVi" class="vi"></div>
+          </div>
+        </div>
+
+        <!-- Khu vực lựa chọn của lượt hiện tại -->
+        <div id="turnArea"></div>
+      </div>
+
+      <!-- Khu vực tổng kết cuối buổi -->
+      <div id="debriefStage" class="debrief-box hidden">
+        <div class="debrief-title" id="debriefHeading">Hoàn thành tình huống!</div>
+        <div id="debriefSummary" class="small-note" style="color:#cbd5e1;"></div>
+        <div id="historyList" class="history-list"></div>
+        <div class="row-gap">
+          <button type="button" id="swapRolesBtn" class="btn btn-primary">Đổi vai & Luyện lại</button>
+          <button type="button" id="restartSameBtn" class="btn btn-outline" style="padding:12px;">Chơi lại từ đầu</button>
+        </div>
+      </div>
+
+      <!-- Khung chọn câu chức năng chung (UNDO / REPEAT / EARLY_END) -->
+      <div id="phrasePicker" class="phrase-picker hidden">
+        <div class="phrase-picker-head">
+          <span id="phrasePickerTitle">Chọn câu giao tiếp:</span>
+          <button type="button" id="closePhrasePicker" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-weight:700;">✕ Đóng</button>
+        </div>
+        <div id="phraseOptions"></div>
+      </div>
+
+      <!-- 3 nút giao tiếp cứu nguy -->
+      <div class="remedy-bar">
+        <button type="button" id="btnUndo" class="remedy-btn" disabled>↩ Nói nhầm (Undo)</button>
+        <button type="button" id="btnRepeat" class="remedy-btn">🔁 Xin nghe lại</button>
+        <button type="button" id="btnEarlyEnd" class="remedy-btn">⏱ Bận / Dừng sớm</button>
+      </div>
+
+      <!-- Thanh âm lượng mic & nút cuộc gọi -->
+      <div class="mic-wrap"><div id="micBar" class="mic-bar"></div></div>
       <div class="controls">
         <button id="muteBtn" class="btn btn-muted">Tắt mic</button>
-        <button id="hangupBtn" class="btn btn-danger">Tắt máy</button>
+        <button id="hangupBtn" class="btn btn-danger">Rời phòng</button>
       </div>
     </div>
 
@@ -260,31 +426,206 @@
   </div>
 
   <script>
-    const APP_PREFIX = 'cf-voice-call-vn-9x2k-';
+    // =========================================================================
+    // 1. CẤU HÌNH API GOOGLE APPS SCRIPT & DỮ LIỆU MẪU TÍCH HỢP SẴN
+    // =========================================================================
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxeILbjho8qJJKgglKr_qAd7Wt4wfACk_KDrfOe0c4Y6khVVd_2JPMnmGrFwZGBpxY-/exec';
+    const APP_PREFIX = 'cf-roleplay-en-v4-';
 
+    const DEFAULT_COMMON_PHRASES = [
+      { Action: 'UNDO', Role: 'ANY', Text_EN: 'Oops, my bad. Let me say that again.', IPA: '/ʊps maɪ bæd let mi seɪ ðæt əˈɡen/' },
+      { Action: 'UNDO', Role: 'DOCTOR', Text_EN: 'Sorry, wrong question. Let me ask again.', IPA: '/ˈsɒri rɒŋ ˈkwestʃən let mi ɑːsk əˈɡen/' },
+      { Action: 'UNDO', Role: 'PATIENT', Text_EN: 'Wait, I said that wrong. Let me try again.', IPA: '/weɪt aɪ sed ðæt rɒŋ let mi traɪ əˈɡen/' },
+      { Action: 'REPEAT', Role: 'ANY', Text_EN: "Sorry, I didn't catch that. Can you repeat?", IPA: '/ˈsɒri aɪ ˈdɪdnt kætʃ ðæt kæn ju rɪˈpiːt/' },
+      { Action: 'EARLY_END', Role: 'ANY', Text_EN: 'Something just came up, I have to go now. Sorry!', IPA: '/ˈsʌmθɪŋ dʒʌst keɪm ʌp aɪ hæv tu ɡəʊ naʊ ˈsɒri/' },
+      { Action: 'EARLY_END', Role: 'DOCTOR', Text_EN: "Sorry, I have an emergency. Let's continue next time.", IPA: '/ˈsɒri aɪ hæv ən ɪˈmɜːdʒənsi lets kənˈtɪnjuː nekst taɪm/' },
+      { Action: 'EARLY_END', Role: 'PATIENT', Text_EN: 'Sorry doctor, something urgent came up. I have to go.', IPA: '/ˈsɒri ˈdɒktə ˈsʌmθɪŋ ˈɜːdʒənt keɪm ʌp aɪ hæv tu ɡəʊ/' }
+    ];
+
+    // Kịch bản mẫu đầy đủ luồng: Tiếp cận -> Tim mạch / Tiêu hóa -> Giải thích CLS (RETURN) -> Loại trừ quay đầu -> Kết thúc
+    const BUILTIN_HOSPITAL_SCENARIO = {
+      fileName: 'Hospital (Mẫu Demo Đau Ngực)',
+      firstSheet: 'Tiếp cận',
+      sheetNames: ['Tiếp cận', 'Tim mạch', 'Tiêu hóa', 'Giải thích CLS', 'Kết thúc', 'Common_Phrases'],
+      sheets: {
+        'Tiếp cận': [
+          {
+            ID: 'START', Role: 'DOCTOR',
+            Text_EN: 'Hi, I am Dr. Minh. What brought you along today?',
+            IPA: '/haɪ aɪ æm ˈdɒktə mɪn wɒt brɔːt ju əˈlɒŋ təˈdeɪ/',
+            Hint_VI: 'Chào hỏi và hỏi lý do bệnh nhân đến khám hôm nay',
+            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'CHIEF_COMPLAINT'
+          },
+          {
+            ID: 'START', Role: 'DOCTOR',
+            Text_EN: 'Hello! Have a seat. How are you feeling right now?',
+            IPA: '/həˈləʊ hæv ə siːt haʊ ɑː ju ˈfiːlɪŋ raɪt naʊ/',
+            Hint_VI: 'Mời ngồi và hỏi thăm tình trạng hiện tại',
+            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'CHIEF_COMPLAINT'
+          },
+          {
+            ID: 'CHIEF_COMPLAINT', Role: 'PATIENT',
+            Text_EN: "I've been having a tight pain in my chest since this morning.",
+            IPA: '/aɪv biːn ˈhævɪŋ ə taɪt peɪn ɪn maɪ tʃest sɪns ðɪs ˈmɔːnɪŋ/',
+            Hint_VI: 'Than phiền cảm giác đau thắt ngực từ sáng nay',
+            Image: '', Add_Tags: 'DAU_NGUC', Require_Tags: '', Next_Sheet: '', Next_ID: 'CHEST_HUB'
+          },
+          {
+            ID: 'CHIEF_COMPLAINT', Role: 'PATIENT',
+            Text_EN: 'My chest feels heavy and burning, especially after eating.',
+            IPA: '/maɪ tʃest fiːlz ˈhevi ænd ˈbɜːnɪŋ ɪˈspeʃəli ˈɑːftər ˈiːtɪŋ/',
+            Hint_VI: 'Nặng ngực và nóng rát sau xương ức, nhất là sau khi ăn',
+            Image: '', Add_Tags: 'DAU_NGUC', Require_Tags: '', Next_Sheet: '', Next_ID: 'CHEST_HUB'
+          },
+          {
+            ID: 'CHEST_HUB', Role: 'DOCTOR',
+            Text_EN: 'Does the pain spread to your left arm or jaw, or get worse when you walk?',
+            IPA: '/dʌz ðə peɪn spred tu jɔː left ɑːm ɔː dʒɔː/',
+            Hint_VI: 'Khai thác hướng lan và yếu tố gắng sức (hướng Tim mạch)',
+            Image: '', Add_Tags: '', Require_Tags: '!LOAI_TRU_TIM', Next_Sheet: 'Tim mạch', Next_ID: 'START'
+          },
+          {
+            ID: 'CHEST_HUB', Role: 'DOCTOR',
+            Text_EN: 'Do you get a sour taste in your mouth or heartburn when lying down?',
+            IPA: '/du ju ɡet ə ˈsaʊə teɪst ɪn jɔː maʊθ ɔː ˈhɑːtbɜːn/',
+            Hint_VI: 'Hỏi triệu chứng trào ngược dạ dày thực quản (hướng Tiêu hóa)',
+            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: 'Tiêu hóa', Next_ID: 'START'
+          }
+        ],
+        'Tim mạch': [
+          {
+            ID: 'START', Role: 'PATIENT',
+            Text_EN: 'Yes, it feels like a heavy weight on my chest when I climb stairs.',
+            IPA: '/jes ɪt fiːlz laɪk ə ˈhevi weɪt ɒn maɪ tʃest wen aɪ klaɪm steəz/',
+            Hint_VI: 'Xác nhận nặng ngực tăng lên khi leo cầu thang',
+            Image: '', Add_Tags: 'NGHI_TIM_MACH', Require_Tags: '', Next_Sheet: '', Next_ID: 'CARDIO_TEST'
+          },
+          {
+            ID: 'START', Role: 'PATIENT',
+            Text_EN: 'Not really, it does not change when I move around.',
+            IPA: '/nɒt ˈrɪəli ɪt dʌz nɒt tʃeɪndʒ wen aɪ muːv əˈraʊnd/',
+            Hint_VI: 'Không liên quan tới vận động gắng sức',
+            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'CARDIO_TEST'
+          },
+          {
+            ID: 'CARDIO_TEST', Role: 'DOCTOR',
+            Text_EN: 'To be safe, I need to run an ECG to check your heart rhythm first.',
+            IPA: '/tu bi seɪf aɪ niːd tu rʌn ən ˌiːsiːˈdʒiː tu tʃek jɔː hɑːt ˈrɪðəm/',
+            Hint_VI: 'Chỉ định làm điện tâm đồ (ECG) kiểm tra nhịp tim',
+            Image: '', Add_Tags: 'LAM_ECG', Require_Tags: '', Next_Sheet: '', Next_ID: 'PATIENT_TEST_REACT'
+          },
+          {
+            ID: 'CARDIO_TEST', Role: 'DOCTOR',
+            Text_EN: 'I would like to do an echocardiogram to look at your heart valves.',
+            IPA: '/aɪ wʊd laɪk tu du ən ˌekəʊˈkɑːdiəʊɡræm/',
+            Hint_VI: 'Chỉ định siêu âm tim kiểm tra cấu trúc và van tim',
+            Image: '', Add_Tags: 'LAM_ECHO', Require_Tags: '', Next_Sheet: '', Next_ID: 'PATIENT_TEST_REACT'
+          },
+          {
+            ID: 'PATIENT_TEST_REACT', Role: 'PATIENT',
+            Text_EN: 'Sure doctor, let us do it right away.',
+            IPA: '/ʃʊə ˈdɒktə let ʌs du ɪt raɪt əˈweɪ/',
+            Hint_VI: 'Đồng ý làm xét nghiệm ngay',
+            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'CARDIO_RESULT'
+          },
+          {
+            ID: 'PATIENT_TEST_REACT', Role: 'PATIENT',
+            Text_EN: 'Will this test hurt or take a long time, doctor?',
+            IPA: '/wɪl ðɪs test hɜːt ɔː teɪk ə lɒŋ taɪm ˈdɒktə/',
+            Hint_VI: 'Hỏi xem xét nghiệm có đau hay tốn nhiều thời gian không (rẽ ngang giải thích)',
+            Image: '', Add_Tags: 'BN_LO_LANG', Require_Tags: '', Next_Sheet: 'Giải thích CLS', Next_ID: 'START'
+          },
+          {
+            ID: 'CARDIO_RESULT', Role: 'DOCTOR',
+            Text_EN: 'Good news: your ECG is completely normal. Let us check your stomach instead.',
+            IPA: '/ɡʊd njuːz jɔːr ˌiːsiːˈdʒiː ɪz kəmˈpliːtli ˈnɔːml/',
+            Hint_VI: 'ECG bình thường -> Loại trừ tim mạch, quay lại Tiếp cận khám tiêu hóa',
+            Image: '', Add_Tags: 'LOAI_TRU_TIM', Require_Tags: 'LAM_ECG', Next_Sheet: 'Tiếp cận', Next_ID: 'CHEST_HUB'
+          },
+          {
+            ID: 'CARDIO_RESULT', Role: 'DOCTOR',
+            Text_EN: 'Your ECG shows signs of reduced blood flow. We need to treat this right away.',
+            IPA: '/jɔːr ˌiːsiːˈdʒiː ʃəʊz saɪnz ɒv rɪˈdjuːst blʌd fləʊ/',
+            Hint_VI: 'ECG có dấu hiệu thiếu máu cơ tim -> Chẩn đoán xác định & điều trị',
+            Image: '', Add_Tags: 'THIEU_MAU_CO_TIM', Require_Tags: 'LAM_ECG', Next_Sheet: 'Kết thúc', Next_ID: 'START'
+          },
+          {
+            ID: 'CARDIO_RESULT', Role: 'DOCTOR',
+            Text_EN: 'Your echocardiogram looks normal. Let us check other causes for your pain.',
+            IPA: '/jɔːr ˌekəʊˈkɑːdiəʊɡræm lʊks ˈnɔːml/',
+            Hint_VI: 'Siêu âm tim bình thường -> Quay lại Tiếp cận tìm nguyên nhân khác',
+            Image: '', Add_Tags: 'LOAI_TRU_TIM', Require_Tags: 'LAM_ECHO', Next_Sheet: 'Tiếp cận', Next_ID: 'CHEST_HUB'
+          }
+        ],
+        'Tiêu hóa': [
+          {
+            ID: 'START', Role: 'PATIENT',
+            Text_EN: 'Yes! I often get heartburn and a sour taste after spicy meals.',
+            IPA: '/jes aɪ ˈɒfn ɡet ˈhɑːtbɜːn ænd ə ˈsaʊə teɪst ˈɑːftə ˈspaɪsi miːlz/',
+            Hint_VI: 'Xác nhận hay ợ nóng và chua miệng sau khi ăn đồ cay',
+            Image: '', Add_Tags: 'TRIEU_CHUNG_GERD', Require_Tags: '', Next_Sheet: '', Next_ID: 'GI_PLAN'
+          },
+          {
+            ID: 'GI_PLAN', Role: 'DOCTOR',
+            Text_EN: 'This sounds like acid reflux (GERD). I will prescribe medication to reduce stomach acid.',
+            IPA: '/ðɪs saʊndz laɪk ˈæsɪd ˈriːflʌks aɪ wɪl prɪˈskraɪb ˌmedɪˈkeɪʃn/',
+            Hint_VI: 'Chẩn đoán trào ngược dạ dày thực quản và kê thuốc giảm tiết axit',
+            Image: '', Add_Tags: 'CHAN_DOAN_GERD', Require_Tags: '', Next_Sheet: 'Kết thúc', Next_ID: 'START'
+          }
+        ],
+        'Giải thích CLS': [
+          {
+            ID: 'START', Role: 'DOCTOR',
+            Text_EN: 'Not at all. We just place small stickers on your chest for 5 minutes—completely painless.',
+            IPA: '/nɒt æt ɔːl wi dʒʌst pleɪs smɔːl ˈstɪkəz ɒn jɔː tʃest fɔː faɪv ˈmɪnɪts/',
+            Hint_VI: 'Giải thích ECG chỉ dán điện cực ngoài da 5 phút, hoàn toàn không đau',
+            Image: '', Add_Tags: '', Require_Tags: 'LAM_ECG', Next_Sheet: '', Next_ID: 'CONFIRM_TEST'
+          },
+          {
+            ID: 'START', Role: 'DOCTOR',
+            Text_EN: 'It is completely painless. We simply use a warm gel and ultrasound probe on your chest.',
+            IPA: '/ɪt ɪz kəmˈpliːtli ˈpeɪnləs wi ˈsɪmpli juːz ə wɔːm dʒel/',
+            Hint_VI: 'Giải thích siêu âm tim chỉ bôi gel và dùng đầu dò ngoài ngực, không đau',
+            Image: '', Add_Tags: '', Require_Tags: 'LAM_ECHO', Next_Sheet: '', Next_ID: 'CONFIRM_TEST'
+          },
+          {
+            ID: 'CONFIRM_TEST', Role: 'PATIENT',
+            Text_EN: 'Oh, that sounds easy. Okay, I am ready now!',
+            IPA: '/əʊ ðæt saʊndz ˈiːzi əʊˈkeɪ aɪ æm ˈredi naʊ/',
+            Hint_VI: 'Yên tâm và đồng ý thực hiện xét nghiệm (tự động quay lại trục chính)',
+            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: 'RETURN', Next_ID: ''
+          }
+        ],
+        'Kết thúc': [
+          {
+            ID: 'START', Role: 'PATIENT',
+            Text_EN: 'Thank you so much for explaining everything clearly, doctor.',
+            IPA: '/θæŋk ju səʊ mʌtʃ fɔːr ɪkˈspleɪnɪŋ ˈevriθɪŋ ˈklɪəli ˈdɒktə/',
+            Hint_VI: 'Cảm ơn bác sĩ đã giải thích rõ ràng',
+            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'GOODBYE'
+          },
+          {
+            ID: 'GOODBYE', Role: 'DOCTOR',
+            Text_EN: 'You are very welcome. Take your medication as directed and see you at your follow-up.',
+            IPA: '/ju ɑː ˈveri ˈwelkəm teɪk jɔː ˌmedɪˈkeɪʃn æz daɪˈrektɪd/',
+            Hint_VI: 'Dặn dò uống thuốc đúng hướng dẫn và hẹn tái khám (Kết thúc ca)',
+            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'END'
+          }
+        ],
+        'Common_Phrases': DEFAULT_COMMON_PHRASES
+      }
+    };
+
+    // =========================================================================
+    // 2. WEBRTC & VOICE FX (4-GRAIN HANN PITCH SHIFTER TỪ BẢN v3.4)
+    // =========================================================================
     const BASE_ICE_SERVERS = [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun.relay.metered.ca:80' },
-      {
-        urls: 'turn:standard.relay.metered.ca:80',
-        username: '2f50aac419dcb5e14ea6161f',
-        credential: 'pdjLgii+aijstW2B'
-      },
-      {
-        urls: 'turn:standard.relay.metered.ca:80?transport=tcp',
-        username: '2f50aac419dcb5e14ea6161f',
-        credential: 'pdjLgii+aijstW2B'
-      },
-      {
-        urls: 'turn:standard.relay.metered.ca:443',
-        username: '2f50aac419dcb5e14ea6161f',
-        credential: 'pdjLgii+aijstW2B'
-      },
-      {
-        urls: 'turns:standard.relay.metered.ca:443?transport=tcp',
-        username: '2f50aac419dcb5e14ea6161f',
-        credential: 'pdjLgii+aijstW2B'
-      }
+      { urls: 'turn:standard.relay.metered.ca:80', username: '2f50aac419dcb5e14ea6161f', credential: 'pdjLgii+aijstW2B' },
+      { urls: 'turn:standard.relay.metered.ca:80?transport=tcp', username: '2f50aac419dcb5e14ea6161f', credential: 'pdjLgii+aijstW2B' },
+      { urls: 'turn:standard.relay.metered.ca:443', username: '2f50aac419dcb5e14ea6161f', credential: 'pdjLgii+aijstW2B' },
+      { urls: 'turns:standard.relay.metered.ca:443?transport=tcp', username: '2f50aac419dcb5e14ea6161f', credential: 'pdjLgii+aijstW2B' }
     ];
 
     function getPeerConfig() {
@@ -299,217 +640,87 @@
       };
     }
 
-    const homeView = document.getElementById('homeView');
-    const roomView = document.getElementById('roomView');
-    const capBtns = document.getElementById('capBtns');
-    const customCodeInput = document.getElementById('customCodeInput');
-    const createBtn = document.getElementById('createBtn');
-    const joinBtn = document.getElementById('joinBtn');
-    const codeInput = document.getElementById('codeInput');
-    const codeBox = document.getElementById('codeBox');
-    const codeDisplay = document.getElementById('codeDisplay');
-    const copyHint = document.getElementById('copyHint');
-    const resumeAudioBtn = document.getElementById('resumeAudioBtn');
-    const statusEl = document.getElementById('status');
-    const fxGrid = document.getElementById('fxGrid');
-    const fxLabel = document.getElementById('fxLabel');
-    const pitchSliderWrap = document.getElementById('pitchSliderWrap');
-    const semitoneSlider = document.getElementById('semitoneSlider');
-    const semitoneVal = document.getElementById('semitoneVal');
-    const selfMonitorChk = document.getElementById('selfMonitorChk');
-    const memberCountEl = document.getElementById('memberCount');
-    const membersListEl = document.getElementById('membersList');
-    const micBar = document.getElementById('micBar');
-    const timerEl = document.getElementById('timer');
-    const muteBtn = document.getElementById('muteBtn');
-    const hangupBtn = document.getElementById('hangupBtn');
-    const audioSink = document.getElementById('audioSink');
-    const testTurnBtn = document.getElementById('testTurnBtn');
-    const turnTestRes = document.getElementById('turnTestRes');
-
-    let selectedMaxUsers = 2;
-    let maxRoomUsers = 2;
-    let isHost = false;
-    let currentRoomCode = '';
-    let hostPeerId = '';
-
-    let peer = null;
-    let rawMicStream = null;
-    let outgoingStream = null;
-    let voiceFX = null;
-    let currentFxMode = 'normal';
-    let currentSemitones = 0;
-
-    let isMuted = false;
-    let timerInterval = null;
-    let statsInterval = null;
-    let micAnimFrame = null;
-    let audioCtx = null;
-    let seconds = 0;
-
-    const remotePeers = new Map();
-    const hostGuestConns = new Map();
-    let guestHostConn = null;
-    let memberCounter = 1;
-
-    // =========================================================================
-    // BỘ DỊCH CAO ĐỘ 4-GRAIN HANN OVERLAP-ADD (KHÔNG RUNG KIM LOẠI)
-    // =========================================================================
     const WORKLET_CODE = `
       class GranularPitchProcessor extends AudioWorkletProcessor {
         constructor() {
           super();
-          this.bufSize = 8192;
-          this.mask = 8191;
+          this.bufSize = 8192; this.mask = 8191;
           this.buf = new Float32Array(this.bufSize);
-          this.writeIdx = 0;
-          this.phase = 0;
-          this.currentRatio = 1.0;
-          this.targetRatio = 1.0;
-          this.grainSize = Math.round(sampleRate * 0.048); // 48ms
+          this.writeIdx = 0; this.phase = 0;
+          this.currentRatio = 1.0; this.targetRatio = 1.0;
+          this.grainSize = Math.round(sampleRate * 0.048);
           this.minDelay = 64;
-
-          // Bảng cửa sổ Hann 1024 điểm cho 4 hạt chồng pha
           this.winTable = new Float32Array(1024);
-          for (let i = 0; i < 1024; i++) {
-            this.winTable[i] = 0.5 * (1.0 - Math.cos(2.0 * Math.PI * (i / 1024)));
-          }
-
-          this.port.onmessage = (e) => {
-            if (e.data && typeof e.data.ratio === 'number') {
-              this.targetRatio = e.data.ratio;
-            }
-          };
+          for (let i = 0; i < 1024; i++) this.winTable[i] = 0.5 * (1.0 - Math.cos(2.0 * Math.PI * (i / 1024)));
+          this.port.onmessage = (e) => { if (e.data && typeof e.data.ratio === 'number') this.targetRatio = e.data.ratio; };
         }
-
         process(inputs, outputs) {
-          const input = inputs[0];
-          const output = outputs[0];
+          const input = inputs[0], output = outputs[0];
           if (!input || !input[0] || !output || !output[0]) return true;
-
-          const inCh = input[0];
-          const outCh = output[0];
-          const len = inCh.length;
-          const buf = this.buf;
-          const mask = this.mask;
-          const G = this.grainSize;
-          const minD = this.minDelay;
-          const winTable = this.winTable;
-
-          for (let i = 0; i < len; i++) {
-            buf[this.writeIdx & mask] = inCh[i];
-
+          const inCh = input[0], outCh = output[0];
+          for (let i = 0; i < inCh.length; i++) {
+            this.buf[this.writeIdx & this.mask] = inCh[i];
             this.currentRatio += (this.targetRatio - this.currentRatio) * 0.0025;
             const r = this.currentRatio;
-
-            if (Math.abs(r - 1.0) < 0.001) {
-              outCh[i] = inCh[i];
-              this.writeIdx++;
-              continue;
-            }
-
-            const diff = Math.abs(1.0 - r);
-            this.phase += diff / G;
+            if (Math.abs(r - 1.0) < 0.001) { outCh[i] = inCh[i]; this.writeIdx++; continue; }
+            this.phase += Math.abs(1.0 - r) / this.grainSize;
             if (this.phase >= 1.0) this.phase -= 1.0;
-
             let sum = 0.0;
             for (let k = 0; k < 4; k++) {
               let p = this.phase + k * 0.25;
               if (p >= 1.0) p -= 1.0;
-
-              const delay = r > 1.0
-                ? (minD + (1.0 - p) * G)
-                : (minD + p * G);
-
+              const delay = r > 1.0 ? (this.minDelay + (1.0 - p) * this.grainSize) : (this.minDelay + p * this.grainSize);
               const readPos = this.writeIdx - delay;
-              const idx0 = Math.floor(readPos);
-              const frac = readPos - idx0;
-              const s0 = buf[idx0 & mask];
-              const s1 = buf[(idx0 + 1) & mask];
-              const sample = s0 + frac * (s1 - s0);
-
-              const w = winTable[(p * 1023) | 0];
-              sum += sample * w;
+              const idx0 = Math.floor(readPos), frac = readPos - idx0;
+              const s0 = this.buf[idx0 & this.mask], s1 = this.buf[(idx0 + 1) & this.mask];
+              sum += (s0 + frac * (s1 - s0)) * this.winTable[(p * 1023) | 0];
             }
-
-            // Tổng 4 cửa sổ Hann lệch pha 0.25 luôn bằng 2.0 -> chia 2 để giữ nguyên âm lượng
             outCh[i] = sum * 0.5;
             this.writeIdx++;
           }
-
           return true;
         }
       }
       registerProcessor('granular-pitch-processor', GranularPitchProcessor);
     `;
 
-    // Fallback cho trình duyệt cũ không hỗ trợ AudioWorklet Blob
     function createScriptFallbackNode(ctx) {
       const node = ctx.createScriptProcessor(1024, 1, 1);
-      const bufSize = 8192;
-      const mask = 8191;
-      const buf = new Float32Array(bufSize);
-      let writeIdx = 0;
-      let phase = 0;
-      let currentRatio = 1.0;
-      let targetRatio = 1.0;
-      const G = Math.round(ctx.sampleRate * 0.048);
-      const minD = 64;
+      const buf = new Float32Array(8192), mask = 8191;
+      let writeIdx = 0, phase = 0, currentRatio = 1.0, targetRatio = 1.0;
+      const G = Math.round(ctx.sampleRate * 0.048), minD = 64;
       const winTable = new Float32Array(1024);
-      for (let i = 0; i < 1024; i++) {
-        winTable[i] = 0.5 * (1.0 - Math.cos(2.0 * Math.PI * (i / 1024)));
-      }
-
+      for (let i = 0; i < 1024; i++) winTable[i] = 0.5 * (1.0 - Math.cos(2.0 * Math.PI * (i / 1024)));
       node.onaudioprocess = (e) => {
-        const inCh = e.inputBuffer.getChannelData(0);
-        const outCh = e.outputBuffer.getChannelData(0);
+        const inCh = e.inputBuffer.getChannelData(0), outCh = e.outputBuffer.getChannelData(0);
         for (let i = 0; i < inCh.length; i++) {
           buf[writeIdx & mask] = inCh[i];
           currentRatio += (targetRatio - currentRatio) * 0.0025;
           const r = currentRatio;
-          if (Math.abs(r - 1.0) < 0.001) {
-            outCh[i] = inCh[i];
-            writeIdx++;
-            continue;
-          }
+          if (Math.abs(r - 1.0) < 0.001) { outCh[i] = inCh[i]; writeIdx++; continue; }
           phase += Math.abs(1.0 - r) / G;
           if (phase >= 1.0) phase -= 1.0;
           let sum = 0.0;
           for (let k = 0; k < 4; k++) {
-            let p = phase + k * 0.25;
-            if (p >= 1.0) p -= 1.0;
+            let p = phase + k * 0.25; if (p >= 1.0) p -= 1.0;
             const delay = r > 1.0 ? (minD + (1.0 - p) * G) : (minD + p * G);
-            const readPos = writeIdx - delay;
-            const idx0 = Math.floor(readPos);
-            const frac = readPos - idx0;
-            const s0 = buf[idx0 & mask];
-            const s1 = buf[(idx0 + 1) & mask];
-            sum += (s0 + frac * (s1 - s0)) * winTable[(p * 1023) | 0];
+            const readPos = writeIdx - delay, idx0 = Math.floor(readPos), frac = readPos - idx0;
+            sum += (buf[idx0 & mask] + frac * (buf[(idx0 + 1) & mask] - buf[idx0 & mask])) * winTable[(p * 1023) | 0];
           }
-          outCh[i] = sum * 0.5;
-          writeIdx++;
+          outCh[i] = sum * 0.5; writeIdx++;
         }
       };
-
-      return {
-        node,
-        setRatio: (r) => { targetRatio = r; },
-        disconnect: () => { try { node.disconnect(); } catch {} }
-      };
+      return { node, setRatio: (r) => { targetRatio = r; }, disconnect: () => { try { node.disconnect(); } catch {} } };
     }
 
     async function createVoiceProcessor(ctx, stream) {
       const source = ctx.createMediaStreamSource(stream);
       const inputGain = ctx.createGain();
-      inputGain.gain.value = 1.0;
       source.connect(inputGain);
 
-      // 1. Nhánh giọng bình thường (Dry)
       const dryGain = ctx.createGain();
-      dryGain.gain.value = 1.0;
       inputGain.connect(dryGain);
 
-      // 2. Nhánh biến âm (Wet)
       let pitchEngine = null;
       try {
         const blob = new Blob([WORKLET_CODE], { type: 'application/javascript' });
@@ -526,59 +737,32 @@
         pitchEngine = createScriptFallbackNode(ctx);
       }
 
-      // Bộ lọc định hình âm sắc tự nhiên (chống giọng sóc chuột)
-      const hpFilter = ctx.createBiquadFilter();
-      hpFilter.type = 'highpass';
-      hpFilter.frequency.value = 70;
-      hpFilter.Q.value = 0.7;
-
-      const bodyWarmth = ctx.createBiquadFilter();
-      bodyWarmth.type = 'peaking';
-      bodyWarmth.frequency.value = 230;
-      bodyWarmth.Q.value = 1.1;
-      bodyWarmth.gain.value = 0;
-
-      const antiChipmunkDip = ctx.createBiquadFilter();
-      antiChipmunkDip.type = 'peaking';
-      antiChipmunkDip.frequency.value = 2600;
-      antiChipmunkDip.Q.value = 0.9;
-      antiChipmunkDip.gain.value = 0;
-
-      const airShelf = ctx.createBiquadFilter();
-      airShelf.type = 'highshelf';
-      airShelf.frequency.value = 6500;
-      airShelf.gain.value = 0;
-
-      const pitchWetGain = ctx.createGain();
-      pitchWetGain.gain.value = 0;
+      const hpFilter = ctx.createBiquadFilter(); hpFilter.type = 'highpass'; hpFilter.frequency.value = 70;
+      const bodyWarmth = ctx.createBiquadFilter(); bodyWarmth.type = 'peaking'; bodyWarmth.frequency.value = 230; bodyWarmth.Q.value = 1.1;
+      const antiChipmunk = ctx.createBiquadFilter(); antiChipmunk.type = 'peaking'; antiChipmunk.frequency.value = 2600; antiChipmunk.Q.value = 0.9;
+      const airShelf = ctx.createBiquadFilter(); airShelf.type = 'highshelf'; airShelf.frequency.value = 6500;
+      const pitchWetGain = ctx.createGain(); pitchWetGain.gain.value = 0;
 
       inputGain.connect(pitchEngine.node);
       pitchEngine.node.connect(hpFilter);
       hpFilter.connect(bodyWarmth);
-      bodyWarmth.connect(antiChipmunkDip);
-      antiChipmunkDip.connect(airShelf);
+      bodyWarmth.connect(antiChipmunk);
+      antiChipmunk.connect(airShelf);
       airShelf.connect(pitchWetGain);
 
-      // Tổng hợp & nén nhẹ
       const sumNode = ctx.createGain();
-      sumNode.gain.value = 1.0;
       dryGain.connect(sumNode);
       pitchWetGain.connect(sumNode);
 
       const compressor = ctx.createDynamicsCompressor();
-      compressor.threshold.value = -18;
-      compressor.knee.value = 14;
-      compressor.ratio.value = 3.2;
-      compressor.attack.value = 0.008;
-      compressor.release.value = 0.16;
+      compressor.threshold.value = -18; compressor.knee.value = 14; compressor.ratio.value = 3.2;
       sumNode.connect(compressor);
 
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
+      const analyser = ctx.createAnalyser(); analyser.fftSize = 256;
       compressor.connect(analyser);
 
       const monitorGain = ctx.createGain();
-      monitorGain.gain.value = selfMonitorChk.checked ? 0.85 : 0;
+      monitorGain.gain.value = document.getElementById('selfMonitorChk').checked ? 0.85 : 0;
       compressor.connect(monitorGain);
       monitorGain.connect(ctx.destination);
 
@@ -586,185 +770,760 @@
       compressor.connect(dest);
 
       function applySemitones(semi) {
-        currentSemitones = semi;
-        const ratio = Math.pow(2, semi / 12);
-        pitchEngine.setRatio(ratio);
+        pitchEngine.setRatio(Math.pow(2, semi / 12));
       }
 
-      function setMode(mode, customSemi = null) {
+      function setMode(mode) {
         currentFxMode = mode;
         const now = ctx.currentTime;
         const isNormal = mode === 'normal';
-
         dryGain.gain.setTargetAtTime(isNormal ? 1.0 : 0, now, 0.02);
         pitchWetGain.gain.setTargetAtTime(isNormal ? 0 : 1.08, now, 0.02);
+        const sliderWrap = document.getElementById('pitchSliderWrap');
+        const slider = document.getElementById('semitoneSlider');
+        const valEl = document.getElementById('semitoneVal');
 
-        if (isNormal) {
-          pitchSliderWrap.classList.add('hidden');
-          applySemitones(0);
-          return;
-        }
-
-        pitchSliderWrap.classList.remove('hidden');
+        if (isNormal) { sliderWrap.classList.add('hidden'); applySemitones(0); return; }
+        sliderWrap.classList.remove('hidden');
 
         if (mode === 'female') {
-          const semi = customSemi !== null ? customSemi : 4.6;
-          semitoneSlider.min = '2.0';
-          semitoneSlider.max = '7.5';
-          semitoneSlider.value = String(semi);
-          semitoneVal.textContent = '+' + semi.toFixed(1);
-          applySemitones(semi);
-
-          // Cắt nhẹ trầm ngực, bù ấm ở 230Hz và giảm dải chói 2.6kHz để hết giọng sóc chuột
+          slider.min = '2.0'; slider.max = '7.5'; slider.value = '4.6'; valEl.textContent = '+4.6';
+          applySemitones(4.6);
           hpFilter.frequency.setTargetAtTime(145, now, 0.02);
-          bodyWarmth.frequency.setTargetAtTime(230, now, 0.02);
-          bodyWarmth.gain.setTargetAtTime(3.8, now, 0.02);
-          antiChipmunkDip.frequency.setTargetAtTime(2600, now, 0.02);
-          antiChipmunkDip.gain.setTargetAtTime(-2.8, now, 0.02);
-          airShelf.frequency.setTargetAtTime(6500, now, 0.02);
+          bodyWarmth.frequency.setTargetAtTime(230, now, 0.02); bodyWarmth.gain.setTargetAtTime(3.8, now, 0.02);
+          antiChipmunk.frequency.setTargetAtTime(2600, now, 0.02); antiChipmunk.gain.setTargetAtTime(-2.8, now, 0.02);
           airShelf.gain.setTargetAtTime(2.0, now, 0.02);
         } else if (mode === 'male') {
-          const semi = customSemi !== null ? customSemi : -3.8;
-          semitoneSlider.min = '-6.5';
-          semitoneSlider.max = '-1.5';
-          semitoneSlider.value = String(semi);
-          semitoneVal.textContent = semi.toFixed(1);
-          applySemitones(semi);
-
+          slider.min = '-6.5'; slider.max = '-1.5'; slider.value = '-3.8'; valEl.textContent = '-3.8';
+          applySemitones(-3.8);
           hpFilter.frequency.setTargetAtTime(65, now, 0.02);
-          bodyWarmth.frequency.setTargetAtTime(135, now, 0.02);
-          bodyWarmth.gain.setTargetAtTime(4.5, now, 0.02);
-          antiChipmunkDip.frequency.setTargetAtTime(2200, now, 0.02);
-          antiChipmunkDip.gain.setTargetAtTime(1.5, now, 0.02);
-          airShelf.frequency.setTargetAtTime(5500, now, 0.02);
+          bodyWarmth.frequency.setTargetAtTime(135, now, 0.02); bodyWarmth.gain.setTargetAtTime(4.5, now, 0.02);
+          antiChipmunk.frequency.setTargetAtTime(2200, now, 0.02); antiChipmunk.gain.setTargetAtTime(1.5, now, 0.02);
           airShelf.gain.setTargetAtTime(-1.5, now, 0.02);
         } else if (mode === 'high') {
-          const semi = customSemi !== null ? customSemi : 6.4;
-          semitoneSlider.min = '4.5';
-          semitoneSlider.max = '8.5';
-          semitoneSlider.value = String(semi);
-          semitoneVal.textContent = '+' + semi.toFixed(1);
-          applySemitones(semi);
-
+          slider.min = '4.5'; slider.max = '8.5'; slider.value = '6.4'; valEl.textContent = '+6.4';
+          applySemitones(6.4);
           hpFilter.frequency.setTargetAtTime(190, now, 0.02);
-          bodyWarmth.frequency.setTargetAtTime(270, now, 0.02);
-          bodyWarmth.gain.setTargetAtTime(2.0, now, 0.02);
-          antiChipmunkDip.frequency.setTargetAtTime(2800, now, 0.02);
-          antiChipmunkDip.gain.setTargetAtTime(-1.5, now, 0.02);
-          airShelf.frequency.setTargetAtTime(6500, now, 0.02);
+          bodyWarmth.frequency.setTargetAtTime(270, now, 0.02); bodyWarmth.gain.setTargetAtTime(2.0, now, 0.02);
+          antiChipmunk.frequency.setTargetAtTime(2800, now, 0.02); antiChipmunk.gain.setTargetAtTime(-1.5, now, 0.02);
           airShelf.gain.setTargetAtTime(2.5, now, 0.02);
         }
       }
 
-      function setMuted(muted) {
-        inputGain.gain.setTargetAtTime(muted ? 0 : 1.0, ctx.currentTime, 0.01);
-      }
-
-      function setSelfMonitor(enabled) {
-        monitorGain.gain.setTargetAtTime(enabled ? 0.85 : 0, ctx.currentTime, 0.02);
-      }
-
-      function destroy() {
-        pitchEngine.disconnect();
-        try { source.disconnect(); } catch {}
-        try { dest.disconnect(); } catch {}
-      }
-
       setMode(currentFxMode);
-
       return {
         stream: dest.stream,
         analyser,
         setMode,
         applySemitones,
-        setMuted,
-        setSelfMonitor,
-        destroy
+        setMuted: (m) => inputGain.gain.setTargetAtTime(m ? 0 : 1.0, ctx.currentTime, 0.01),
+        setSelfMonitor: (en) => monitorGain.gain.setTargetAtTime(en ? 0.85 : 0, ctx.currentTime, 0.02),
+        destroy: () => { pitchEngine.disconnect(); try { source.disconnect(); dest.disconnect(); } catch {} }
       };
     }
 
-    const FX_NAMES = {
-      normal: 'Bình thường',
-      female: 'Giọng Nữ',
-      male: 'Giọng Nam',
-      high: 'Cao (Trẻ con)'
-    };
+    // =========================================================================
+    // 3. QUẢN LÝ TRẠNG THÁI KỊCH BẢN & ĐỒNG BỘ P2P
+    // =========================================================================
+    let isHost = false;
+    let hostRoleChoice = 'ROLE_A'; // ROLE_A = vai đầu tiên tìm thấy, ROLE_B = vai thứ 2
+    let currentRoomCode = '';
+    let hostPeerId = '';
+    let peer = null;
+    let dataConn = null;
+    let mediaCall = null;
+    let rawMicStream = null;
+    let outgoingStream = null;
+    let voiceFX = null;
+    let currentFxMode = 'normal';
+    let audioCtx = null;
+    let remoteDummyAudio = null;
+    let remoteSourceNode = null;
+    let isMuted = false;
+    let timerInterval = null;
+    let micAnimFrame = null;
+    let seconds = 0;
 
-    fxGrid.addEventListener('click', (e) => {
-      const btn = e.target.closest('.fx-btn');
-      if (!btn) return;
-      const mode = btn.dataset.fx;
-      fxGrid.querySelectorAll('.fx-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      fxLabel.textContent = FX_NAMES[mode] || mode;
-      if (voiceFX) voiceFX.setMode(mode);
-      else currentFxMode = mode;
-      renderMembers();
-    });
+    // Dữ liệu kịch bản & trạng thái cuộc khám
+    let activeScenario = null; // { fileName, firstSheet, sheets, roles: [roleA, roleB] }
+    let gameState = null;      // Nguồn sự thật duy nhất (Single Source of Truth)
+    let stateSnapshots = [];   // Lịch sử snapshot để UNDO 1 bước chính xác tuyệt đối
 
-    semitoneSlider.addEventListener('input', () => {
-      const val = parseFloat(semitoneSlider.value);
-      semitoneVal.textContent = (val > 0 ? '+' : '') + val.toFixed(1);
-      if (voiceFX) voiceFX.applySemitones(val);
-    });
+    // Chế độ học tập cục bộ trên từng máy
+    let challengeMode = false; // Ẩn EN trên thẻ lựa chọn
+    let listenMode = false;    // Làm mờ câu đối phương vừa nói
 
-    selfMonitorChk.addEventListener('change', () => {
-      if (voiceFX) voiceFX.setSelfMonitor(selfMonitorChk.checked);
-    });
+    // =========================================================================
+    // 4. TẢI DANH SÁCH & NỘI DUNG TỪ GOOGLE DRIVE APPS SCRIPT
+    // =========================================================================
+    const scenarioSelect = document.getElementById('scenarioSelect');
+    const driveStatus = document.getElementById('driveStatus');
 
-    capBtns.addEventListener('click', (e) => {
-      const btn = e.target.closest('.cap-btn');
-      if (!btn) return;
-      selectedMaxUsers = Number(btn.dataset.cap) || 2;
-      capBtns.querySelectorAll('.cap-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    });
-
-    function sanitizeCode(raw) {
-      return raw.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
-    }
-
-    testTurnBtn.addEventListener('click', async () => {
-      testTurnBtn.disabled = true;
-      turnTestRes.className = 'turn-test-res';
-      turnTestRes.textContent = 'Đang kiểm tra kết nối tới TURN...';
-
-      const pc = new RTCPeerConnection({
-        iceServers: BASE_ICE_SERVERS,
-        iceTransportPolicy: 'relay'
-      });
-      pc.createDataChannel('test');
-
-      let foundRelay = false;
-      pc.onicecandidate = (e) => {
-        if (e.candidate && e.candidate.candidate && e.candidate.candidate.includes(' typ relay ')) {
-          foundRelay = true;
-          const ip = e.candidate.address || e.candidate.candidate.split(' ')[4] || '';
-          turnTestRes.className = 'turn-test-res ok';
-          turnTestRes.textContent = `TURN hoạt động tốt! (Cổng trung gian: ${ip})`;
-          pc.close();
-          testTurnBtn.disabled = false;
-        }
-      };
-
+    async function fetchDriveScenarios() {
+      driveStatus.textContent = 'Đang quét thư mục Google Drive...';
       try {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=list`);
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error || 'Lỗi API');
+
+        scenarioSelect.innerHTML = '';
+        (json.scenarios || []).forEach((item) => {
+          const opt = document.createElement('option');
+          opt.value = item.id;
+          opt.textContent = `${item.name} (Google Sheets)`;
+          scenarioSelect.appendChild(opt);
+        });
+
+        // Luôn giữ kịch bản Demo ở cuối để dự phòng
+        const demoOpt = document.createElement('option');
+        demoOpt.value = 'BUILTIN_HOSPITAL';
+        demoOpt.textContent = 'Hospital (Mẫu tích hợp sẵn - Khám Đau Ngực)';
+        scenarioSelect.appendChild(demoOpt);
+
+        if ((json.scenarios || []).length > 0) {
+          driveStatus.textContent = `Đã tìm thấy ${json.scenarios.length} kịch bản trên Drive của bạn.`;
+        } else {
+          driveStatus.textContent = 'Thư mục Drive chưa có file Sheet nào. Dùng tạm mẫu tích hợp sẵn bên trên.';
+        }
       } catch (err) {
-        turnTestRes.className = 'turn-test-res err';
-        turnTestRes.textContent = 'Lỗi khởi tạo WebRTC: ' + err.message;
-        testTurnBtn.disabled = false;
+        driveStatus.textContent = 'Không kết nối được Drive (dùng mẫu tích hợp sẵn).';
+      }
+    }
+
+    document.getElementById('refreshDriveBtn').addEventListener('click', fetchDriveScenarios);
+    fetchDriveScenarios();
+
+    async function loadSelectedScenarioData(val) {
+      if (val === 'BUILTIN_HOSPITAL') {
+        return normalizeScenario(BUILTIN_HOSPITAL_SCENARIO);
+      }
+      const cacheKey = 'roleplay_cache_' + val;
+      try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=load&fileId=${encodeURIComponent(val)}`);
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error || 'Không đọc được file Sheet');
+        localStorage.setItem(cacheKey, JSON.stringify(json));
+        return normalizeScenario(json);
+      } catch (err) {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          alert('Mạng yếu, đang nạp bản kịch bản đã lưu tạm trong máy.');
+          return normalizeScenario(JSON.parse(cached));
+        }
+        throw err;
+      }
+    }
+
+    function normalizeScenario(raw) {
+      const rolesFound = [];
+      Object.entries(raw.sheets || {}).forEach(([sheetName, rows]) => {
+        if (sheetName.toLowerCase() === 'common_phrases') return;
+        (rows || []).forEach((r) => {
+          const role = (r.Role || '').trim().toUpperCase();
+          if (role && role !== 'ANY' && !rolesFound.includes(role)) {
+            rolesFound.push(role);
+          }
+        });
+      });
+      if (rolesFound.length === 0) rolesFound.push('DOCTOR', 'PATIENT');
+      if (rolesFound.length === 1) rolesFound.push(rolesFound[0] === 'DOCTOR' ? 'PATIENT' : 'DOCTOR');
+
+      return {
+        fileName: raw.fileName || 'Kịch bản',
+        firstSheet: raw.firstSheet || Object.keys(raw.sheets)[0] || '',
+        sheets: raw.sheets || {},
+        roles: [rolesFound[0], rolesFound[1]]
+      };
+    }
+
+    // =========================================================================
+    // 5. BỘ MÁY XỬ LÝ CÂY KỊCH BẢN (STACK + CONTEXT TAGS + FILTER)
+    // =========================================================================
+    function createInitialGameState(scen, hostRoleKey) {
+      const roleA = scen.roles[0];
+      const roleB = scen.roles[1];
+      const hostRole = hostRoleKey === 'ROLE_B' ? roleB : roleA;
+      const guestRole = hostRole === roleA ? roleB : roleA;
+
+      return {
+        stepIndex: 1,
+        hostRole,
+        guestRole,
+        currentSheet: scen.firstSheet,
+        currentID: 'START',
+        navStack: [],     // Lưu { sheet, id } trước khi rẽ ngang giải thích
+        tags: [],         // Túi nhãn ngữ cảnh (Add_Tags)
+        history: [],      // Lịch sử hội thoại đã chọn
+        lastTurn: null,   // { role, en, ipa, vi }
+        systemNotice: '', // Thông báo phụ (VD: đối phương xin nghe lại / đính chính)
+        status: 'ACTIVE', // ACTIVE | ENDED | EARLY_ENDED
+        endReason: ''
+      };
+    }
+
+    function parseTagList(str) {
+      if (!str) return [];
+      return String(str).split(/[,;|]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+    }
+
+    function matchRequireTags(reqStr, activeTags) {
+      const reqs = parseTagList(reqStr);
+      if (reqs.length === 0) return true;
+      return reqs.every((req) => {
+        if (req.startsWith('!')) {
+          const forbidden = req.slice(1);
+          return !activeTags.includes(forbidden);
+        }
+        return activeTags.includes(req);
+      });
+    }
+
+    function getAvailableChoices(scen, state) {
+      if (!scen || !state || state.status !== 'ACTIVE') return [];
+      const rows = scen.sheets[state.currentSheet] || [];
+      const targetId = String(state.currentID || '').trim().toUpperCase();
+
+      // Lọc các dòng khớp ID hiện tại và thỏa điều kiện Require_Tags
+      let matched = rows.filter((r) => {
+        const rowId = String(r.ID || '').trim().toUpperCase();
+        return rowId === targetId && matchRequireTags(r.Require_Tags, state.tags);
+      });
+
+      // Nếu lọc Require_Tags quá chặt khiến rỗng nhưng ID vẫn tồn tại -> nới điều kiện để không kẹt
+      if (matched.length === 0) {
+        matched = rows.filter(r => String(r.ID || '').trim().toUpperCase() === targetId);
+      }
+      return matched;
+    }
+
+    function convertDriveImageUrl(url) {
+      if (!url) return '';
+      const clean = url.trim();
+      const match = clean.match(/\/d\/([a-zA-Z0-9_-]+)/) || clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (match && clean.includes('drive.google.com')) {
+        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      }
+      return clean;
+    }
+
+    function applyChoiceTransition(choiceRow) {
+      if (!isHost || !gameState || !activeScenario) return;
+
+      // Lưu snapshot trước khi bước tiếp để hỗ trợ UNDO 1 bước
+      stateSnapshots.push(JSON.parse(JSON.stringify(gameState)));
+      if (stateSnapshots.length > 10) stateSnapshots.shift();
+
+      const speakerRole = (choiceRow.Role && choiceRow.Role.toUpperCase() !== 'ANY')
+        ? choiceRow.Role.toUpperCase()
+        : getCurrentTurnRole();
+
+      // 1. Cộng thêm nhãn ngữ cảnh mới
+      const newTags = parseTagList(choiceRow.Add_Tags);
+      newTags.forEach((t) => {
+        if (!gameState.tags.includes(t)) gameState.tags.push(t);
+      });
+
+      // 2. Ghi lịch sử câu nói
+      const turnRecord = {
+        role: speakerRole,
+        en: choiceRow.Text_EN || '',
+        ipa: choiceRow.IPA || '',
+        vi: choiceRow.Hint_VI || ''
+      };
+      gameState.history.push(turnRecord);
+      gameState.lastTurn = turnRecord;
+      gameState.systemNotice = '';
+      gameState.stepIndex++;
+
+      // 3. Tính tọa độ tiếp theo (Hỗ trợ nhảy tab & lệnh RETURN qua Stack)
+      const rawNextSheet = String(choiceRow.Next_Sheet || '').trim();
+      const rawNextId = String(choiceRow.Next_ID || '').trim();
+
+      if (rawNextId.toUpperCase() === 'END' || rawNextSheet.toUpperCase() === 'END') {
+        gameState.status = 'ENDED';
+        gameState.endReason = 'Hoàn thành trọn vẹn tình huống giao tiếp.';
+      } else if (rawNextSheet.toUpperCase() === 'RETURN') {
+        const backPos = gameState.navStack.pop();
+        if (backPos) {
+          gameState.currentSheet = backPos.sheet;
+          gameState.currentID = backPos.id;
+        } else {
+          gameState.status = 'ENDED';
+          gameState.endReason = 'Kết thúc nhánh hội thoại.';
+        }
+      } else if (rawNextSheet && rawNextSheet !== gameState.currentSheet) {
+        // Nếu nhảy sang tab phụ (như Giải thích CLS), đẩy tọa độ hiện tại vào Stack để lát RETURN
+        // Xác định nút tiếp theo trên tab cũ nếu quay về (mặc định tìm dòng kế tiếp hoặc giữ ID hiện tại)
+        const returnId = findFallbackReturnId(activeScenario, gameState.currentSheet, gameState.currentID);
+        gameState.navStack.push({ sheet: gameState.currentSheet, id: returnId });
+
+        gameState.currentSheet = rawNextSheet;
+        gameState.currentID = rawNextId || 'START';
+      } else {
+        gameState.currentID = rawNextId || 'END';
+        if (gameState.currentID.toUpperCase() === 'END') {
+          gameState.status = 'ENDED';
+          gameState.endReason = 'Hoàn thành tình huống.';
+        }
+      }
+
+      broadcastGameState();
+      renderStage();
+    }
+
+    // Tìm nút hợp lý để quay về khi kết thúc nhánh giải thích phụ
+    function findFallbackReturnId(scen, sheetName, currentId) {
+      const rows = scen.sheets[sheetName] || [];
+      const curUpper = String(currentId || '').toUpperCase();
+      // Tìm xem ở nút hiện tại có nhánh nào đi tiếp trong cùng sheet không để làm điểm quay về
+      const sameSheetBranch = rows.find(r =>
+        String(r.ID || '').toUpperCase() === curUpper &&
+        (!r.Next_Sheet || r.Next_Sheet === sheetName) &&
+        r.Next_ID
+      );
+      return sameSheetBranch ? sameSheetBranch.Next_ID : currentId;
+    }
+
+    function getMyRole() {
+      if (!gameState) return '';
+      return isHost ? gameState.hostRole : gameState.guestRole;
+    }
+
+    function getCurrentTurnRole() {
+      const choices = getAvailableChoices(activeScenario, gameState);
+      if (choices.length === 0) return getMyRole();
+      const firstRole = String(choices[0].Role || '').trim().toUpperCase();
+      if (!firstRole || firstRole === 'ANY') return getMyRole();
+      return firstRole;
+    }
+
+    // =========================================================================
+    // 6. XỬ LÝ 3 NÚT GIAO TIẾP CỨU NGUY (UNDO / REPEAT / EARLY_END)
+    // =========================================================================
+    function getCommonPhrasesForAction(action) {
+      const sheetPhrases = (activeScenario && activeScenario.sheets && activeScenario.sheets['Common_Phrases'])
+        ? activeScenario.sheets['Common_Phrases']
+        : DEFAULT_COMMON_PHRASES;
+      const myRole = getMyRole();
+
+      return sheetPhrases.filter((p) => {
+        const act = String(p.Action || '').trim().toUpperCase();
+        const role = String(p.Role || 'ANY').trim().toUpperCase();
+        return act === action && (role === 'ANY' || role === myRole);
+      });
+    }
+
+    function openPhrasePicker(action, titleText) {
+      const list = getCommonPhrasesForAction(action);
+      const picker = document.getElementById('phrasePicker');
+      const titleEl = document.getElementById('phrasePickerTitle');
+      const optsEl = document.getElementById('phraseOptions');
+
+      titleEl.textContent = titleText;
+      optsEl.innerHTML = '';
+
+      list.forEach((item) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'phrase-opt';
+        btn.innerHTML = `<strong>${escapeHtml(item.Text_EN)}</strong><small>${escapeHtml(item.IPA || '')}</small>`;
+        btn.addEventListener('click', () => {
+          picker.classList.add('hidden');
+          triggerRemedyAction(action, item);
+        });
+        optsEl.appendChild(btn);
+      });
+
+      picker.classList.remove('hidden');
+    }
+
+    function triggerRemedyAction(action, phraseObj) {
+      const payload = {
+        type: 'remedy',
+        action,
+        byRole: getMyRole(),
+        phrase: phraseObj
+      };
+
+      if (isHost) {
+        processRemedyOnHost(payload);
+      } else if (dataConn && dataConn.open) {
+        dataConn.send(payload);
+      }
+    }
+
+    function processRemedyOnHost(payload) {
+      if (!isHost || !gameState) return;
+      const { action, byRole, phrase } = payload;
+
+      if (action === 'UNDO') {
+        if (stateSnapshots.length > 0) {
+          const prev = stateSnapshots.pop();
+          prev.stepIndex = gameState.stepIndex + 1;
+          prev.systemNotice = `${byRole} vừa đính chính: "${phrase.Text_EN}" — Mời chọn lại.`;
+          gameState = prev;
+        }
+      } else if (action === 'REPEAT') {
+        gameState.stepIndex++;
+        gameState.systemNotice = `${byRole} xin nghe lại: "${phrase.Text_EN}"`;
+      } else if (action === 'EARLY_END') {
+        gameState.stepIndex++;
+        gameState.status = 'EARLY_ENDED';
+        gameState.endReason = `${byRole} báo bận và xin phép dừng sớm: "${phrase.Text_EN}"`;
+        gameState.history.push({
+          role: byRole,
+          en: phrase.Text_EN,
+          ipa: phrase.IPA || '',
+          vi: '(Xin phép dừng sớm vì có việc bận)'
+        });
+      }
+
+      broadcastGameState();
+      renderStage();
+    }
+
+    document.getElementById('btnUndo').addEventListener('click', () => {
+      openPhrasePicker('UNDO', 'Đọc câu xin đính chính rồi bấm chọn:');
+    });
+    document.getElementById('btnRepeat').addEventListener('click', () => {
+      openPhrasePicker('REPEAT', 'Đọc câu xin nghe lại rồi bấm chọn:');
+    });
+    document.getElementById('btnEarlyEnd').addEventListener('click', () => {
+      openPhrasePicker('EARLY_END', 'Đọc câu xin phép dừng sớm rồi bấm chọn:');
+    });
+    document.getElementById('closePhrasePicker').addEventListener('click', () => {
+      document.getElementById('phrasePicker').classList.add('hidden');
+    });
+
+    // =========================================================================
+    // 7. HIỂN THỊ GIAO DIỆN KỊCH BẢN (RENDER STAGE & DEBRIEF)
+    // =========================================================================
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderStage() {
+      if (!gameState || !activeScenario) return;
+
+      const myRole = getMyRole();
+      document.getElementById('myRoleBadge').textContent = `Vai của bạn: ${myRole}`;
+
+      // Nếu đã kết thúc hoặc dừng sớm -> hiện bảng tổng kết
+      if (gameState.status === 'ENDED' || gameState.status === 'EARLY_ENDED') {
+        document.getElementById('scenarioStage').classList.add('hidden');
+        document.getElementById('debriefStage').classList.remove('hidden');
+        document.getElementById('debriefHeading').textContent =
+          gameState.status === 'EARLY_ENDED' ? 'Đã tạm dừng tình huống' : 'Hoàn thành buổi nhập vai!';
+        document.getElementById('debriefSummary').textContent = gameState.endReason;
+
+        const histEl = document.getElementById('historyList');
+        histEl.innerHTML = '';
+        gameState.history.forEach((h, idx) => {
+          const div = document.createElement('div');
+          div.className = 'hist-item';
+          div.innerHTML = `
+            <div class="h-role">#${idx + 1} • ${escapeHtml(h.role)}</div>
+            <div class="h-en">${escapeHtml(h.en)}</div>
+            ${h.ipa ? `<div class="h-ipa">${escapeHtml(h.ipa)}</div>` : ''}
+          `;
+          histEl.appendChild(div);
+        });
+
+        // Chỉ Host mới điều khiển nút đổi vai / chơi lại đồng bộ cho cả 2
+        document.getElementById('swapRolesBtn').classList.toggle('hidden', !isHost);
+        document.getElementById('restartSameBtn').classList.toggle('hidden', !isHost);
         return;
       }
 
-      setTimeout(() => {
-        if (!foundRelay) {
-          turnTestRes.className = 'turn-test-res err';
-          turnTestRes.textContent = 'Không lấy được cổng TURN (mạng hiện tại có thể đang chặn cổng TURN).';
-          try { pc.close(); } catch {}
-          testTurnBtn.disabled = false;
+      document.getElementById('scenarioStage').classList.remove('hidden');
+      document.getElementById('debriefStage').classList.add('hidden');
+
+      // Breadcrumb & Context Tags
+      document.getElementById('crumbSheet').textContent = `${activeScenario.fileName} › ${gameState.currentSheet}`;
+      document.getElementById('crumbStep').textContent = `Lượt #${gameState.stepIndex}`;
+
+      const tagsBar = document.getElementById('ctxTagsBar');
+      if (gameState.tags.length > 0) {
+        tagsBar.classList.remove('hidden');
+        tagsBar.innerHTML = gameState.tags.map(t => `<span class="ctx-tag">#${escapeHtml(t)}</span>`).join('');
+      } else {
+        tagsBar.classList.add('hidden');
+      }
+
+      // Thông báo phụ (Undo / Repeat)
+      const noticeEl = document.getElementById('systemNotice');
+      if (gameState.systemNotice) {
+        noticeEl.textContent = gameState.systemNotice;
+        noticeEl.classList.remove('hidden');
+      } else {
+        noticeEl.classList.add('hidden');
+      }
+
+      // Nút Undo chỉ bật khi có snapshot và lượt vừa rồi là của chính mình (hoặc Host)
+      const btnUndo = document.getElementById('btnUndo');
+      const canUndo = gameState.lastTurn && gameState.lastTurn.role === myRole;
+      btnUndo.disabled = !canUndo;
+
+      // Bong bóng câu đối phương vừa nói
+      const bubbleEl = document.getElementById('partnerBubble');
+      if (gameState.lastTurn && gameState.lastTurn.role !== myRole) {
+        bubbleEl.classList.remove('hidden');
+        document.getElementById('partnerWho').textContent = `${gameState.lastTurn.role} vừa nói:`;
+        document.getElementById('partnerEn').textContent = gameState.lastTurn.en;
+        document.getElementById('partnerIpa').textContent = gameState.lastTurn.ipa;
+        document.getElementById('partnerVi').textContent = gameState.lastTurn.vi;
+
+        const wrap = document.getElementById('partnerTextWrap');
+        const hint = document.getElementById('blurHint');
+        if (listenMode) {
+          wrap.classList.add('blurred-text');
+          wrap.classList.remove('revealed');
+          hint.classList.remove('hidden');
+        } else {
+          wrap.classList.remove('blurred-text', 'revealed');
+          hint.classList.add('hidden');
         }
-      }, 6000);
+      } else {
+        bubbleEl.classList.add('hidden');
+      }
+
+      // Danh sách lựa chọn của lượt hiện tại
+      const turnArea = document.getElementById('turnArea');
+      turnArea.innerHTML = '';
+
+      const choices = getAvailableChoices(activeScenario, gameState);
+
+      // Chống đường cụt (Dead-end fallback) nếu nhập sai ID trong Sheet
+      if (choices.length === 0) {
+        const fb = document.createElement('div');
+        fb.className = 'wait-box';
+        fb.innerHTML = `
+          <div style="margin-bottom:8px;">Không tìm thấy nhánh tiếp theo (ID: <strong>${escapeHtml(gameState.currentID)}</strong> tại tab <strong>${escapeHtml(gameState.currentSheet)}</strong>).</div>
+          <button type="button" id="deadEndRecoverBtn" class="btn btn-primary" style="width:auto; padding:8px 16px;">Quay lại trục chính / Kết thúc</button>
+        `;
+        turnArea.appendChild(fb);
+        document.getElementById('deadEndRecoverBtn').addEventListener('click', () => {
+          const recoveryChoice = {
+            Role: myRole,
+            Text_EN: 'Let us wrap up our session here.',
+            IPA: '',
+            Hint_VI: '(Tự động thoát nhánh cụt)',
+            Next_Sheet: gameState.navStack.length > 0 ? 'RETURN' : 'END',
+            Next_ID: 'END'
+          };
+          if (isHost) applyChoiceTransition(recoveryChoice);
+          else if (dataConn && dataConn.open) dataConn.send({ type: 'select-choice', choice: recoveryChoice });
+        });
+        return;
+      }
+
+      const turnRole = String(choices[0].Role || '').trim().toUpperCase();
+      const isMyTurn = (turnRole === 'ANY' || turnRole === myRole);
+
+      if (!isMyTurn) {
+        const waitDiv = document.createElement('div');
+        waitDiv.className = 'wait-box';
+        waitDiv.innerHTML = `Đang tới lượt của <strong>${escapeHtml(turnRole)}</strong> nói...<br><small style="color:#64748b;">Hãy lắng nghe qua micro, màn hình sẽ tự lật khi đối phương chọn xong.</small>`;
+        turnArea.appendChild(waitDiv);
+        return;
+      }
+
+      const promptHead = document.createElement('div');
+      promptHead.className = 'turn-prompt';
+      promptHead.innerHTML = `<span>Lượt của bạn (${escapeHtml(myRole)}) — Hãy nói rồi chọn thẻ:</span>`;
+      turnArea.appendChild(promptHead);
+
+      const listDiv = document.createElement('div');
+      listDiv.className = 'choices-list';
+
+      choices.forEach((choice) => {
+        const card = document.createElement('div');
+        card.className = 'choice-card';
+
+        const imgUrl = convertDriveImageUrl(choice.Image);
+        if (imgUrl) {
+          const img = document.createElement('img');
+          img.className = 'choice-img';
+          img.src = imgUrl;
+          img.alt = 'Tình huống minh họa';
+          card.appendChild(img);
+        }
+
+        const enDiv = document.createElement('div');
+        enDiv.className = 'choice-en';
+        enDiv.textContent = choice.Text_EN;
+
+        const ipaDiv = document.createElement('div');
+        ipaDiv.className = 'choice-ipa';
+        ipaDiv.textContent = choice.IPA || '';
+
+        const viDiv = document.createElement('div');
+        viDiv.className = 'choice-vi';
+        viDiv.textContent = choice.Hint_VI ? `Gợi ý: ${choice.Hint_VI}` : '';
+
+        if (challengeMode && choice.Hint_VI) {
+          enDiv.classList.add('hidden');
+          ipaDiv.classList.add('hidden');
+        }
+
+        card.append(enDiv, ipaDiv, viDiv);
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'choice-actions';
+
+        if (challengeMode && choice.Hint_VI) {
+          const peekBtn = document.createElement('button');
+          peekBtn.type = 'button';
+          peekBtn.className = 'btn-peek';
+          peekBtn.textContent = '👁 Xem mẫu EN';
+          peekBtn.addEventListener('click', () => {
+            enDiv.classList.toggle('hidden');
+            ipaDiv.classList.toggle('hidden');
+          });
+          actionsDiv.appendChild(peekBtn);
+        }
+
+        const selectBtn = document.createElement('button');
+        selectBtn.type = 'button';
+        selectBtn.className = 'btn-speak-select';
+        selectBtn.textContent = 'Đã nói xong • Đi tiếp ➔';
+        selectBtn.addEventListener('click', () => {
+          if (isHost) {
+            applyChoiceTransition(choice);
+          } else if (dataConn && dataConn.open) {
+            dataConn.send({ type: 'select-choice', choice });
+          }
+        });
+
+        actionsDiv.appendChild(selectBtn);
+        card.appendChild(actionsDiv);
+        listDiv.appendChild(card);
+      });
+
+      turnArea.appendChild(listDiv);
+    }
+
+    // =========================================================================
+    // 8. ĐỒNG BỘ MẠNG PEERJS (DATA + AUDIO CALL)
+    // =========================================================================
+    function broadcastGameState() {
+      if (!isHost || !dataConn || !dataConn.open) return;
+      dataConn.send({
+        type: 'sync-state',
+        scenario: activeScenario,
+        state: gameState
+      });
+    }
+
+    function setupDataConnection(conn) {
+      dataConn = conn;
+      conn.on('open', () => {
+        updateConnBadge('Đã kết nối 2 máy', 'ok');
+        if (isHost) {
+          broadcastGameState();
+        } else {
+          conn.send({ type: 'request-sync' });
+        }
+      });
+
+      conn.on('data', (msg) => {
+        if (!msg || typeof msg !== 'object') return;
+
+        if (msg.type === 'request-sync' && isHost) {
+          broadcastGameState();
+        } else if (msg.type === 'sync-state' && !isHost) {
+          if (!gameState || msg.state.stepIndex >= gameState.stepIndex) {
+            activeScenario = msg.scenario;
+            gameState = msg.state;
+            renderStage();
+          }
+        } else if (msg.type === 'select-choice' && isHost) {
+          applyChoiceTransition(msg.choice);
+        } else if (msg.type === 'remedy' && isHost) {
+          processRemedyOnHost(msg);
+        }
+      });
+
+      conn.on('close', () => {
+        updateConnBadge('Bạn học đã ngắt kết nối', 'warn');
+      });
+    }
+
+    // Đổi vai & Chơi lại (Host điều khiển)
+    document.getElementById('swapRolesBtn').addEventListener('click', () => {
+      if (!isHost || !activeScenario || !gameState) return;
+      const oldHostRole = gameState.hostRole;
+      const oldGuestRole = gameState.guestRole;
+      stateSnapshots = [];
+      gameState = createInitialGameState(activeScenario, 'ROLE_A');
+      gameState.hostRole = oldGuestRole;
+      gameState.guestRole = oldHostRole;
+      broadcastGameState();
+      renderStage();
+    });
+
+    document.getElementById('restartSameBtn').addEventListener('click', () => {
+      if (!isHost || !activeScenario || !gameState) return;
+      const keepHostRole = gameState.hostRole;
+      const keepGuestRole = gameState.guestRole;
+      stateSnapshots = [];
+      gameState = createInitialGameState(activeScenario, 'ROLE_A');
+      gameState.hostRole = keepHostRole;
+      gameState.guestRole = keepGuestRole;
+      broadcastGameState();
+      renderStage();
+    });
+
+    // =========================================================================
+    // 9. CÁC SỰ KIỆN UI & CUỘC GỌI THOẠI
+    // =========================================================================
+    document.getElementById('hostRolePills').addEventListener('click', (e) => {
+      const pill = e.target.closest('.role-pill');
+      if (!pill) return;
+      hostRoleChoice = pill.dataset.role;
+      document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('selected'));
+      pill.classList.add('selected');
+    });
+
+    document.getElementById('challengeToggle').addEventListener('click', (e) => {
+      challengeMode = !challengeMode;
+      e.target.classList.toggle('on', challengeMode);
+      renderStage();
+    });
+
+    document.getElementById('listenToggle').addEventListener('click', (e) => {
+      listenMode = !listenMode;
+      e.target.classList.toggle('on', listenMode);
+      renderStage();
+    });
+
+    document.getElementById('partnerTextWrap').addEventListener('click', (e) => {
+      if (listenMode) e.currentTarget.classList.toggle('revealed');
+    });
+
+    // Voice FX UI
+    const FX_NAMES = { normal: 'Bình thường', female: 'Giọng Nữ', male: 'Giọng Nam', high: 'Trẻ con' };
+    document.getElementById('fxGrid').addEventListener('click', (e) => {
+      const btn = e.target.closest('.fx-btn');
+      if (!btn) return;
+      const mode = btn.dataset.fx;
+      document.querySelectorAll('.fx-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('fxLabel').textContent = FX_NAMES[mode];
+      if (voiceFX) voiceFX.setMode(mode);
+      else currentFxMode = mode;
+    });
+
+    document.getElementById('semitoneSlider').addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      document.getElementById('semitoneVal').textContent = (v > 0 ? '+' : '') + v.toFixed(1);
+      if (voiceFX) voiceFX.applySemitones(v);
+    });
+
+    document.getElementById('selfMonitorChk').addEventListener('change', (e) => {
+      if (voiceFX) voiceFX.setSelfMonitor(e.target.checked);
     });
 
     function unlockAudio() {
@@ -774,48 +1533,84 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const buf = audioCtx.createBuffer(1, 1, 22050);
         const src = audioCtx.createBufferSource();
-        src.buffer = buf;
-        src.connect(audioCtx.destination);
-        src.start(0);
+        src.buffer = buf; src.connect(audioCtx.destination); src.start(0);
         updateAudioResumeButton();
       } catch {}
     }
 
     function updateAudioResumeButton() {
-      if (audioCtx && audioCtx.state === 'suspended' && !roomView.classList.contains('hidden')) {
-        resumeAudioBtn.classList.remove('hidden');
+      const btn = document.getElementById('resumeAudioBtn');
+      if (audioCtx && audioCtx.state === 'suspended' && !document.getElementById('roomView').classList.contains('hidden')) {
+        btn.classList.remove('hidden');
       } else {
-        resumeAudioBtn.classList.add('hidden');
+        btn.classList.add('hidden');
       }
     }
 
-    resumeAudioBtn.addEventListener('click', () => {
+    document.getElementById('resumeAudioBtn').addEventListener('click', () => {
       if (audioCtx) audioCtx.resume().then(updateAudioResumeButton);
     });
 
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) updateAudioResumeButton();
-    });
+    async function initProcessedMic() {
+      unlockAudio();
+      rawMicStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: false
+      });
+      voiceFX = await createVoiceProcessor(audioCtx, rawMicStream);
+      outgoingStream = voiceFX.stream;
 
-    function startMicMeter(analyser) {
-      stopMicMeter();
-      if (!analyser) return;
-      const data = new Uint8Array(analyser.frequencyBinCount);
+      const data = new Uint8Array(voiceFX.analyser.frequencyBinCount);
+      const micBar = document.getElementById('micBar');
       function tick() {
-        analyser.getByteFrequencyData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) sum += data[i];
-        const avg = sum / data.length;
-        micBar.style.width = Math.min(100, Math.round(avg * 2.2)) + '%';
+        if (!voiceFX) return;
+        voiceFX.analyser.getByteFrequencyData(data);
+        let sum = 0; for (let i = 0; i < data.length; i++) sum += data[i];
+        micBar.style.width = Math.min(100, Math.round((sum / data.length) * 2.2)) + '%';
         micAnimFrame = requestAnimationFrame(tick);
       }
       tick();
     }
 
-    function stopMicMeter() {
-      if (micAnimFrame) cancelAnimationFrame(micAnimFrame);
-      micAnimFrame = null;
-      micBar.style.width = '0%';
+    function attachRemoteAudio(stream) {
+      if (!stream) return;
+      if (!remoteDummyAudio) {
+        remoteDummyAudio = document.createElement('audio');
+        remoteDummyAudio.muted = true; remoteDummyAudio.playsInline = true; remoteDummyAudio.autoplay = true;
+        document.getElementById('audioSink').appendChild(remoteDummyAudio);
+      }
+      remoteDummyAudio.srcObject = stream;
+      remoteDummyAudio.play().catch(() => {});
+      try {
+        if (!remoteSourceNode) {
+          remoteSourceNode = audioCtx.createMediaStreamSource(stream);
+          remoteSourceNode.connect(audioCtx.destination);
+        }
+      } catch {
+        remoteDummyAudio.muted = false;
+      }
+      startTimerIfNeeded();
+      updateAudioResumeButton();
+    }
+
+    function startTimerIfNeeded() {
+      if (timerInterval) return;
+      seconds = 0;
+      const timerEl = document.getElementById('timer');
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerEl.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function updateConnBadge(text, cls = '') {
+      const el = document.getElementById('connBadge');
+      el.textContent = text;
+      el.className = 'conn-badge' + (cls ? ' ' + cls : '');
+    }
+
+    function sanitizeCode(raw) {
+      return raw.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
     }
 
     function genCode() {
@@ -825,474 +1620,138 @@
       return out;
     }
 
-    function setStatus(text, type = '') {
-      statusEl.textContent = text;
-      statusEl.className = 'status' + (type ? ' ' + type : '');
-    }
+    // TẠO PHÒNG (HOST)
+    document.getElementById('createBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('createBtn');
+      btn.disabled = true;
+      btn.textContent = 'Đang nạp kịch bản...';
 
-    function startTimerIfNeeded() {
-      if (timerInterval) return;
-      seconds = 0;
-      timerEl.textContent = '00:00';
-      timerEl.classList.remove('hidden');
-      timerInterval = setInterval(() => {
-        seconds++;
-        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-        const s = String(seconds % 60).padStart(2, '0');
-        timerEl.textContent = `${m}:${s}`;
-      }, 1000);
-    }
-
-    function stopTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = null;
-      timerEl.classList.add('hidden');
-    }
-
-    async function initProcessedMic() {
       try {
-        unlockAudio();
-        rawMicStream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-          video: false
-        });
-        voiceFX = await createVoiceProcessor(audioCtx, rawMicStream);
-        outgoingStream = voiceFX.stream;
-        startMicMeter(voiceFX.analyser);
-        return outgoingStream;
+        activeScenario = await loadSelectedScenarioData(scenarioSelect.value);
+        await initProcessedMic();
       } catch (err) {
-        alert('Không truy cập được micro. Hãy cấp quyền Micro cho trình duyệt rồi thử lại.');
-        throw err;
-      }
-    }
-
-    function renderMembers() {
-      const totalInRoom = 1 + remotePeers.size;
-      memberCountEl.textContent = `${totalInRoom}/${maxRoomUsers} người`;
-
-      membersListEl.innerHTML = '';
-
-      const selfRow = document.createElement('div');
-      selfRow.className = 'member-item';
-      const selfName = document.createElement('span');
-      selfName.textContent = isHost ? 'Bạn (Chủ phòng)' : 'Bạn';
-      const selfBadge = document.createElement('span');
-      selfBadge.className = 'badge ok';
-      selfBadge.textContent = isMuted ? 'Đang tắt mic' : (FX_NAMES[currentFxMode] || 'Đang bật mic');
-      selfRow.append(selfName, selfBadge);
-      membersListEl.appendChild(selfRow);
-
-      remotePeers.forEach((info) => {
-        const row = document.createElement('div');
-        row.className = 'member-item';
-
-        const nameEl = document.createElement('span');
-        nameEl.textContent = info.label;
-
-        const badgeEl = document.createElement('span');
-        const isTurn = info.route === 'TURN';
-        badgeEl.className = 'badge ' + (isTurn ? 'turn' : (info.bytesKB > 0 ? 'ok' : ''));
-        const routeTxt = info.route ? ` • ${info.route}` : '';
-        badgeEl.textContent = info.bytesKB > 0 ? `${info.bytesKB} KB${routeTxt}` : 'Đang nối...';
-
-        row.append(nameEl, badgeEl);
-        membersListEl.appendChild(row);
-      });
-
-      if (remotePeers.size > 0) {
-        startTimerIfNeeded();
-        setStatus(`Đang trò chuyện (${totalInRoom}/${maxRoomUsers} người)`, 'ok');
-      } else {
-        stopTimer();
-        setStatus(isHost ? `Phòng đã sẵn sàng (tối đa ${maxRoomUsers} người). Đang chờ...` : 'Đang kết nối vào phòng...');
-      }
-    }
-
-    function attachRemoteAudio(peerId, stream) {
-      const info = remotePeers.get(peerId);
-      if (!info || !stream) return;
-
-      if (info.dummyAudio) {
-        info.dummyAudio.srcObject = stream;
-        info.dummyAudio.play().catch(() => {});
+        alert('Lỗi khởi tạo: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Tạo phòng';
         return;
       }
-
-      const dummy = document.createElement('audio');
-      dummy.srcObject = stream;
-      dummy.muted = true;
-      dummy.playsInline = true;
-      dummy.autoplay = true;
-      audioSink.appendChild(dummy);
-      dummy.play().catch(() => {});
-      info.dummyAudio = dummy;
-
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtx) audioCtx = new AudioCtx();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const srcNode = audioCtx.createMediaStreamSource(stream);
-        srcNode.connect(audioCtx.destination);
-        info.sourceNode = srcNode;
-      } catch {
-        dummy.muted = false;
-      }
-      updateAudioResumeButton();
-    }
-
-    function ensureRemotePeerEntry(peerId, customLabel = null) {
-      if (!remotePeers.has(peerId)) {
-        memberCounter++;
-        const label = customLabel || (peerId === hostPeerId ? 'Chủ phòng (Host)' : `Thành viên #${memberCounter}`);
-        remotePeers.set(peerId, {
-          label,
-          call: null,
-          dummyAudio: null,
-          sourceNode: null,
-          bytesKB: 0,
-          route: ''
-        });
-      } else if (customLabel) {
-        remotePeers.get(peerId).label = customLabel;
-      }
-      return remotePeers.get(peerId);
-    }
-
-    function removeRemotePeer(peerId) {
-      const info = remotePeers.get(peerId);
-      if (!info) return;
-      try { if (info.call) info.call.close(); } catch {}
-      try { if (info.sourceNode) info.sourceNode.disconnect(); } catch {}
-      if (info.dummyAudio) {
-        info.dummyAudio.srcObject = null;
-        info.dummyAudio.remove();
-      }
-      remotePeers.delete(peerId);
-      renderMembers();
-    }
-
-    function bindMediaCall(call, label = null) {
-      const peerId = call.peer;
-      const info = ensureRemotePeerEntry(peerId, label);
-      info.call = call;
-      renderMembers();
-
-      call.on('stream', (remoteStream) => {
-        attachRemoteAudio(peerId, remoteStream);
-        renderMembers();
-      });
-
-      if (call.peerConnection) {
-        call.peerConnection.addEventListener('track', (e) => {
-          const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
-          attachRemoteAudio(peerId, stream);
-        });
-        call.peerConnection.oniceconnectionstatechange = () => {
-          const st = call.peerConnection.iceConnectionState;
-          if (st === 'closed' || st === 'failed') {
-            removeRemotePeer(peerId);
-          }
-        };
-      }
-
-      call.on('close', () => removeRemotePeer(peerId));
-      call.on('error', () => removeRemotePeer(peerId));
-    }
-
-    function startStatsLoop() {
-      stopStatsLoop();
-      statsInterval = setInterval(async () => {
-        for (const [peerId, info] of remotePeers.entries()) {
-          if (!info.call || !info.call.peerConnection) continue;
-          try {
-            const stats = await info.call.peerConnection.getStats();
-            let totalBytes = 0;
-            let routeType = '';
-            stats.forEach((r) => {
-              if (r.type === 'inbound-rtp' && (r.kind === 'audio' || r.mediaType === 'audio')) {
-                totalBytes += r.bytesReceived || 0;
-              }
-              if (r.type === 'candidate-pair' && r.state === 'succeeded') {
-                const cand = stats.get(r.localCandidateId);
-                if (cand) routeType = cand.candidateType === 'relay' ? 'TURN' : 'P2P';
-              }
-            });
-            info.bytesKB = Math.round(totalBytes / 1024);
-            if (routeType) info.route = routeType;
-          } catch {}
-        }
-        if (remotePeers.size > 0) renderMembers();
-      }, 1500);
-    }
-
-    function stopStatsLoop() {
-      if (statsInterval) clearInterval(statsInterval);
-      statsInterval = null;
-    }
-
-    function notifyLeaveBeforeExit() {
-      if (isHost) {
-        hostGuestConns.forEach((conn) => {
-          if (conn.open) try { conn.send({ type: 'host-closed' }); } catch {}
-        });
-      } else if (guestHostConn && guestHostConn.open) {
-        try { guestHostConn.send({ type: 'leave' }); } catch {}
-      }
-    }
-
-    function cleanup(message = '', isErr = false) {
-      notifyLeaveBeforeExit();
-      stopTimer();
-      stopStatsLoop();
-      stopMicMeter();
-
-      remotePeers.forEach((_, peerId) => removeRemotePeer(peerId));
-      remotePeers.clear();
-
-      hostGuestConns.forEach((conn) => { try { conn.close(); } catch {} });
-      hostGuestConns.clear();
-      if (guestHostConn) { try { guestHostConn.close(); } catch {} guestHostConn = null; }
-
-      if (peer) { try { peer.destroy(); } catch {} peer = null; }
-      if (voiceFX) { voiceFX.destroy(); voiceFX = null; }
-      if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
-      outgoingStream = null;
-
-      isMuted = false;
-      memberCounter = 1;
-      selfMonitorChk.checked = false;
-      muteBtn.textContent = 'Tắt mic';
-      muteBtn.classList.remove('active');
-      resumeAudioBtn.classList.add('hidden');
-
-      if (message) {
-        setStatus(message, isErr ? 'err' : '');
-        setTimeout(() => {
-          roomView.classList.add('hidden');
-          homeView.classList.remove('hidden');
-        }, 2200);
-      } else {
-        roomView.classList.add('hidden');
-        homeView.classList.remove('hidden');
-      }
-    }
-
-    window.addEventListener('beforeunload', notifyLeaveBeforeExit);
-
-    // 1. HOST: Tạo phòng (2 - 4 người)
-    createBtn.addEventListener('click', async () => {
-      const rawCustom = customCodeInput.value;
-      const customCode = sanitizeCode(rawCustom);
-      if (rawCustom.trim() !== '' && customCode.length < 3) {
-        alert('Mã tự đặt cần ít nhất 3 ký tự (chữ không dấu hoặc số).');
-        return;
-      }
-
-      try { await initProcessedMic(); } catch { return; }
 
       isHost = true;
-      maxRoomUsers = selectedMaxUsers;
+      stateSnapshots = [];
+      gameState = createInitialGameState(activeScenario, hostRoleChoice);
+
+      const rawCustom = document.getElementById('customCodeInput').value;
+      const customCode = sanitizeCode(rawCustom);
       currentRoomCode = customCode.length >= 3 ? customCode : genCode();
       hostPeerId = APP_PREFIX + currentRoomCode;
 
-      homeView.classList.add('hidden');
-      roomView.classList.remove('hidden');
-      codeDisplay.textContent = currentRoomCode;
-      setStatus('Đang tạo phòng...');
-      renderMembers();
+      document.getElementById('homeView').classList.add('hidden');
+      document.getElementById('roomView').classList.remove('hidden');
+      document.getElementById('codeDisplay').textContent = currentRoomCode;
+      renderStage();
 
       peer = new Peer(hostPeerId, getPeerConfig());
 
-      peer.on('open', () => {
-        renderMembers();
-        startStatsLoop();
-      });
-
-      peer.on('connection', (conn) => {
-        const guestId = conn.peer;
-
-        conn.on('data', (msg) => {
-          if (!msg || typeof msg !== 'object') return;
-
-          if (msg.type === 'join') {
-            const currentCount = 1 + hostGuestConns.size;
-            if (currentCount >= maxRoomUsers) {
-              try { conn.send({ type: 'room-full', max: maxRoomUsers }); } catch {}
-              setTimeout(() => { try { conn.close(); } catch {} }, 300);
-              return;
-            }
-
-            const existingGuestIds = Array.from(hostGuestConns.keys());
-            hostGuestConns.set(guestId, conn);
-            ensureRemotePeerEntry(guestId);
-            renderMembers();
-
-            conn.send({
-              type: 'welcome',
-              max: maxRoomUsers,
-              peers: existingGuestIds
-            });
-
-            existingGuestIds.forEach((oldId) => {
-              const oldConn = hostGuestConns.get(oldId);
-              if (oldConn && oldConn.open) {
-                try { oldConn.send({ type: 'peer-joined', peerId: guestId }); } catch {}
-              }
-            });
-          } else if (msg.type === 'leave') {
-            handleGuestDisconnect(guestId);
-          }
-        });
-
-        conn.on('close', () => handleGuestDisconnect(guestId));
-        conn.on('error', () => handleGuestDisconnect(guestId));
-      });
-
+      peer.on('open', () => updateConnBadge('Chờ người thứ 2 vào mã phòng...'));
+      peer.on('connection', (conn) => setupDataConnection(conn));
       peer.on('call', (call) => {
-        if (!hostGuestConns.has(call.peer) && (1 + remotePeers.size) >= maxRoomUsers) {
-          call.close();
-          return;
-        }
+        mediaCall = call;
         call.answer(outgoingStream);
-        bindMediaCall(call);
+        call.on('stream', attachRemoteAudio);
       });
-
-      peer.on('disconnected', () => {
-        if (peer && !peer.destroyed) peer.reconnect();
-      });
-
       peer.on('error', (err) => {
-        if (err.type === 'unavailable-id') {
-          cleanup(`Mã "${currentRoomCode}" đang có người dùng, hãy chọn mã khác!`, true);
-        } else {
-          cleanup('Lỗi kết nối máy chủ: ' + err.type, true);
-        }
+        alert(err.type === 'unavailable-id' ? 'Mã phòng này đang có người dùng, hãy chọn mã khác!' : 'Lỗi kết nối: ' + err.type);
+        cleanupRoom();
       });
+
+      btn.disabled = false;
+      btn.textContent = 'Tạo phòng';
     });
 
-    function handleGuestDisconnect(guestId) {
-      if (!hostGuestConns.has(guestId)) return;
-      hostGuestConns.delete(guestId);
-      removeRemotePeer(guestId);
-
-      hostGuestConns.forEach((conn) => {
-        if (conn.open) {
-          try { conn.send({ type: 'peer-left', peerId: guestId }); } catch {}
-        }
-      });
-    }
-
-    // 2. GUEST: Nhập mã để vào phòng
-    joinBtn.addEventListener('click', async () => {
-      const code = sanitizeCode(codeInput.value);
+    // VÀO PHÒNG (GUEST)
+    document.getElementById('joinBtn').addEventListener('click', async () => {
+      const code = sanitizeCode(document.getElementById('codeInput').value);
       if (code.length < 3) {
-        alert('Vui lòng nhập đúng mã phòng (tối thiểu 3 ký tự).');
+        alert('Vui lòng nhập đúng mã phòng.');
         return;
       }
 
-      try { await initProcessedMic(); } catch { return; }
+      try {
+        await initProcessedMic();
+      } catch {
+        alert('Cần cấp quyền Micro để vào phòng luyện nói.');
+        return;
+      }
 
       isHost = false;
       currentRoomCode = code;
       hostPeerId = APP_PREFIX + code;
 
-      homeView.classList.add('hidden');
-      roomView.classList.remove('hidden');
-      codeDisplay.textContent = currentRoomCode;
-      setStatus('Đang xin vào phòng ' + code + '...');
-      renderMembers();
+      document.getElementById('homeView').classList.add('hidden');
+      document.getElementById('roomView').classList.remove('hidden');
+      document.getElementById('codeDisplay').textContent = currentRoomCode;
+      updateConnBadge('Đang kết nối tới Host...');
 
       peer = new Peer(undefined, getPeerConfig());
 
       peer.on('open', () => {
-        startStatsLoop();
         const conn = peer.connect(hostPeerId, { reliable: true });
-        guestHostConn = conn;
+        setupDataConnection(conn);
 
-        conn.on('open', () => {
-          conn.send({ type: 'join' });
-        });
-
-        conn.on('data', (msg) => {
-          if (!msg || typeof msg !== 'object') return;
-
-          if (msg.type === 'room-full') {
-            cleanup(`Phòng đã đầy (tối đa ${msg.max}/${msg.max} người)!`, true);
-          } else if (msg.type === 'welcome') {
-            maxRoomUsers = msg.max || 4;
-            renderMembers();
-
-            const hostCall = peer.call(hostPeerId, outgoingStream);
-            bindMediaCall(hostCall, 'Chủ phòng (Host)');
-
-            (msg.peers || []).forEach((otherPeerId) => {
-              if (otherPeerId !== peer.id && !remotePeers.has(otherPeerId)) {
-                const peerCall = peer.call(otherPeerId, outgoingStream);
-                bindMediaCall(peerCall);
-              }
-            });
-          } else if (msg.type === 'peer-joined') {
-            ensureRemotePeerEntry(msg.peerId);
-            renderMembers();
-          } else if (msg.type === 'peer-left') {
-            removeRemotePeer(msg.peerId);
-          } else if (msg.type === 'host-closed') {
-            cleanup('Chủ phòng đã kết thúc cuộc gọi.');
-          }
-        });
-
-        conn.on('close', () => {
-          if (peer && !peer.destroyed) {
-            cleanup('Mất kết nối với chủ phòng.', true);
-          }
-        });
+        const call = peer.call(hostPeerId, outgoingStream);
+        mediaCall = call;
+        call.on('stream', attachRemoteAudio);
       });
 
       peer.on('call', (call) => {
+        mediaCall = call;
         call.answer(outgoingStream);
-        bindMediaCall(call);
-      });
-
-      peer.on('disconnected', () => {
-        if (peer && !peer.destroyed) peer.reconnect();
+        call.on('stream', attachRemoteAudio);
       });
 
       peer.on('error', (err) => {
-        if (err.type === 'peer-unavailable') {
-          cleanup('Không tìm thấy mã phòng này hoặc Host chưa mở.', true);
-        } else {
-          cleanup('Lỗi kết nối: ' + err.type, true);
-        }
+        alert(err.type === 'peer-unavailable' ? 'Không tìm thấy phòng này hoặc Host chưa mở.' : 'Lỗi kết nối: ' + err.type);
+        cleanupRoom();
       });
     });
 
-    customCodeInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') createBtn.click();
-    });
+    function cleanupRoom() {
+      if (timerInterval) clearInterval(timerInterval); timerInterval = null;
+      if (micAnimFrame) cancelAnimationFrame(micAnimFrame); micAnimFrame = null;
+      if (mediaCall) { try { mediaCall.close(); } catch {} mediaCall = null; }
+      if (dataConn) { try { dataConn.close(); } catch {} dataConn = null; }
+      if (peer) { try { peer.destroy(); } catch {} peer = null; }
+      if (voiceFX) { voiceFX.destroy(); voiceFX = null; }
+      if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
+      if (remoteSourceNode) { try { remoteSourceNode.disconnect(); } catch {} remoteSourceNode = null; }
+      if (remoteDummyAudio) { remoteDummyAudio.srcObject = null; remoteDummyAudio.remove(); remoteDummyAudio = null; }
 
-    codeInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') joinBtn.click();
-    });
+      isMuted = false;
+      document.getElementById('muteBtn').textContent = 'Tắt mic';
+      document.getElementById('muteBtn').classList.remove('active');
+      document.getElementById('roomView').classList.add('hidden');
+      document.getElementById('homeView').classList.remove('hidden');
+    }
 
-    codeBox.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(codeDisplay.textContent);
-        copyHint.textContent = 'Đã sao chép mã!';
-        setTimeout(() => copyHint.textContent = 'Bấm vào mã để sao chép', 1500);
-      } catch {}
-    });
+    document.getElementById('hangupBtn').addEventListener('click', cleanupRoom);
 
-    muteBtn.addEventListener('click', () => {
+    document.getElementById('muteBtn').addEventListener('click', () => {
       if (!rawMicStream) return;
       isMuted = !isMuted;
       rawMicStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
       if (voiceFX) voiceFX.setMuted(isMuted);
-      muteBtn.textContent = isMuted ? 'Bật mic' : 'Tắt mic';
-      muteBtn.classList.toggle('active', isMuted);
-      renderMembers();
+      const btn = document.getElementById('muteBtn');
+      btn.textContent = isMuted ? 'Bật mic' : 'Tắt mic';
+      btn.classList.toggle('active', isMuted);
     });
 
-    hangupBtn.addEventListener('click', () => cleanup('Bạn đã kết thúc cuộc gọi.'));
+    document.getElementById('codeBox').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(document.getElementById('codeDisplay').textContent);
+        document.getElementById('copyHint').textContent = 'ĐÃ SAO CHÉP MÃ!';
+        setTimeout(() => document.getElementById('copyHint').textContent = 'MÃ PHÒNG (BẤM COPY)', 1500);
+      } catch {}
+    });
   </script>
 </body>
 </html>
