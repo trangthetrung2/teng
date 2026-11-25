@@ -61,9 +61,8 @@
     .status.warn { color: #fbbf24; border: 1px solid #78350f; }
     .status.err { color: #f87171; border: 1px solid #7f1d1d; }
     .diag {
-      font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px; min-height: 18px; line-height: 1.4;
+      font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px; min-height: 18px;
     }
-    .diag.warn { color: #fbbf24; font-weight: 500; }
     .mic-wrap {
       background: #0f172a; border-radius: 99px; height: 8px; overflow: hidden;
       margin: 10px 0 16px; border: 1px solid #334155;
@@ -79,7 +78,7 @@
 <body>
   <div class="card">
     <h1>Phòng Gọi Thoại</h1>
-    <p class="sub">v2.1 • Kết nối trực tiếp & TURN</p>
+    <p class="sub">v2.2 • Tắt thủ công</p>
 
     <!-- Màn hình chính -->
     <div id="homeView">
@@ -121,8 +120,6 @@
 
   <script>
     const APP_PREFIX = 'cf-voice-call-vn-9x2k-';
-    const CONNECT_TIMEOUT_SECONDS = 25; // Chờ tối đa 25s để bắt tay qua 4G/TURN
-    const SILENT_HANGUP_SECONDS = 15;   // Sau khi đã nối, tự tắt nếu mất hẳn dữ liệu tiếng 15s
 
     const BASE_ICE_SERVERS = [
       { urls: 'stun:stun.l.google.com:19302' },
@@ -186,7 +183,6 @@
     let micAnimFrame = null;
     let audioCtx = null;
     let seconds = 0;
-    let hasRelayCandidate = false;
 
     function unlockAudio() {
       try {
@@ -232,13 +228,9 @@
       micBar.style.width = '0%';
     }
 
+    // Chỉ hiển thị thông số tham khảo, tuyệt đối không tự ngắt máy
     function startStatsMonitor(pc) {
       stopStatsMonitor();
-      let lastBytes = 0;
-      let waitingSeconds = 0;
-      let silentSeconds = 0;
-      let everReceivedAudio = false;
-
       statsInterval = setInterval(async () => {
         if (!pc || !currentCall) return;
         try {
@@ -258,46 +250,16 @@
             }
           });
 
-          const delta = totalBytes - lastBytes;
-          lastBytes = totalBytes;
-
-          if (delta > 0) {
-            everReceivedAudio = true;
-            silentSeconds = 0;
-            const badge = routeType ? ` [${routeType}]` : '';
-            diagEl.textContent = `Đang nhận âm thanh (${Math.round(totalBytes / 1024)} KB)${badge}`;
-            diagEl.className = 'diag';
-          } else if (!everReceivedAudio) {
-            // Giai đoạn đang bắt tay qua 4G/TURN (cho phép tối đa 25s)
-            waitingSeconds++;
-            const remain = CONNECT_TIMEOUT_SECONDS - waitingSeconds;
-            if (remain <= 0) {
-              cleanup(`Quá ${CONNECT_TIMEOUT_SECONDS}s không thông âm thanh (Relay: ${hasRelayCandidate ? 'OK' : 'Lỗi TURN'}).`, true);
-              return;
-            }
-            const relayNote = hasRelayCandidate ? 'TURN sẵn sàng' : 'Đang lấy cổng TURN...';
-            diagEl.textContent = `Đang nối đường tiếng (${relayNote}) • Còn ${remain}s...`;
-            diagEl.className = 'diag warn';
-          } else {
-            // Đã từng nghe được nhưng bị mất tín hiệu giữa chừng
-            silentSeconds++;
-            const remain = SILENT_HANGUP_SECONDS - silentSeconds;
-            if (remain <= 0) {
-              cleanup(`Mất luồng âm thanh liên tục ${SILENT_HANGUP_SECONDS} giây.`, true);
-              return;
-            }
-            diagEl.textContent = `Mất tín hiệu tiếng — Tự tắt sau ${remain}s...`;
-            diagEl.className = 'diag warn';
-          }
+          const badge = routeType ? ` • ${routeType}` : '';
+          diagEl.textContent = `Đã nhận: ${Math.round(totalBytes / 1024)} KB${badge}`;
         } catch {}
-      }, 1000);
+      }, 1500);
     }
 
     function stopStatsMonitor() {
       if (statsInterval) clearInterval(statsInterval);
       statsInterval = null;
       diagEl.textContent = '';
-      diagEl.className = 'diag';
     }
 
     function genCode() {
@@ -358,13 +320,11 @@
       remoteAudio.volume = 1.0;
       remoteAudio.play().catch((e) => {
         diagEl.textContent = 'Trình duyệt chặn tự phát loa: ' + e.name;
-        diagEl.className = 'diag warn';
       });
     }
 
     function setupCall(call) {
       currentCall = call;
-      hasRelayCandidate = false;
 
       call.on('stream', (remoteStream) => {
         attachStreamToAudio(remoteStream);
@@ -378,23 +338,13 @@
 
       if (call.peerConnection) {
         const pc = call.peerConnection;
-
-        pc.addEventListener('icecandidate', (e) => {
-          if (e.candidate && e.candidate.candidate && e.candidate.candidate.includes(' typ relay ')) {
-            hasRelayCandidate = true;
-          }
-        });
-
         pc.addEventListener('track', (e) => {
           if (e.streams && e.streams[0]) attachStreamToAudio(e.streams[0]);
         });
-
         pc.oniceconnectionstatechange = () => {
           const state = pc.iceConnectionState;
-          if (state === 'failed' || state === 'closed') {
-            cleanup('Đối phương đã ngắt kết nối hoặc mạng bị chặn.');
-          } else if (state === 'disconnected') {
-            setStatus('Mạng chập chờn, đang thử nối lại...', 'warn');
+          if (state === 'disconnected' || state === 'failed') {
+            setStatus('Mạng đang yếu hoặc chưa thông, đang giữ phòng...', 'warn');
           } else if (state === 'connected' || state === 'completed') {
             setStatus('Đã kết nối!', 'ok');
           }
@@ -435,7 +385,7 @@
         setTimeout(() => {
           roomView.classList.add('hidden');
           homeView.classList.remove('hidden');
-        }, 2500);
+        }, 1800);
       } else {
         roomView.classList.add('hidden');
         homeView.classList.remove('hidden');
