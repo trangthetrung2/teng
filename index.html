@@ -30,6 +30,12 @@
     .btn-danger:hover { background: #dc2626; }
     .btn-muted { background: #334155; color: #e2e8f0; }
     .btn-muted.active { background: #f59e0b; color: #0f172a; }
+    .btn-sm {
+      padding: 8px 12px; font-size: 0.8rem; border-radius: 8px;
+      background: #0f172a; color: #94a3b8; border: 1px solid #334155;
+      cursor: pointer; margin-top: 12px; width: 100%;
+    }
+    .btn-sm:hover { color: #fff; border-color: #475569; }
     .divider {
       display: flex; align-items: center; gap: 12px; margin: 18px 0; color: #64748b; font-size: 0.85rem;
     }
@@ -46,6 +52,11 @@
       margin-top: 16px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer; user-select: none;
     }
     .opt-row input { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; }
+    .turn-test-res {
+      margin-top: 8px; font-size: 0.8rem; color: #94a3b8; min-height: 18px; line-height: 1.4;
+    }
+    .turn-test-res.ok { color: #34d399; }
+    .turn-test-res.err { color: #f87171; }
     .code-box {
       background: #0f172a; border: 2px dashed #3b82f6; border-radius: 14px;
       padding: 16px; margin: 16px 0; cursor: pointer;
@@ -78,7 +89,7 @@
 <body>
   <div class="card">
     <h1>Phòng Gọi Thoại</h1>
-    <p class="sub">v2.2 • Tắt thủ công</p>
+    <p class="sub">v2.4 • Standard TURN Ready</p>
 
     <!-- Màn hình chính -->
     <div id="homeView">
@@ -88,10 +99,14 @@
         <input id="codeInput" type="text" maxlength="6" placeholder="NHẬP MÃ" autocomplete="off" />
         <button id="joinBtn" class="btn btn-success" style="width:auto; padding: 0 20px;">Vào</button>
       </div>
+
       <label class="opt-row" title="Bật khi gọi giữa 4G/5G hoặc Wi-Fi công ty bị chặn">
         <input id="forceRelayChk" type="checkbox" />
         <span>Ép qua TURN (bật nếu gọi 4G khó nối)</span>
       </label>
+
+      <button id="testTurnBtn" class="btn-sm">Kiểm tra kết nối máy chủ TURN</button>
+      <div id="turnTestRes" class="turn-test-res"></div>
     </div>
 
     <!-- Màn hình trong phòng -->
@@ -125,22 +140,22 @@
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun.relay.metered.ca:80' },
       {
-        urls: 'turn:global.relay.metered.ca:80',
+        urls: 'turn:standard.relay.metered.ca:80',
         username: '2f50aac419dcb5e14ea6161f',
         credential: 'pdjLgii+aijstW2B'
       },
       {
-        urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+        urls: 'turn:standard.relay.metered.ca:80?transport=tcp',
         username: '2f50aac419dcb5e14ea6161f',
         credential: 'pdjLgii+aijstW2B'
       },
       {
-        urls: 'turn:global.relay.metered.ca:443',
+        urls: 'turn:standard.relay.metered.ca:443',
         username: '2f50aac419dcb5e14ea6161f',
         credential: 'pdjLgii+aijstW2B'
       },
       {
-        urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+        urls: 'turns:standard.relay.metered.ca:443?transport=tcp',
         username: '2f50aac419dcb5e14ea6161f',
         credential: 'pdjLgii+aijstW2B'
       }
@@ -152,7 +167,7 @@
         config: {
           iceServers: BASE_ICE_SERVERS,
           iceTransportPolicy: forceRelay ? 'relay' : 'all',
-          iceCandidatePoolSize: 4
+          iceCandidatePoolSize: 2
         }
       };
     }
@@ -172,6 +187,8 @@
     const muteBtn = document.getElementById('muteBtn');
     const hangupBtn = document.getElementById('hangupBtn');
     const remoteAudio = document.getElementById('remoteAudio');
+    const testTurnBtn = document.getElementById('testTurnBtn');
+    const turnTestRes = document.getElementById('turnTestRes');
 
     let peer = null;
     let localStream = null;
@@ -183,6 +200,50 @@
     let micAnimFrame = null;
     let audioCtx = null;
     let seconds = 0;
+
+    // Kiểm tra TURN ngay trên màn hình chính
+    testTurnBtn.addEventListener('click', async () => {
+      testTurnBtn.disabled = true;
+      turnTestRes.className = 'turn-test-res';
+      turnTestRes.textContent = 'Đang kiểm tra kết nối tới TURN...';
+
+      const pc = new RTCPeerConnection({
+        iceServers: BASE_ICE_SERVERS,
+        iceTransportPolicy: 'relay'
+      });
+      pc.createDataChannel('test');
+
+      let foundRelay = false;
+      pc.onicecandidate = (e) => {
+        if (e.candidate && e.candidate.candidate && e.candidate.candidate.includes(' typ relay ')) {
+          foundRelay = true;
+          const ip = e.candidate.address || e.candidate.candidate.split(' ')[4] || '';
+          turnTestRes.className = 'turn-test-res ok';
+          turnTestRes.textContent = `TURN hoạt động tốt! (Cổng trung gian: ${ip})`;
+          pc.close();
+          testTurnBtn.disabled = false;
+        }
+      };
+
+      try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+      } catch (err) {
+        turnTestRes.className = 'turn-test-res err';
+        turnTestRes.textContent = 'Lỗi khởi tạo WebRTC: ' + err.message;
+        testTurnBtn.disabled = false;
+        return;
+      }
+
+      setTimeout(() => {
+        if (!foundRelay) {
+          turnTestRes.className = 'turn-test-res err';
+          turnTestRes.textContent = 'Không lấy được cổng TURN (mạng hiện tại có thể đang chặn cổng TURN).';
+          try { pc.close(); } catch {}
+          testTurnBtn.disabled = false;
+        }
+      }, 6000);
+    });
 
     function unlockAudio() {
       try {
@@ -228,7 +289,6 @@
       micBar.style.width = '0%';
     }
 
-    // Chỉ hiển thị thông số tham khảo, tuyệt đối không tự ngắt máy
     function startStatsMonitor(pc) {
       stopStatsMonitor();
       statsInterval = setInterval(async () => {
@@ -250,8 +310,8 @@
             }
           });
 
-          const badge = routeType ? ` • ${routeType}` : '';
-          diagEl.textContent = `Đã nhận: ${Math.round(totalBytes / 1024)} KB${badge}`;
+          const routeLabel = routeType || `ICE: ${pc.iceConnectionState}`;
+          diagEl.textContent = `Đã nhận: ${Math.round(totalBytes / 1024)} KB • ${routeLabel}`;
         } catch {}
       }, 1500);
     }
@@ -339,7 +399,8 @@
       if (call.peerConnection) {
         const pc = call.peerConnection;
         pc.addEventListener('track', (e) => {
-          if (e.streams && e.streams[0]) attachStreamToAudio(e.streams[0]);
+          const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+          attachStreamToAudio(stream);
         });
         pc.oniceconnectionstatechange = () => {
           const state = pc.iceConnectionState;
@@ -392,7 +453,6 @@
       }
     }
 
-    // 1. HOST: Tạo phòng
     createBtn.addEventListener('click', async () => {
       unlockAudio();
       try { localStream = await getMic(); } catch { return; }
@@ -417,7 +477,6 @@
       peer.on('error', (err) => cleanup('Lỗi kết nối máy chủ: ' + err.type, true));
     });
 
-    // 2. GUEST: Nhập mã để vào phòng
     joinBtn.addEventListener('click', async () => {
       unlockAudio();
       const code = codeInput.value.trim().toUpperCase();
