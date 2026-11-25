@@ -117,6 +117,15 @@
     .fx-btn.male.active {
       background: #0284c7; border-color: #38bdf8; color: #fff;
     }
+    .pitch-slider-wrap {
+      margin-top: 10px; padding-top: 8px; border-top: 1px solid #1e293b;
+    }
+    .pitch-slider-head {
+      display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px;
+    }
+    .pitch-slider-wrap input[type="range"] {
+      width: 100%; accent-color: #ec4899; cursor: pointer;
+    }
     .monitor-toggle {
       display: flex; align-items: center; gap: 6px; margin-top: 9px;
       font-size: 0.76rem; color: #94a3b8; cursor: pointer; user-select: none;
@@ -157,7 +166,7 @@
 <body>
   <div class="card">
     <h1>Phòng Gọi Thoại Nhóm</h1>
-    <p class="sub">v3.3 • 2–4 người • Giọng Nữ & Nam tự nhiên</p>
+    <p class="sub">v3.4 • 2–4 người • Giọng Nữ & Nam mượt</p>
 
     <!-- Màn hình chính -->
     <div id="homeView">
@@ -215,6 +224,15 @@
           <button type="button" class="fx-btn male" data-fx="male">Giọng Nam</button>
           <button type="button" class="fx-btn" data-fx="high">Cao (Trẻ con)</button>
         </div>
+
+        <div id="pitchSliderWrap" class="pitch-slider-wrap hidden">
+          <div class="pitch-slider-head">
+            <span>Tinh chỉnh độ thanh / trầm (khớp giọng gốc):</span>
+            <span id="semitoneVal" style="color:#f8fafc; font-weight:600;">+4.6</span>
+          </div>
+          <input id="semitoneSlider" type="range" min="2.0" max="7.5" step="0.1" value="4.6" />
+        </div>
+
         <label class="monitor-toggle">
           <input id="selfMonitorChk" type="checkbox" />
           <span>Nghe thử giọng biến âm (nên đeo tai nghe)</span>
@@ -295,6 +313,9 @@
     const statusEl = document.getElementById('status');
     const fxGrid = document.getElementById('fxGrid');
     const fxLabel = document.getElementById('fxLabel');
+    const pitchSliderWrap = document.getElementById('pitchSliderWrap');
+    const semitoneSlider = document.getElementById('semitoneSlider');
+    const semitoneVal = document.getElementById('semitoneVal');
     const selfMonitorChk = document.getElementById('selfMonitorChk');
     const memberCountEl = document.getElementById('memberCount');
     const membersListEl = document.getElementById('membersList');
@@ -317,6 +338,7 @@
     let outgoingStream = null;
     let voiceFX = null;
     let currentFxMode = 'normal';
+    let currentSemitones = 0;
 
     let isMuted = false;
     let timerInterval = null;
@@ -331,9 +353,152 @@
     let memberCounter = 1;
 
     // =========================================================================
-    // BỘ XỬ LÝ BIẾN ÂM TỰ NHIÊN (DỊCH CAO ĐỘ + MÔ PHỎNG THANH QUẢN FORMANT EQ)
+    // BỘ DỊCH CAO ĐỘ 4-GRAIN HANN OVERLAP-ADD (KHÔNG RUNG KIM LOẠI)
     // =========================================================================
-    function createVoiceProcessor(ctx, stream) {
+    const WORKLET_CODE = `
+      class GranularPitchProcessor extends AudioWorkletProcessor {
+        constructor() {
+          super();
+          this.bufSize = 8192;
+          this.mask = 8191;
+          this.buf = new Float32Array(this.bufSize);
+          this.writeIdx = 0;
+          this.phase = 0;
+          this.currentRatio = 1.0;
+          this.targetRatio = 1.0;
+          this.grainSize = Math.round(sampleRate * 0.048); // 48ms
+          this.minDelay = 64;
+
+          // Bảng cửa sổ Hann 1024 điểm cho 4 hạt chồng pha
+          this.winTable = new Float32Array(1024);
+          for (let i = 0; i < 1024; i++) {
+            this.winTable[i] = 0.5 * (1.0 - Math.cos(2.0 * Math.PI * (i / 1024)));
+          }
+
+          this.port.onmessage = (e) => {
+            if (e.data && typeof e.data.ratio === 'number') {
+              this.targetRatio = e.data.ratio;
+            }
+          };
+        }
+
+        process(inputs, outputs) {
+          const input = inputs[0];
+          const output = outputs[0];
+          if (!input || !input[0] || !output || !output[0]) return true;
+
+          const inCh = input[0];
+          const outCh = output[0];
+          const len = inCh.length;
+          const buf = this.buf;
+          const mask = this.mask;
+          const G = this.grainSize;
+          const minD = this.minDelay;
+          const winTable = this.winTable;
+
+          for (let i = 0; i < len; i++) {
+            buf[this.writeIdx & mask] = inCh[i];
+
+            this.currentRatio += (this.targetRatio - this.currentRatio) * 0.0025;
+            const r = this.currentRatio;
+
+            if (Math.abs(r - 1.0) < 0.001) {
+              outCh[i] = inCh[i];
+              this.writeIdx++;
+              continue;
+            }
+
+            const diff = Math.abs(1.0 - r);
+            this.phase += diff / G;
+            if (this.phase >= 1.0) this.phase -= 1.0;
+
+            let sum = 0.0;
+            for (let k = 0; k < 4; k++) {
+              let p = this.phase + k * 0.25;
+              if (p >= 1.0) p -= 1.0;
+
+              const delay = r > 1.0
+                ? (minD + (1.0 - p) * G)
+                : (minD + p * G);
+
+              const readPos = this.writeIdx - delay;
+              const idx0 = Math.floor(readPos);
+              const frac = readPos - idx0;
+              const s0 = buf[idx0 & mask];
+              const s1 = buf[(idx0 + 1) & mask];
+              const sample = s0 + frac * (s1 - s0);
+
+              const w = winTable[(p * 1023) | 0];
+              sum += sample * w;
+            }
+
+            // Tổng 4 cửa sổ Hann lệch pha 0.25 luôn bằng 2.0 -> chia 2 để giữ nguyên âm lượng
+            outCh[i] = sum * 0.5;
+            this.writeIdx++;
+          }
+
+          return true;
+        }
+      }
+      registerProcessor('granular-pitch-processor', GranularPitchProcessor);
+    `;
+
+    // Fallback cho trình duyệt cũ không hỗ trợ AudioWorklet Blob
+    function createScriptFallbackNode(ctx) {
+      const node = ctx.createScriptProcessor(1024, 1, 1);
+      const bufSize = 8192;
+      const mask = 8191;
+      const buf = new Float32Array(bufSize);
+      let writeIdx = 0;
+      let phase = 0;
+      let currentRatio = 1.0;
+      let targetRatio = 1.0;
+      const G = Math.round(ctx.sampleRate * 0.048);
+      const minD = 64;
+      const winTable = new Float32Array(1024);
+      for (let i = 0; i < 1024; i++) {
+        winTable[i] = 0.5 * (1.0 - Math.cos(2.0 * Math.PI * (i / 1024)));
+      }
+
+      node.onaudioprocess = (e) => {
+        const inCh = e.inputBuffer.getChannelData(0);
+        const outCh = e.outputBuffer.getChannelData(0);
+        for (let i = 0; i < inCh.length; i++) {
+          buf[writeIdx & mask] = inCh[i];
+          currentRatio += (targetRatio - currentRatio) * 0.0025;
+          const r = currentRatio;
+          if (Math.abs(r - 1.0) < 0.001) {
+            outCh[i] = inCh[i];
+            writeIdx++;
+            continue;
+          }
+          phase += Math.abs(1.0 - r) / G;
+          if (phase >= 1.0) phase -= 1.0;
+          let sum = 0.0;
+          for (let k = 0; k < 4; k++) {
+            let p = phase + k * 0.25;
+            if (p >= 1.0) p -= 1.0;
+            const delay = r > 1.0 ? (minD + (1.0 - p) * G) : (minD + p * G);
+            const readPos = writeIdx - delay;
+            const idx0 = Math.floor(readPos);
+            const frac = readPos - idx0;
+            const s0 = buf[idx0 & mask];
+            const s1 = buf[(idx0 + 1) & mask];
+            sum += (s0 + frac * (s1 - s0)) * winTable[(p * 1023) | 0];
+          }
+          outCh[i] = sum * 0.5;
+          writeIdx++;
+        }
+      };
+
+      return {
+        node,
+        setRatio: (r) => { targetRatio = r; },
+        disconnect: () => { try { node.disconnect(); } catch {} }
+      };
+    }
+
+    async function createVoiceProcessor(ctx, stream) {
       const source = ctx.createMediaStreamSource(stream);
       const inputGain = ctx.createGain();
       inputGain.gain.value = 1.0;
@@ -344,120 +509,57 @@
       dryGain.gain.value = 1.0;
       inputGain.connect(dryGain);
 
-      // 2. Bộ lọc cắt trầm 2 tầng (24 dB/oct) để triệt tiêu tiếng ồm vùng ngực
-      const hp1 = ctx.createBiquadFilter();
-      hp1.type = 'highpass';
-      hp1.frequency.value = 70;
-      hp1.Q.value = 0.75;
+      // 2. Nhánh biến âm (Wet)
+      let pitchEngine = null;
+      try {
+        const blob = new Blob([WORKLET_CODE], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
+        await ctx.audioWorklet.addModule(url);
+        URL.revokeObjectURL(url);
+        const workletNode = new AudioWorkletNode(ctx, 'granular-pitch-processor');
+        pitchEngine = {
+          node: workletNode,
+          setRatio: (r) => workletNode.port.postMessage({ ratio: r }),
+          disconnect: () => { try { workletNode.disconnect(); } catch {} }
+        };
+      } catch {
+        pitchEngine = createScriptFallbackNode(ctx);
+      }
 
-      const hp2 = ctx.createBiquadFilter();
-      hp2.type = 'highpass';
-      hp2.frequency.value = 70;
-      hp2.Q.value = 0.75;
+      // Bộ lọc định hình âm sắc tự nhiên (chống giọng sóc chuột)
+      const hpFilter = ctx.createBiquadFilter();
+      hpFilter.type = 'highpass';
+      hpFilter.frequency.value = 70;
+      hpFilter.Q.value = 0.7;
 
-      // 3. Bộ dịch cao độ (Pitch Shifter) cửa sổ ngắn giúp giữ nguyên độ rõ phụ âm
-      const delayA = ctx.createDelay(0.5);
-      const delayB = ctx.createDelay(0.5);
-      delayA.delayTime.value = 0.04;
-      delayB.delayTime.value = 0.04;
+      const bodyWarmth = ctx.createBiquadFilter();
+      bodyWarmth.type = 'peaking';
+      bodyWarmth.frequency.value = 230;
+      bodyWarmth.Q.value = 1.1;
+      bodyWarmth.gain.value = 0;
 
-      const winGainA = ctx.createGain();
-      const winGainB = ctx.createGain();
-      winGainA.gain.value = 0;
-      winGainB.gain.value = 0;
-
-      // 4. Chuỗi 5 tầng Formant & Air EQ định hình chất giọng Nữ / Nam
-      const fundamentalWarmth = ctx.createBiquadFilter();
-      fundamentalWarmth.type = 'peaking';
-      fundamentalWarmth.frequency.value = 215;
-      fundamentalWarmth.Q.value = 1.3;
-      fundamentalWarmth.gain.value = 0;
-
-      const formant1 = ctx.createBiquadFilter();
-      formant1.type = 'peaking';
-      formant1.frequency.value = 680;
-      formant1.Q.value = 1.3;
-      formant1.gain.value = 0;
-
-      const formant2 = ctx.createBiquadFilter();
-      formant2.type = 'peaking';
-      formant2.frequency.value = 1950;
-      formant2.Q.value = 1.4;
-      formant2.gain.value = 0;
-
-      const formant3 = ctx.createBiquadFilter();
-      formant3.type = 'peaking';
-      formant3.frequency.value = 3250;
-      formant3.Q.value = 1.5;
-      formant3.gain.value = 0;
+      const antiChipmunkDip = ctx.createBiquadFilter();
+      antiChipmunkDip.type = 'peaking';
+      antiChipmunkDip.frequency.value = 2600;
+      antiChipmunkDip.Q.value = 0.9;
+      antiChipmunkDip.gain.value = 0;
 
       const airShelf = ctx.createBiquadFilter();
       airShelf.type = 'highshelf';
-      airShelf.frequency.value = 5800;
+      airShelf.frequency.value = 6500;
       airShelf.gain.value = 0;
 
       const pitchWetGain = ctx.createGain();
       pitchWetGain.gain.value = 0;
 
-      inputGain.connect(hp1);
-      hp1.connect(hp2);
-      hp2.connect(delayA);
-      hp2.connect(delayB);
-      delayA.connect(winGainA);
-      delayB.connect(winGainB);
-
-      winGainA.connect(fundamentalWarmth);
-      winGainB.connect(fundamentalWarmth);
-      fundamentalWarmth.connect(formant1);
-      formant1.connect(formant2);
-      formant2.connect(formant3);
-      formant3.connect(airShelf);
+      inputGain.connect(pitchEngine.node);
+      pitchEngine.node.connect(hpFilter);
+      hpFilter.connect(bodyWarmth);
+      bodyWarmth.connect(antiChipmunkDip);
+      antiChipmunkDip.connect(airShelf);
       airShelf.connect(pitchWetGain);
 
-      const lfo = ctx.createOscillator();
-      lfo.type = 'sawtooth';
-      lfo.frequency.value = 7.29;
-
-      const depthGainA = ctx.createGain();
-      const depthGainB = ctx.createGain();
-      depthGainA.gain.value = -0.024;
-      depthGainB.gain.value = -0.024;
-
-      const phaseShiftShaper = ctx.createWaveShaper();
-      const shiftCurve = new Float32Array(2048);
-      for (let i = 0; i < 2048; i++) {
-        const x = (i / 1023.5) - 1;
-        shiftCurve[i] = x < 0 ? x + 1 : x - 1;
-      }
-      phaseShiftShaper.curve = shiftCurve;
-
-      const winShaperA = ctx.createWaveShaper();
-      const winShaperB = ctx.createWaveShaper();
-      const curveA = new Float32Array(2048);
-      const curveB = new Float32Array(2048);
-      for (let i = 0; i < 2048; i++) {
-        const x = (i / 1023.5) - 1;
-        curveA[i] = Math.cos((Math.PI / 2) * x);
-        curveB[i] = Math.abs(Math.sin((Math.PI / 2) * x));
-      }
-      winShaperA.curve = curveA;
-      winShaperB.curve = curveB;
-
-      lfo.connect(depthGainA);
-      depthGainA.connect(delayA.delayTime);
-
-      lfo.connect(phaseShiftShaper);
-      phaseShiftShaper.connect(depthGainB);
-      depthGainB.connect(delayB.delayTime);
-
-      lfo.connect(winShaperA);
-      winShaperA.connect(winGainA.gain);
-
-      lfo.connect(winShaperB);
-      winShaperB.connect(winGainB.gain);
-      lfo.start();
-
-      // Tổng hợp & nén nhẹ giữ âm lượng đều đặn, tự nhiên
+      // Tổng hợp & nén nhẹ
       const sumNode = ctx.createGain();
       sumNode.gain.value = 1.0;
       dryGain.connect(sumNode);
@@ -466,8 +568,8 @@
       const compressor = ctx.createDynamicsCompressor();
       compressor.threshold.value = -18;
       compressor.knee.value = 14;
-      compressor.ratio.value = 3.5;
-      compressor.attack.value = 0.006;
+      compressor.ratio.value = 3.2;
+      compressor.attack.value = 0.008;
       compressor.release.value = 0.16;
       sumNode.connect(compressor);
 
@@ -483,83 +585,74 @@
       const dest = ctx.createMediaStreamDestination();
       compressor.connect(dest);
 
-      function setMode(mode) {
+      function applySemitones(semi) {
+        currentSemitones = semi;
+        const ratio = Math.pow(2, semi / 12);
+        pitchEngine.setRatio(ratio);
+      }
+
+      function setMode(mode, customSemi = null) {
         currentFxMode = mode;
         const now = ctx.currentTime;
         const isNormal = mode === 'normal';
 
         dryGain.gain.setTargetAtTime(isNormal ? 1.0 : 0, now, 0.02);
-        pitchWetGain.gain.setTargetAtTime(isNormal ? 0 : 1.15, now, 0.02);
+        pitchWetGain.gain.setTargetAtTime(isNormal ? 0 : 1.08, now, 0.02);
+
+        if (isNormal) {
+          pitchSliderWrap.classList.add('hidden');
+          applySemitones(0);
+          return;
+        }
+
+        pitchSliderWrap.classList.remove('hidden');
 
         if (mode === 'female') {
-          // Cao độ +5.2 nửa cung (~1.35x) + Cắt sạch trầm ngực dưới 175Hz + Formant Nữ thanh & mềm
-          lfo.frequency.setTargetAtTime(7.29, now, 0.02);
-          depthGainA.gain.setTargetAtTime(-0.024, now, 0.02);
-          depthGainB.gain.setTargetAtTime(-0.024, now, 0.02);
+          const semi = customSemi !== null ? customSemi : 4.6;
+          semitoneSlider.min = '2.0';
+          semitoneSlider.max = '7.5';
+          semitoneSlider.value = String(semi);
+          semitoneVal.textContent = '+' + semi.toFixed(1);
+          applySemitones(semi);
 
-          hp1.frequency.setTargetAtTime(175, now, 0.02);
-          hp2.frequency.setTargetAtTime(175, now, 0.02);
-
-          fundamentalWarmth.frequency.setTargetAtTime(215, now, 0.02);
-          fundamentalWarmth.gain.setTargetAtTime(3.5, now, 0.02);
-
-          formant1.frequency.setTargetAtTime(680, now, 0.02);
-          formant1.gain.setTargetAtTime(3.5, now, 0.02);
-
-          formant2.frequency.setTargetAtTime(1950, now, 0.02);
-          formant2.gain.setTargetAtTime(5.0, now, 0.02);
-
-          formant3.frequency.setTargetAtTime(3250, now, 0.02);
-          formant3.gain.setTargetAtTime(4.5, now, 0.02);
-
-          airShelf.frequency.setTargetAtTime(5800, now, 0.02);
-          airShelf.gain.setTargetAtTime(4.0, now, 0.02);
+          // Cắt nhẹ trầm ngực, bù ấm ở 230Hz và giảm dải chói 2.6kHz để hết giọng sóc chuột
+          hpFilter.frequency.setTargetAtTime(145, now, 0.02);
+          bodyWarmth.frequency.setTargetAtTime(230, now, 0.02);
+          bodyWarmth.gain.setTargetAtTime(3.8, now, 0.02);
+          antiChipmunkDip.frequency.setTargetAtTime(2600, now, 0.02);
+          antiChipmunkDip.gain.setTargetAtTime(-2.8, now, 0.02);
+          airShelf.frequency.setTargetAtTime(6500, now, 0.02);
+          airShelf.gain.setTargetAtTime(2.0, now, 0.02);
         } else if (mode === 'male') {
-          // Cao độ -4.1 nửa cung (~0.79x) + Giữ trầm ấm vùng ngực + Giảm dải sáng
-          lfo.frequency.setTargetAtTime(3.75, now, 0.02);
-          depthGainA.gain.setTargetAtTime(0.028, now, 0.02);
-          depthGainB.gain.setTargetAtTime(0.028, now, 0.02);
+          const semi = customSemi !== null ? customSemi : -3.8;
+          semitoneSlider.min = '-6.5';
+          semitoneSlider.max = '-1.5';
+          semitoneSlider.value = String(semi);
+          semitoneVal.textContent = semi.toFixed(1);
+          applySemitones(semi);
 
-          hp1.frequency.setTargetAtTime(65, now, 0.02);
-          hp2.frequency.setTargetAtTime(65, now, 0.02);
-
-          fundamentalWarmth.frequency.setTargetAtTime(125, now, 0.02);
-          fundamentalWarmth.gain.setTargetAtTime(7.0, now, 0.02);
-
-          formant1.frequency.setTargetAtTime(480, now, 0.02);
-          formant1.gain.setTargetAtTime(2.5, now, 0.02);
-
-          formant2.frequency.setTargetAtTime(1100, now, 0.02);
-          formant2.gain.setTargetAtTime(-2.0, now, 0.02);
-
-          formant3.frequency.setTargetAtTime(2600, now, 0.02);
-          formant3.gain.setTargetAtTime(-5.0, now, 0.02);
-
-          airShelf.frequency.setTargetAtTime(4500, now, 0.02);
-          airShelf.gain.setTargetAtTime(-3.0, now, 0.02);
+          hpFilter.frequency.setTargetAtTime(65, now, 0.02);
+          bodyWarmth.frequency.setTargetAtTime(135, now, 0.02);
+          bodyWarmth.gain.setTargetAtTime(4.5, now, 0.02);
+          antiChipmunkDip.frequency.setTargetAtTime(2200, now, 0.02);
+          antiChipmunkDip.gain.setTargetAtTime(1.5, now, 0.02);
+          airShelf.frequency.setTargetAtTime(5500, now, 0.02);
+          airShelf.gain.setTargetAtTime(-1.5, now, 0.02);
         } else if (mode === 'high') {
-          // Cao độ +6.4 nửa cung (~1.45x) kiểu giọng trẻ con
-          lfo.frequency.setTargetAtTime(9.0, now, 0.02);
-          depthGainA.gain.setTargetAtTime(-0.025, now, 0.02);
-          depthGainB.gain.setTargetAtTime(-0.025, now, 0.02);
+          const semi = customSemi !== null ? customSemi : 6.4;
+          semitoneSlider.min = '4.5';
+          semitoneSlider.max = '8.5';
+          semitoneSlider.value = String(semi);
+          semitoneVal.textContent = '+' + semi.toFixed(1);
+          applySemitones(semi);
 
-          hp1.frequency.setTargetAtTime(220, now, 0.02);
-          hp2.frequency.setTargetAtTime(220, now, 0.02);
-
-          fundamentalWarmth.frequency.setTargetAtTime(270, now, 0.02);
-          fundamentalWarmth.gain.setTargetAtTime(2.0, now, 0.02);
-
-          formant1.frequency.setTargetAtTime(850, now, 0.02);
-          formant1.gain.setTargetAtTime(4.0, now, 0.02);
-
-          formant2.frequency.setTargetAtTime(2300, now, 0.02);
-          formant2.gain.setTargetAtTime(5.5, now, 0.02);
-
-          formant3.frequency.setTargetAtTime(3600, now, 0.02);
-          formant3.gain.setTargetAtTime(5.0, now, 0.02);
-
-          airShelf.frequency.setTargetAtTime(6200, now, 0.02);
-          airShelf.gain.setTargetAtTime(3.0, now, 0.02);
+          hpFilter.frequency.setTargetAtTime(190, now, 0.02);
+          bodyWarmth.frequency.setTargetAtTime(270, now, 0.02);
+          bodyWarmth.gain.setTargetAtTime(2.0, now, 0.02);
+          antiChipmunkDip.frequency.setTargetAtTime(2800, now, 0.02);
+          antiChipmunkDip.gain.setTargetAtTime(-1.5, now, 0.02);
+          airShelf.frequency.setTargetAtTime(6500, now, 0.02);
+          airShelf.gain.setTargetAtTime(2.5, now, 0.02);
         }
       }
 
@@ -572,7 +665,7 @@
       }
 
       function destroy() {
-        try { lfo.stop(); } catch {}
+        pitchEngine.disconnect();
         try { source.disconnect(); } catch {}
         try { dest.disconnect(); } catch {}
       }
@@ -583,6 +676,7 @@
         stream: dest.stream,
         analyser,
         setMode,
+        applySemitones,
         setMuted,
         setSelfMonitor,
         destroy
@@ -606,6 +700,12 @@
       if (voiceFX) voiceFX.setMode(mode);
       else currentFxMode = mode;
       renderMembers();
+    });
+
+    semitoneSlider.addEventListener('input', () => {
+      const val = parseFloat(semitoneSlider.value);
+      semitoneVal.textContent = (val > 0 ? '+' : '') + val.toFixed(1);
+      if (voiceFX) voiceFX.applySemitones(val);
     });
 
     selfMonitorChk.addEventListener('change', () => {
@@ -756,7 +856,7 @@
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
           video: false
         });
-        voiceFX = createVoiceProcessor(audioCtx, rawMicStream);
+        voiceFX = await createVoiceProcessor(audioCtx, rawMicStream);
         outgoingStream = voiceFX.stream;
         startMicMeter(voiceFX.analyser);
         return outgoingStream;
