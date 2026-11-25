@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phòng Gọi Điện</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: #0f172a; color: #f8fafc; padding: 20px;
+    }
+    .card {
+      width: 100%; max-width: 400px; background: #1e293b; border: 1px solid #334155;
+      border-radius: 20px; padding: 28px 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 6px; }
+    .sub { color: #94a3b8; font-size: 0.9rem; margin-bottom: 24px; }
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.15s;
+    }
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-success { background: #10b981; color: #fff; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-muted { background: #334155; color: #e2e8f0; }
+    .btn-muted.active { background: #f59e0b; color: #0f172a; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .divider {
+      display: flex; align-items: center; gap: 12px; margin: 20px 0; color: #64748b; font-size: 0.85rem;
+    }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #334155; }
+    .join-row { display: flex; gap: 8px; }
+    input {
+      flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #475569;
+      background: #0f172a; color: #fff; font-size: 1.05rem; text-align: center;
+      letter-spacing: 3px; text-transform: uppercase; outline: none;
+    }
+    input:focus { border-color: #3b82f6; }
+    .code-box {
+      background: #0f172a; border: 2px dashed #3b82f6; border-radius: 14px;
+      padding: 16px; margin: 16px 0; cursor: pointer;
+    }
+    .code-label { font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; }
+    .code-value { font-size: 2rem; font-weight: 800; letter-spacing: 6px; color: #60a5fa; }
+    .copy-hint { font-size: 0.78rem; color: #64748b; margin-top: 6px; }
+    .status {
+      margin: 14px 0; padding: 10px 14px; border-radius: 10px;
+      background: #0f172a; font-size: 0.9rem; color: #cbd5e1;
+    }
+    .status.ok { color: #34d399; border: 1px solid #065f46; }
+    .status.err { color: #f87171; border: 1px solid #7f1d1d; }
+    .timer { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 12px 0; color: #34d399; }
+    .controls { display: flex; gap: 10px; margin-top: 16px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Phòng Gọi Thoại</h1>
+    <p class="sub">Kết nối trực tiếp qua mã phòng</p>
+
+    <!-- Màn hình chính -->
+    <div id="homeView">
+      <button id="createBtn" class="btn btn-primary">Tạo phòng (Host)</button>
+      <div class="divider">hoặc vào phòng có sẵn</div>
+      <div class="join-row">
+        <input id="codeInput" type="text" maxlength="6" placeholder="NHẬP MÃ" autocomplete="off" />
+        <button id="joinBtn" class="btn btn-success" style="width:auto; padding: 0 20px;">Vào</button>
+      </div>
+    </div>
+
+    <!-- Màn hình trong phòng -->
+    <div id="roomView" class="hidden">
+      <div id="codeBox" class="code-box hidden" title="Bấm để sao chép">
+        <div class="code-label">MÃ PHÒNG CỦA BẠN</div>
+        <div id="codeDisplay" class="code-value">------</div>
+        <div id="copyHint" class="copy-hint">Bấm vào mã để sao chép</div>
+      </div>
+
+      <div id="timer" class="timer hidden">00:00</div>
+      <div id="status" class="status">Đang khởi tạo...</div>
+
+      <div class="controls">
+        <button id="muteBtn" class="btn btn-muted">Tắt mic</button>
+        <button id="hangupBtn" class="btn btn-danger">Tắt máy</button>
+      </div>
+    </div>
+
+    <!-- Thẻ audio phát giọng đối phương (playsinline bắt buộc cho iOS Safari) -->
+    <audio id="remoteAudio" autoplay playsinline></audio>
+  </div>
+
+  <script>
+    // Tiền tố riêng để tránh trùng mã phòng với người khác dùng chung PeerJS cloud
+    const APP_PREFIX = 'cf-voice-call-vn-9x2k-';
+    const PEER_CONFIG = {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
+        ]
+      }
+    };
+
+    const homeView = document.getElementById('homeView');
+    const roomView = document.getElementById('roomView');
+    const createBtn = document.getElementById('createBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const codeInput = document.getElementById('codeInput');
+    const codeBox = document.getElementById('codeBox');
+    const codeDisplay = document.getElementById('codeDisplay');
+    const copyHint = document.getElementById('copyHint');
+    const statusEl = document.getElementById('status');
+    const timerEl = document.getElementById('timer');
+    const muteBtn = document.getElementById('muteBtn');
+    const hangupBtn = document.getElementById('hangupBtn');
+    const remoteAudio = document.getElementById('remoteAudio');
+
+    let peer = null;
+    let localStream = null;
+    let currentCall = null;
+    let dataConn = null;
+    let isMuted = false;
+    let timerInterval = null;
+    let seconds = 0;
+
+    function genCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Bỏ O, 0, I, 1 tránh nhìn nhầm
+      let out = '';
+      for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
+      return out;
+    }
+
+    function setStatus(text, type = '') {
+      statusEl.textContent = text;
+      statusEl.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function startTimer() {
+      stopTimer();
+      seconds = 0;
+      timerEl.textContent = '00:00';
+      timerEl.classList.remove('hidden');
+      timerInterval = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        timerEl.textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      timerEl.classList.add('hidden');
+    }
+
+    async function getMic() {
+      try {
+        return await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          video: false
+        });
+      } catch (err) {
+        alert('Không truy cập được micro. Hãy cấp quyền Micro cho trình duyệt rồi thử lại.');
+        throw err;
+      }
+    }
+
+    function showRoom(showCode) {
+      homeView.classList.add('hidden');
+      roomView.classList.remove('hidden');
+      codeBox.classList.toggle('hidden', !showCode);
+    }
+
+    function setupCall(call) {
+      currentCall = call;
+
+      call.on('stream', (remoteStream) => {
+        remoteAudio.srcObject = remoteStream;
+        remoteAudio.play().catch(() => {});
+        setStatus('Đã kết nối âm thanh!', 'ok');
+        startTimer();
+      });
+
+      call.on('close', () => cleanup('Cuộc gọi đã kết thúc.'));
+      call.on('error', () => cleanup('Mất kết nối cuộc gọi.', true));
+
+      if (call.peerConnection) {
+        call.peerConnection.oniceconnectionstatechange = () => {
+          const state = call.peerConnection.iceConnectionState;
+          if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+            cleanup('Đối phương đã ngắt kết nối.');
+          }
+        };
+      }
+    }
+
+    function setupDataConn(conn) {
+      dataConn = conn;
+      conn.on('data', (msg) => {
+        if (msg === 'hangup') cleanup('Đối phương đã tắt máy.');
+      });
+      conn.on('close', () => {
+        if (currentCall) cleanup('Đối phương đã rời phòng.');
+      });
+    }
+
+    function cleanup(message = '', isErr = false) {
+      stopTimer();
+      if (dataConn && dataConn.open) {
+        try { dataConn.send('hangup'); } catch {}
+        dataConn.close();
+      }
+      if (currentCall) currentCall.close();
+      if (peer) peer.destroy();
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+
+      peer = null; localStream = null; currentCall = null; dataConn = null;
+      remoteAudio.srcObject = null;
+      isMuted = false;
+      muteBtn.textContent = 'Tắt mic';
+      muteBtn.classList.remove('active');
+
+      if (message) {
+        setStatus(message, isErr ? 'err' : '');
+        setTimeout(() => {
+          roomView.classList.add('hidden');
+          homeView.classList.remove('hidden');
+        }, 1800);
+      } else {
+        roomView.classList.add('hidden');
+        homeView.classList.remove('hidden');
+      }
+    }
+
+    // 1. HOST: Tạo phòng
+    createBtn.addEventListener('click', async () => {
+      try {
+        localStream = await getMic();
+      } catch { return; }
+
+      const roomCode = genCode();
+      showRoom(true);
+      codeDisplay.textContent = roomCode;
+      setStatus('Đang tạo phòng...');
+
+      peer = new Peer(APP_PREFIX + roomCode, PEER_CONFIG);
+
+      peer.on('open', () => {
+        setStatus('Phòng đã sẵn sàng. Đang chờ người kia nhập mã...');
+      });
+
+      peer.on('connection', (conn) => setupDataConn(conn));
+
+      peer.on('call', (call) => {
+        if (currentCall) {
+          call.close(); // Chỉ cho 1 người gọi vào phòng
+          return;
+        }
+        setStatus('Có người đang vào phòng...');
+        call.answer(localStream);
+        setupCall(call);
+      });
+
+      peer.on('error', (err) => {
+        cleanup('Lỗi kết nối máy chủ: ' + err.type, true);
+      });
+    });
+
+    // 2. GUEST: Nhập mã để vào phòng
+    joinBtn.addEventListener('click', async () => {
+      const code = codeInput.value.trim().toUpperCase();
+      if (code.length < 4) {
+        alert('Vui lòng nhập đúng mã phòng.');
+        return;
+      }
+
+      try {
+        localStream = await getMic();
+      } catch { return; }
+
+      showRoom(false);
+      setStatus('Đang kết nối tới phòng ' + code + '...');
+
+      peer = new Peer(undefined, PEER_CONFIG);
+
+      peer.on('open', () => {
+        const hostId = APP_PREFIX + code;
+        const conn = peer.connect(hostId);
+        setupDataConn(conn);
+
+        const call = peer.call(hostId, localStream);
+        setupCall(call);
+      });
+
+      peer.on('error', (err) => {
+        if (err.type === 'peer-unavailable') {
+          cleanup('Không tìm thấy mã phòng này hoặc Host chưa mở.', true);
+        } else {
+          cleanup('Lỗi kết nối: ' + err.type, true);
+        }
+      });
+    });
+
+    // Copy mã phòng
+    codeBox.addEventListener('click', async () => {
+      const code = codeDisplay.textContent;
+      try {
+        await navigator.clipboard.writeText(code);
+        copyHint.textContent = 'Đã sao chép mã!';
+        setTimeout(() => copyHint.textContent = 'Bấm vào mã để sao chép', 1500);
+      } catch {}
+    });
+
+    // Bật / tắt mic
+    muteBtn.addEventListener('click', () => {
+      if (!localStream) return;
+      isMuted = !isMuted;
+      localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+      muteBtn.textContent = isMuted ? 'Bật mic' : 'Tắt mic';
+      muteBtn.classList.toggle('active', isMuted);
+    });
+
+    // Tắt máy
+    hangupBtn.addEventListener('click', () => cleanup('Bạn đã kết thúc cuộc gọi.'));
+  </script>
+</body>
+</html>
