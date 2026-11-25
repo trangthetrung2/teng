@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Phòng Gọi Điện</title>
+  <title>Phòng Gọi Thoại Nhóm & Biến Âm</title>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
@@ -12,14 +12,14 @@
       background: #0f172a; color: #f8fafc; padding: 20px;
     }
     .card {
-      width: 100%; max-width: 400px; background: #1e293b; border: 1px solid #334155;
-      border-radius: 20px; padding: 28px 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      width: 100%; max-width: 430px; background: #1e293b; border: 1px solid #334155;
+      border-radius: 20px; padding: 24px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
       text-align: center;
     }
-    h1 { font-size: 1.4rem; margin-bottom: 6px; }
-    .sub { color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px; }
+    h1 { font-size: 1.35rem; margin-bottom: 4px; }
+    .sub { color: #94a3b8; font-size: 0.82rem; margin-bottom: 18px; }
     .btn {
-      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
       font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.15s;
     }
     .btn-primary { background: #3b82f6; color: #fff; }
@@ -30,6 +30,7 @@
     .btn-danger:hover { background: #dc2626; }
     .btn-muted { background: #334155; color: #e2e8f0; }
     .btn-muted.active { background: #f59e0b; color: #0f172a; }
+    .btn-warn { background: #f59e0b; color: #0f172a; margin-bottom: 10px; font-size: 0.9rem; padding: 10px; }
     .btn-sm {
       padding: 8px 12px; font-size: 0.8rem; border-radius: 8px;
       background: #0f172a; color: #94a3b8; border: 1px solid #334155;
@@ -37,19 +38,36 @@
     }
     .btn-sm:hover { color: #fff; border-color: #475569; }
     .divider {
-      display: flex; align-items: center; gap: 12px; margin: 18px 0; color: #64748b; font-size: 0.85rem;
+      display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #64748b; font-size: 0.85rem;
     }
     .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #334155; }
+    .host-group { display: flex; flex-direction: column; gap: 10px; }
+    .cap-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: #0f172a; padding: 8px 12px; border-radius: 12px; border: 1px solid #334155;
+      font-size: 0.85rem; color: #cbd5e1;
+    }
+    .cap-btns { display: flex; gap: 6px; }
+    .cap-btn {
+      padding: 6px 12px; border-radius: 8px; border: 1px solid #475569;
+      background: #1e293b; color: #94a3b8; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+    }
+    .cap-btn.selected {
+      background: #3b82f6; border-color: #3b82f6; color: #fff;
+    }
     .join-row { display: flex; gap: 8px; }
     input[type="text"] {
-      flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #475569;
-      background: #0f172a; color: #fff; font-size: 1.05rem; text-align: center;
-      letter-spacing: 3px; text-transform: uppercase; outline: none;
+      width: 100%; flex: 1; padding: 13px 12px; border-radius: 12px; border: 1px solid #475569;
+      background: #0f172a; color: #fff; font-size: 1rem; text-align: center;
+      letter-spacing: 2px; text-transform: uppercase; outline: none;
+    }
+    input[type="text"]::placeholder {
+      font-size: 0.82rem; letter-spacing: 0.5px; color: #64748b;
     }
     input[type="text"]:focus { border-color: #3b82f6; }
     .opt-row {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 16px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer; user-select: none;
+      margin-top: 14px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer; user-select: none;
     }
     .opt-row input { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; }
     .turn-test-res {
@@ -59,44 +77,107 @@
     .turn-test-res.err { color: #f87171; }
     .code-box {
       background: #0f172a; border: 2px dashed #3b82f6; border-radius: 14px;
-      padding: 16px; margin: 16px 0; cursor: pointer;
+      padding: 12px; margin: 10px 0; cursor: pointer;
     }
-    .code-label { font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; }
-    .code-value { font-size: 2rem; font-weight: 800; letter-spacing: 6px; color: #60a5fa; }
-    .copy-hint { font-size: 0.78rem; color: #64748b; margin-top: 6px; }
+    .code-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: 2px; }
+    .code-value { font-size: 1.7rem; font-weight: 800; letter-spacing: 4px; color: #60a5fa; word-break: break-all; }
+    .copy-hint { font-size: 0.72rem; color: #64748b; margin-top: 3px; }
     .status {
-      margin: 14px 0 8px; padding: 10px 14px; border-radius: 10px;
-      background: #0f172a; font-size: 0.9rem; color: #cbd5e1;
+      margin: 10px 0 8px; padding: 9px 12px; border-radius: 10px;
+      background: #0f172a; font-size: 0.86rem; color: #cbd5e1;
     }
     .status.ok { color: #34d399; border: 1px solid #065f46; }
     .status.warn { color: #fbbf24; border: 1px solid #78350f; }
     .status.err { color: #f87171; border: 1px solid #7f1d1d; }
-    .diag {
-      font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px; min-height: 18px;
+
+    /* Khu vực biến âm */
+    .fx-box {
+      background: #0f172a; border: 1px solid #334155; border-radius: 12px;
+      padding: 10px 12px; margin: 10px 0; text-align: left;
     }
+    .fx-header {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.78rem; color: #94a3b8; margin-bottom: 8px; font-weight: 600;
+    }
+    .fx-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    }
+    .fx-btn {
+      padding: 8px 4px; border-radius: 8px; border: 1px solid #334155;
+      background: #1e293b; color: #cbd5e1; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; transition: 0.15s; text-align: center;
+    }
+    .fx-btn:hover { border-color: #60a5fa; }
+    .fx-btn.active {
+      background: #8b5cf6; border-color: #a78bfa; color: #fff;
+    }
+    .fx-btn.female.active {
+      background: #ec4899; border-color: #f472b6; color: #fff;
+    }
+    .fx-btn.male.active {
+      background: #0284c7; border-color: #38bdf8; color: #fff;
+    }
+    .monitor-toggle {
+      display: flex; align-items: center; gap: 6px; margin-top: 8px;
+      font-size: 0.76rem; color: #94a3b8; cursor: pointer; user-select: none;
+    }
+    .monitor-toggle input { accent-color: #8b5cf6; cursor: pointer; }
+
+    .members-box {
+      background: #0f172a; border: 1px solid #334155; border-radius: 12px;
+      padding: 10px 12px; margin: 10px 0; text-align: left;
+    }
+    .members-title {
+      font-size: 0.76rem; color: #94a3b8; margin-bottom: 6px;
+      display: flex; justify-content: space-between; font-weight: 600;
+    }
+    .member-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 0; border-top: 1px solid #1e293b; font-size: 0.83rem;
+    }
+    .member-item:first-of-type { border-top: none; }
+    .badge {
+      font-size: 0.7rem; padding: 2px 8px; border-radius: 99px;
+      background: #1e293b; color: #94a3b8;
+    }
+    .badge.ok { background: #064e3b; color: #34d399; }
+    .badge.turn { background: #1e3a8a; color: #93c5fd; }
     .mic-wrap {
-      background: #0f172a; border-radius: 99px; height: 8px; overflow: hidden;
-      margin: 10px 0 16px; border: 1px solid #334155;
+      background: #0f172a; border-radius: 99px; height: 7px; overflow: hidden;
+      margin: 6px 0 12px; border: 1px solid #334155;
     }
     .mic-bar {
       height: 100%; width: 0%; background: #10b981; transition: width 0.08s linear;
     }
-    .timer { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 10px 0; color: #34d399; }
-    .controls { display: flex; gap: 10px; margin-top: 12px; }
+    .timer { font-size: 1.55rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 6px 0; color: #34d399; }
+    .controls { display: flex; gap: 10px; margin-top: 8px; }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Phòng Gọi Thoại</h1>
-    <p class="sub">v2.4 • Standard TURN Ready</p>
+    <h1>Phòng Gọi Thoại Nhóm</h1>
+    <p class="sub">v3.2 • 2–4 người • Giọng Nam / Nữ chuẩn</p>
 
     <!-- Màn hình chính -->
     <div id="homeView">
-      <button id="createBtn" class="btn btn-primary">Tạo phòng (Host)</button>
+      <div class="host-group">
+        <div class="cap-row">
+          <span>Số người tối đa:</span>
+          <div class="cap-btns" id="capBtns">
+            <button type="button" class="cap-btn selected" data-cap="2">2</button>
+            <button type="button" class="cap-btn" data-cap="3">3</button>
+            <button type="button" class="cap-btn" data-cap="4">4</button>
+          </div>
+        </div>
+        <input id="customCodeInput" type="text" maxlength="12" placeholder="Tự đặt mã (bỏ trống = ngẫu nhiên)" autocomplete="off" />
+        <button id="createBtn" class="btn btn-primary">Tạo phòng (Host)</button>
+      </div>
+
       <div class="divider">hoặc vào phòng có sẵn</div>
+
       <div class="join-row">
-        <input id="codeInput" type="text" maxlength="6" placeholder="NHẬP MÃ" autocomplete="off" />
+        <input id="codeInput" type="text" maxlength="12" placeholder="NHẬP MÃ PHÒNG" autocomplete="off" />
         <button id="joinBtn" class="btn btn-success" style="width:auto; padding: 0 20px;">Vào</button>
       </div>
 
@@ -111,17 +192,47 @@
 
     <!-- Màn hình trong phòng -->
     <div id="roomView" class="hidden">
-      <div id="codeBox" class="code-box hidden" title="Bấm để sao chép">
-        <div class="code-label">MÃ PHÒNG CỦA BẠN</div>
+      <div id="codeBox" class="code-box" title="Bấm để sao chép">
+        <div class="code-label">MÃ PHÒNG HIỆN TẠI</div>
         <div id="codeDisplay" class="code-value">------</div>
         <div id="copyHint" class="copy-hint">Bấm vào mã để sao chép</div>
       </div>
 
+      <button id="resumeAudioBtn" class="btn btn-warn hidden">Chạm để mở lại loa (iOS)</button>
+
       <div id="timer" class="timer hidden">00:00</div>
       <div id="status" class="status">Đang khởi tạo...</div>
-      <div id="diag" class="diag"></div>
 
-      <div style="font-size: 0.75rem; color: #64748b; text-align: left;">Âm lượng micro của bạn:</div>
+      <!-- Bộ chọn hiệu ứng biến âm -->
+      <div class="fx-box">
+        <div class="fx-header">
+          <span>HIỆU ỨNG BIẾN ÂM</span>
+          <span id="fxLabel" style="color: #a78bfa;">Bình thường</span>
+        </div>
+        <div class="fx-grid" id="fxGrid">
+          <button type="button" class="fx-btn active" data-fx="normal">Bình thường</button>
+          <button type="button" class="fx-btn female" data-fx="female">Giọng Nữ</button>
+          <button type="button" class="fx-btn male" data-fx="male">Giọng Nam</button>
+          <button type="button" class="fx-btn" data-fx="deep">Trầm (Quái vật)</button>
+          <button type="button" class="fx-btn" data-fx="high">Cao (Trẻ con)</button>
+          <button type="button" class="fx-btn" data-fx="robot">Robot</button>
+          <button type="button" class="fx-btn" data-fx="radio">Bộ đàm</button>
+        </div>
+        <label class="monitor-toggle">
+          <input id="selfMonitorChk" type="checkbox" />
+          <span>Nghe thử giọng biến âm (nên đeo tai nghe)</span>
+        </label>
+      </div>
+
+      <div class="members-box">
+        <div class="members-title">
+          <span>THÀNH VIÊN TRONG PHÒNG</span>
+          <span id="memberCount">1/2</span>
+        </div>
+        <div id="membersList"></div>
+      </div>
+
+      <div style="font-size: 0.74rem; color: #64748b; text-align: left;">Âm lượng micro đầu ra:</div>
       <div class="mic-wrap"><div id="micBar" class="mic-bar"></div></div>
 
       <div class="controls">
@@ -130,7 +241,7 @@
       </div>
     </div>
 
-    <audio id="remoteAudio" autoplay playsinline></audio>
+    <div id="audioSink" class="hidden"></div>
   </div>
 
   <script>
@@ -164,6 +275,7 @@
     function getPeerConfig() {
       const forceRelay = document.getElementById('forceRelayChk').checked;
       return {
+        debug: 1,
         config: {
           iceServers: BASE_ICE_SERVERS,
           iceTransportPolicy: forceRelay ? 'relay' : 'all',
@@ -174,26 +286,41 @@
 
     const homeView = document.getElementById('homeView');
     const roomView = document.getElementById('roomView');
+    const capBtns = document.getElementById('capBtns');
+    const customCodeInput = document.getElementById('customCodeInput');
     const createBtn = document.getElementById('createBtn');
     const joinBtn = document.getElementById('joinBtn');
     const codeInput = document.getElementById('codeInput');
     const codeBox = document.getElementById('codeBox');
     const codeDisplay = document.getElementById('codeDisplay');
     const copyHint = document.getElementById('copyHint');
+    const resumeAudioBtn = document.getElementById('resumeAudioBtn');
     const statusEl = document.getElementById('status');
-    const diagEl = document.getElementById('diag');
+    const fxGrid = document.getElementById('fxGrid');
+    const fxLabel = document.getElementById('fxLabel');
+    const selfMonitorChk = document.getElementById('selfMonitorChk');
+    const memberCountEl = document.getElementById('memberCount');
+    const membersListEl = document.getElementById('membersList');
     const micBar = document.getElementById('micBar');
     const timerEl = document.getElementById('timer');
     const muteBtn = document.getElementById('muteBtn');
     const hangupBtn = document.getElementById('hangupBtn');
-    const remoteAudio = document.getElementById('remoteAudio');
+    const audioSink = document.getElementById('audioSink');
     const testTurnBtn = document.getElementById('testTurnBtn');
     const turnTestRes = document.getElementById('turnTestRes');
 
+    let selectedMaxUsers = 2;
+    let maxRoomUsers = 2;
+    let isHost = false;
+    let currentRoomCode = '';
+    let hostPeerId = '';
+
     let peer = null;
-    let localStream = null;
-    let currentCall = null;
-    let dataConn = null;
+    let rawMicStream = null;
+    let outgoingStream = null;
+    let voiceFX = null;
+    let currentFxMode = 'normal';
+
     let isMuted = false;
     let timerInterval = null;
     let statsInterval = null;
@@ -201,7 +328,328 @@
     let audioCtx = null;
     let seconds = 0;
 
-    // Kiểm tra TURN ngay trên màn hình chính
+    const remotePeers = new Map();
+    const hostGuestConns = new Map();
+    let guestHostConn = null;
+    let memberCounter = 1;
+
+    // =========================================================================
+    // BỘ XỬ LÝ BIẾN ÂM THỜI GIAN THỰC (DỊCH CAO ĐỘ + CỘNG HƯỞNG FORMANT EQ)
+    // =========================================================================
+    function createVoiceProcessor(ctx, stream) {
+      const source = ctx.createMediaStreamSource(stream);
+      const inputGain = ctx.createGain();
+      inputGain.gain.value = 1.0;
+      source.connect(inputGain);
+
+      // 1. Nhánh giọng bình thường (Dry)
+      const dryGain = ctx.createGain();
+      dryGain.gain.value = 1.0;
+      inputGain.connect(dryGain);
+
+      // 2. Nhánh đổi cao độ (Pitch Shifter) + Bộ lọc Formant mô phỏng thanh quản Nam / Nữ
+      const lowCutFilter = ctx.createBiquadFilter();
+      lowCutFilter.type = 'highpass';
+      lowCutFilter.frequency.value = 60;
+
+      const delayA = ctx.createDelay(0.5);
+      const delayB = ctx.createDelay(0.5);
+      delayA.delayTime.value = 0.055;
+      delayB.delayTime.value = 0.055;
+
+      const winGainA = ctx.createGain();
+      const winGainB = ctx.createGain();
+      winGainA.gain.value = 0;
+      winGainB.gain.value = 0;
+
+      // 3 tầng lọc Formant EQ tạo màu giọng Nam / Nữ tự nhiên
+      const formantLow = ctx.createBiquadFilter();
+      formantLow.type = 'lowshelf';
+      formantLow.frequency.value = 200;
+      formantLow.gain.value = 0;
+
+      const formantMid = ctx.createBiquadFilter();
+      formantMid.type = 'peaking';
+      formantMid.frequency.value = 1200;
+      formantMid.Q.value = 1.1;
+      formantMid.gain.value = 0;
+
+      const formantHigh = ctx.createBiquadFilter();
+      formantHigh.type = 'peaking';
+      formantHigh.frequency.value = 3000;
+      formantHigh.Q.value = 1.2;
+      formantHigh.gain.value = 0;
+
+      const pitchWetGain = ctx.createGain();
+      pitchWetGain.gain.value = 0;
+
+      inputGain.connect(lowCutFilter);
+      lowCutFilter.connect(delayA);
+      lowCutFilter.connect(delayB);
+      delayA.connect(winGainA);
+      delayB.connect(winGainB);
+
+      winGainA.connect(formantLow);
+      winGainB.connect(formantLow);
+      formantLow.connect(formantMid);
+      formantMid.connect(formantHigh);
+      formantHigh.connect(pitchWetGain);
+
+      const lfo = ctx.createOscillator();
+      lfo.type = 'sawtooth';
+      lfo.frequency.value = 3.2;
+
+      const depthGainA = ctx.createGain();
+      const depthGainB = ctx.createGain();
+      depthGainA.gain.value = 0.035;
+      depthGainB.gain.value = 0.035;
+
+      const phaseShiftShaper = ctx.createWaveShaper();
+      const shiftCurve = new Float32Array(2048);
+      for (let i = 0; i < 2048; i++) {
+        const x = (i / 1023.5) - 1;
+        shiftCurve[i] = x < 0 ? x + 1 : x - 1;
+      }
+      phaseShiftShaper.curve = shiftCurve;
+
+      const winShaperA = ctx.createWaveShaper();
+      const winShaperB = ctx.createWaveShaper();
+      const curveA = new Float32Array(2048);
+      const curveB = new Float32Array(2048);
+      for (let i = 0; i < 2048; i++) {
+        const x = (i / 1023.5) - 1;
+        curveA[i] = Math.cos((Math.PI / 2) * x);
+        curveB[i] = Math.abs(Math.sin((Math.PI / 2) * x));
+      }
+      winShaperA.curve = curveA;
+      winShaperB.curve = curveB;
+
+      lfo.connect(depthGainA);
+      depthGainA.connect(delayA.delayTime);
+
+      lfo.connect(phaseShiftShaper);
+      phaseShiftShaper.connect(depthGainB);
+      depthGainB.connect(delayB.delayTime);
+
+      lfo.connect(winShaperA);
+      winShaperA.connect(winGainA.gain);
+
+      lfo.connect(winShaperB);
+      winShaperB.connect(winGainB.gain);
+      lfo.start();
+
+      // 3. Nhánh Robot (Ring Modulator 48Hz)
+      const robotFilter = ctx.createBiquadFilter();
+      robotFilter.type = 'bandpass';
+      robotFilter.frequency.value = 850;
+      robotFilter.Q.value = 1.1;
+
+      const ringModGain = ctx.createGain();
+      ringModGain.gain.value = 0;
+
+      const robotOsc = ctx.createOscillator();
+      robotOsc.type = 'sine';
+      robotOsc.frequency.value = 48;
+
+      const robotOscDepth = ctx.createGain();
+      robotOscDepth.gain.value = 0.95;
+
+      const robotWetGain = ctx.createGain();
+      robotWetGain.gain.value = 0;
+
+      inputGain.connect(robotFilter);
+      robotFilter.connect(ringModGain);
+      robotOsc.connect(robotOscDepth);
+      robotOscDepth.connect(ringModGain.gain);
+      ringModGain.connect(robotWetGain);
+      robotOsc.start();
+
+      // 4. Nhánh Bộ đàm
+      const radioHP = ctx.createBiquadFilter();
+      radioHP.type = 'highpass';
+      radioHP.frequency.value = 550;
+
+      const radioLP = ctx.createBiquadFilter();
+      radioLP.type = 'lowpass';
+      radioLP.frequency.value = 2500;
+
+      const radioDrive = ctx.createWaveShaper();
+      const driveCurve = new Float32Array(2048);
+      const k = 18;
+      for (let i = 0; i < 2048; i++) {
+        const x = (i / 1023.5) - 1;
+        driveCurve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
+      }
+      radioDrive.curve = driveCurve;
+
+      const radioWetGain = ctx.createGain();
+      radioWetGain.gain.value = 0;
+
+      inputGain.connect(radioHP);
+      radioHP.connect(radioLP);
+      radioLP.connect(radioDrive);
+      radioDrive.connect(radioWetGain);
+
+      // Tổng hợp & nén âm lượng chống vỡ tiếng
+      const sumNode = ctx.createGain();
+      sumNode.gain.value = 1.0;
+      dryGain.connect(sumNode);
+      pitchWetGain.connect(sumNode);
+      robotWetGain.connect(sumNode);
+      radioWetGain.connect(sumNode);
+
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -18;
+      compressor.knee.value = 12;
+      compressor.ratio.value = 4;
+      compressor.attack.value = 0.005;
+      compressor.release.value = 0.15;
+      sumNode.connect(compressor);
+
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      compressor.connect(analyser);
+
+      const monitorGain = ctx.createGain();
+      monitorGain.gain.value = selfMonitorChk.checked ? 0.85 : 0;
+      compressor.connect(monitorGain);
+      monitorGain.connect(ctx.destination);
+
+      const dest = ctx.createMediaStreamDestination();
+      compressor.connect(dest);
+
+      function setMode(mode) {
+        currentFxMode = mode;
+        const now = ctx.currentTime;
+        const isPitchMode = ['female', 'male', 'deep', 'high'].includes(mode);
+
+        dryGain.gain.setTargetAtTime(mode === 'normal' ? 1.0 : 0, now, 0.02);
+        pitchWetGain.gain.setTargetAtTime(isPitchMode ? 1.15 : 0, now, 0.02);
+        robotWetGain.gain.setTargetAtTime(mode === 'robot' ? 1.6 : 0, now, 0.02);
+        radioWetGain.gain.setTargetAtTime(mode === 'radio' ? 1.1 : 0, now, 0.02);
+
+        if (mode === 'female') {
+          // +4 nửa cung (~1.26x) + Cắt trầm ngực + Nâng formant sáng giọng nữ
+          lfo.frequency.setTargetAtTime(4.06, now, 0.02);
+          depthGainA.gain.setTargetAtTime(-0.032, now, 0.02);
+          depthGainB.gain.setTargetAtTime(-0.032, now, 0.02);
+          lowCutFilter.frequency.setTargetAtTime(165, now, 0.02);
+
+          formantLow.frequency.setTargetAtTime(240, now, 0.02);
+          formantLow.gain.setTargetAtTime(-7, now, 0.02);
+
+          formantMid.frequency.setTargetAtTime(1150, now, 0.02);
+          formantMid.gain.setTargetAtTime(3.5, now, 0.02);
+
+          formantHigh.frequency.setTargetAtTime(3100, now, 0.02);
+          formantHigh.gain.setTargetAtTime(5.5, now, 0.02);
+        } else if (mode === 'male') {
+          // -3.8 nửa cung (~0.80x) + Tăng ấm vùng ngực + Giảm dải chói
+          lfo.frequency.setTargetAtTime(2.86, now, 0.02);
+          depthGainA.gain.setTargetAtTime(0.035, now, 0.02);
+          depthGainB.gain.setTargetAtTime(0.035, now, 0.02);
+          lowCutFilter.frequency.setTargetAtTime(65, now, 0.02);
+
+          formantLow.frequency.setTargetAtTime(135, now, 0.02);
+          formantLow.gain.setTargetAtTime(6.5, now, 0.02);
+
+          formantMid.frequency.setTargetAtTime(950, now, 0.02);
+          formantMid.gain.setTargetAtTime(1.5, now, 0.02);
+
+          formantHigh.frequency.setTargetAtTime(2500, now, 0.02);
+          formantHigh.gain.setTargetAtTime(-4.5, now, 0.02);
+        } else if (mode === 'deep') {
+          // -6 nửa cung (Trầm sâu kiểu quái vật)
+          lfo.frequency.setTargetAtTime(3.2, now, 0.02);
+          depthGainA.gain.setTargetAtTime(0.045, now, 0.02);
+          depthGainB.gain.setTargetAtTime(0.045, now, 0.02);
+          lowCutFilter.frequency.setTargetAtTime(50, now, 0.02);
+
+          formantLow.frequency.setTargetAtTime(120, now, 0.02);
+          formantLow.gain.setTargetAtTime(8, now, 0.02);
+          formantMid.gain.setTargetAtTime(-2, now, 0.02);
+          formantHigh.gain.setTargetAtTime(-6, now, 0.02);
+        } else if (mode === 'high') {
+          // +6.2 nửa cung (Cao kiểu trẻ con / hoạt hình)
+          lfo.frequency.setTargetAtTime(4.8, now, 0.02);
+          depthGainA.gain.setTargetAtTime(-0.045, now, 0.02);
+          depthGainB.gain.setTargetAtTime(-0.045, now, 0.02);
+          lowCutFilter.frequency.setTargetAtTime(200, now, 0.02);
+
+          formantLow.frequency.setTargetAtTime(280, now, 0.02);
+          formantLow.gain.setTargetAtTime(-9, now, 0.02);
+          formantMid.frequency.setTargetAtTime(1500, now, 0.02);
+          formantMid.gain.setTargetAtTime(4, now, 0.02);
+          formantHigh.frequency.setTargetAtTime(3400, now, 0.02);
+          formantHigh.gain.setTargetAtTime(6, now, 0.02);
+        }
+      }
+
+      function setMuted(muted) {
+        inputGain.gain.setTargetAtTime(muted ? 0 : 1.0, ctx.currentTime, 0.01);
+      }
+
+      function setSelfMonitor(enabled) {
+        monitorGain.gain.setTargetAtTime(enabled ? 0.85 : 0, ctx.currentTime, 0.02);
+      }
+
+      function destroy() {
+        try { lfo.stop(); } catch {}
+        try { robotOsc.stop(); } catch {}
+        try { source.disconnect(); } catch {}
+        try { dest.disconnect(); } catch {}
+      }
+
+      setMode(currentFxMode);
+
+      return {
+        stream: dest.stream,
+        analyser,
+        setMode,
+        setMuted,
+        setSelfMonitor,
+        destroy
+      };
+    }
+
+    const FX_NAMES = {
+      normal: 'Bình thường',
+      female: 'Giọng Nữ',
+      male: 'Giọng Nam',
+      deep: 'Trầm (Quái vật)',
+      high: 'Cao (Trẻ con)',
+      robot: 'Robot',
+      radio: 'Bộ đàm'
+    };
+
+    fxGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.fx-btn');
+      if (!btn) return;
+      const mode = btn.dataset.fx;
+      fxGrid.querySelectorAll('.fx-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      fxLabel.textContent = FX_NAMES[mode] || mode;
+      if (voiceFX) voiceFX.setMode(mode);
+      else currentFxMode = mode;
+      renderMembers();
+    });
+
+    selfMonitorChk.addEventListener('change', () => {
+      if (voiceFX) voiceFX.setSelfMonitor(selfMonitorChk.checked);
+    });
+
+    capBtns.addEventListener('click', (e) => {
+      const btn = e.target.closest('.cap-btn');
+      if (!btn) return;
+      selectedMaxUsers = Number(btn.dataset.cap) || 2;
+      capBtns.querySelectorAll('.cap-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+
+    function sanitizeCode(raw) {
+      return raw.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    }
+
     testTurnBtn.addEventListener('click', async () => {
       testTurnBtn.disabled = true;
       turnTestRes.className = 'turn-test-res';
@@ -255,71 +703,45 @@
         src.buffer = buf;
         src.connect(audioCtx.destination);
         src.start(0);
-        remoteAudio.muted = false;
-        remoteAudio.play().catch(() => {});
+        updateAudioResumeButton();
       } catch {}
     }
 
-    function startMicMeter(stream) {
-      stopMicMeter();
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtx) audioCtx = new AudioCtx();
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        source.connect(analyser);
-        const data = new Uint8Array(analyser.frequencyBinCount);
+    function updateAudioResumeButton() {
+      if (audioCtx && audioCtx.state === 'suspended' && !roomView.classList.contains('hidden')) {
+        resumeAudioBtn.classList.remove('hidden');
+      } else {
+        resumeAudioBtn.classList.add('hidden');
+      }
+    }
 
-        function tick() {
-          analyser.getByteFrequencyData(data);
-          let sum = 0;
-          for (let i = 0; i < data.length; i++) sum += data[i];
-          const avg = sum / data.length;
-          micBar.style.width = Math.min(100, Math.round(avg * 2.2)) + '%';
-          micAnimFrame = requestAnimationFrame(tick);
-        }
-        tick();
-      } catch {}
+    resumeAudioBtn.addEventListener('click', () => {
+      if (audioCtx) audioCtx.resume().then(updateAudioResumeButton);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateAudioResumeButton();
+    });
+
+    function startMicMeter(analyser) {
+      stopMicMeter();
+      if (!analyser) return;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      function tick() {
+        analyser.getByteFrequencyData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) sum += data[i];
+        const avg = sum / data.length;
+        micBar.style.width = Math.min(100, Math.round(avg * 2.2)) + '%';
+        micAnimFrame = requestAnimationFrame(tick);
+      }
+      tick();
     }
 
     function stopMicMeter() {
       if (micAnimFrame) cancelAnimationFrame(micAnimFrame);
       micAnimFrame = null;
       micBar.style.width = '0%';
-    }
-
-    function startStatsMonitor(pc) {
-      stopStatsMonitor();
-      statsInterval = setInterval(async () => {
-        if (!pc || !currentCall) return;
-        try {
-          const stats = await pc.getStats();
-          let totalBytes = 0;
-          let routeType = '';
-
-          stats.forEach((report) => {
-            if (report.type === 'inbound-rtp' && (report.kind === 'audio' || report.mediaType === 'audio')) {
-              totalBytes += report.bytesReceived || 0;
-            }
-            if (report.type === 'candidate-pair' && report.state === 'succeeded') {
-              const localCand = stats.get(report.localCandidateId);
-              if (localCand) {
-                routeType = localCand.candidateType === 'relay' ? 'Qua TURN' : 'Trực tiếp';
-              }
-            }
-          });
-
-          const routeLabel = routeType || `ICE: ${pc.iceConnectionState}`;
-          diagEl.textContent = `Đã nhận: ${Math.round(totalBytes / 1024)} KB • ${routeLabel}`;
-        } catch {}
-      }, 1500);
-    }
-
-    function stopStatsMonitor() {
-      if (statsInterval) clearInterval(statsInterval);
-      statsInterval = null;
-      diagEl.textContent = '';
     }
 
     function genCode() {
@@ -334,8 +756,8 @@
       statusEl.className = 'status' + (type ? ' ' + type : '');
     }
 
-    function startTimer() {
-      stopTimer();
+    function startTimerIfNeeded() {
+      if (timerInterval) return;
       seconds = 0;
       timerEl.textContent = '00:00';
       timerEl.classList.remove('hidden');
@@ -353,149 +775,414 @@
       timerEl.classList.add('hidden');
     }
 
-    async function getMic() {
+    async function initProcessedMic() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        unlockAudio();
+        rawMicStream = await navigator.mediaDevices.getUserMedia({
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
           video: false
         });
-        startMicMeter(stream);
-        return stream;
+        voiceFX = createVoiceProcessor(audioCtx, rawMicStream);
+        outgoingStream = voiceFX.stream;
+        startMicMeter(voiceFX.analyser);
+        return outgoingStream;
       } catch (err) {
         alert('Không truy cập được micro. Hãy cấp quyền Micro cho trình duyệt rồi thử lại.');
         throw err;
       }
     }
 
-    function showRoom(showCode) {
-      homeView.classList.add('hidden');
-      roomView.classList.remove('hidden');
-      codeBox.classList.toggle('hidden', !showCode);
-    }
+    function renderMembers() {
+      const totalInRoom = 1 + remotePeers.size;
+      memberCountEl.textContent = `${totalInRoom}/${maxRoomUsers} người`;
 
-    function attachStreamToAudio(stream) {
-      if (!stream) return;
-      remoteAudio.srcObject = stream;
-      remoteAudio.muted = false;
-      remoteAudio.volume = 1.0;
-      remoteAudio.play().catch((e) => {
-        diagEl.textContent = 'Trình duyệt chặn tự phát loa: ' + e.name;
+      membersListEl.innerHTML = '';
+
+      const selfRow = document.createElement('div');
+      selfRow.className = 'member-item';
+      const selfName = document.createElement('span');
+      selfName.textContent = isHost ? 'Bạn (Chủ phòng)' : 'Bạn';
+      const selfBadge = document.createElement('span');
+      selfBadge.className = 'badge ok';
+      selfBadge.textContent = isMuted ? 'Đang tắt mic' : (FX_NAMES[currentFxMode] || 'Đang bật mic');
+      selfRow.append(selfName, selfBadge);
+      membersListEl.appendChild(selfRow);
+
+      remotePeers.forEach((info) => {
+        const row = document.createElement('div');
+        row.className = 'member-item';
+
+        const nameEl = document.createElement('span');
+        nameEl.textContent = info.label;
+
+        const badgeEl = document.createElement('span');
+        const isTurn = info.route === 'TURN';
+        badgeEl.className = 'badge ' + (isTurn ? 'turn' : (info.bytesKB > 0 ? 'ok' : ''));
+        const routeTxt = info.route ? ` • ${info.route}` : '';
+        badgeEl.textContent = info.bytesKB > 0 ? `${info.bytesKB} KB${routeTxt}` : 'Đang nối...';
+
+        row.append(nameEl, badgeEl);
+        membersListEl.appendChild(row);
       });
+
+      if (remotePeers.size > 0) {
+        startTimerIfNeeded();
+        setStatus(`Đang trò chuyện (${totalInRoom}/${maxRoomUsers} người)`, 'ok');
+      } else {
+        stopTimer();
+        setStatus(isHost ? `Phòng đã sẵn sàng (tối đa ${maxRoomUsers} người). Đang chờ...` : 'Đang kết nối vào phòng...');
+      }
     }
 
-    function setupCall(call) {
-      currentCall = call;
+    function attachRemoteAudio(peerId, stream) {
+      const info = remotePeers.get(peerId);
+      if (!info || !stream) return;
+
+      if (info.dummyAudio) {
+        info.dummyAudio.srcObject = stream;
+        info.dummyAudio.play().catch(() => {});
+        return;
+      }
+
+      const dummy = document.createElement('audio');
+      dummy.srcObject = stream;
+      dummy.muted = true;
+      dummy.playsInline = true;
+      dummy.autoplay = true;
+      audioSink.appendChild(dummy);
+      dummy.play().catch(() => {});
+      info.dummyAudio = dummy;
+
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const srcNode = audioCtx.createMediaStreamSource(stream);
+        srcNode.connect(audioCtx.destination);
+        info.sourceNode = srcNode;
+      } catch {
+        dummy.muted = false;
+      }
+      updateAudioResumeButton();
+    }
+
+    function ensureRemotePeerEntry(peerId, customLabel = null) {
+      if (!remotePeers.has(peerId)) {
+        memberCounter++;
+        const label = customLabel || (peerId === hostPeerId ? 'Chủ phòng (Host)' : `Thành viên #${memberCounter}`);
+        remotePeers.set(peerId, {
+          label,
+          call: null,
+          dummyAudio: null,
+          sourceNode: null,
+          bytesKB: 0,
+          route: ''
+        });
+      } else if (customLabel) {
+        remotePeers.get(peerId).label = customLabel;
+      }
+      return remotePeers.get(peerId);
+    }
+
+    function removeRemotePeer(peerId) {
+      const info = remotePeers.get(peerId);
+      if (!info) return;
+      try { if (info.call) info.call.close(); } catch {}
+      try { if (info.sourceNode) info.sourceNode.disconnect(); } catch {}
+      if (info.dummyAudio) {
+        info.dummyAudio.srcObject = null;
+        info.dummyAudio.remove();
+      }
+      remotePeers.delete(peerId);
+      renderMembers();
+    }
+
+    function bindMediaCall(call, label = null) {
+      const peerId = call.peer;
+      const info = ensureRemotePeerEntry(peerId, label);
+      info.call = call;
+      renderMembers();
 
       call.on('stream', (remoteStream) => {
-        attachStreamToAudio(remoteStream);
-        setStatus('Đã kết nối!', 'ok');
-        startTimer();
-        if (call.peerConnection) startStatsMonitor(call.peerConnection);
+        attachRemoteAudio(peerId, remoteStream);
+        renderMembers();
       });
 
-      call.on('close', () => cleanup('Cuộc gọi đã kết thúc.'));
-      call.on('error', () => cleanup('Mất kết nối cuộc gọi.', true));
-
       if (call.peerConnection) {
-        const pc = call.peerConnection;
-        pc.addEventListener('track', (e) => {
+        call.peerConnection.addEventListener('track', (e) => {
           const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
-          attachStreamToAudio(stream);
+          attachRemoteAudio(peerId, stream);
         });
-        pc.oniceconnectionstatechange = () => {
-          const state = pc.iceConnectionState;
-          if (state === 'disconnected' || state === 'failed') {
-            setStatus('Mạng đang yếu hoặc chưa thông, đang giữ phòng...', 'warn');
-          } else if (state === 'connected' || state === 'completed') {
-            setStatus('Đã kết nối!', 'ok');
+        call.peerConnection.oniceconnectionstatechange = () => {
+          const st = call.peerConnection.iceConnectionState;
+          if (st === 'closed' || st === 'failed') {
+            removeRemotePeer(peerId);
           }
         };
       }
+
+      call.on('close', () => removeRemotePeer(peerId));
+      call.on('error', () => removeRemotePeer(peerId));
     }
 
-    function setupDataConn(conn) {
-      dataConn = conn;
-      conn.on('data', (msg) => {
-        if (msg === 'hangup') cleanup('Đối phương đã tắt máy.');
-      });
-      conn.on('close', () => {
-        if (currentCall) cleanup('Đối phương đã rời phòng.');
-      });
+    function startStatsLoop() {
+      stopStatsLoop();
+      statsInterval = setInterval(async () => {
+        for (const [peerId, info] of remotePeers.entries()) {
+          if (!info.call || !info.call.peerConnection) continue;
+          try {
+            const stats = await info.call.peerConnection.getStats();
+            let totalBytes = 0;
+            let routeType = '';
+            stats.forEach((r) => {
+              if (r.type === 'inbound-rtp' && (r.kind === 'audio' || r.mediaType === 'audio')) {
+                totalBytes += r.bytesReceived || 0;
+              }
+              if (r.type === 'candidate-pair' && r.state === 'succeeded') {
+                const cand = stats.get(r.localCandidateId);
+                if (cand) routeType = cand.candidateType === 'relay' ? 'TURN' : 'P2P';
+              }
+            });
+            info.bytesKB = Math.round(totalBytes / 1024);
+            if (routeType) info.route = routeType;
+          } catch {}
+        }
+        if (remotePeers.size > 0) renderMembers();
+      }, 1500);
+    }
+
+    function stopStatsLoop() {
+      if (statsInterval) clearInterval(statsInterval);
+      statsInterval = null;
+    }
+
+    function notifyLeaveBeforeExit() {
+      if (isHost) {
+        hostGuestConns.forEach((conn) => {
+          if (conn.open) try { conn.send({ type: 'host-closed' }); } catch {}
+        });
+      } else if (guestHostConn && guestHostConn.open) {
+        try { guestHostConn.send({ type: 'leave' }); } catch {}
+      }
     }
 
     function cleanup(message = '', isErr = false) {
+      notifyLeaveBeforeExit();
       stopTimer();
-      stopStatsMonitor();
+      stopStatsLoop();
       stopMicMeter();
-      if (dataConn && dataConn.open) {
-        try { dataConn.send('hangup'); } catch {}
-        dataConn.close();
-      }
-      if (currentCall) currentCall.close();
-      if (peer) peer.destroy();
-      if (localStream) localStream.getTracks().forEach(t => t.stop());
 
-      peer = null; localStream = null; currentCall = null; dataConn = null;
-      remoteAudio.srcObject = null;
+      remotePeers.forEach((_, peerId) => removeRemotePeer(peerId));
+      remotePeers.clear();
+
+      hostGuestConns.forEach((conn) => { try { conn.close(); } catch {} });
+      hostGuestConns.clear();
+      if (guestHostConn) { try { guestHostConn.close(); } catch {} guestHostConn = null; }
+
+      if (peer) { try { peer.destroy(); } catch {} peer = null; }
+      if (voiceFX) { voiceFX.destroy(); voiceFX = null; }
+      if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
+      outgoingStream = null;
+
       isMuted = false;
+      memberCounter = 1;
+      selfMonitorChk.checked = false;
       muteBtn.textContent = 'Tắt mic';
       muteBtn.classList.remove('active');
+      resumeAudioBtn.classList.add('hidden');
 
       if (message) {
         setStatus(message, isErr ? 'err' : '');
         setTimeout(() => {
           roomView.classList.add('hidden');
           homeView.classList.remove('hidden');
-        }, 1800);
+        }, 2200);
       } else {
         roomView.classList.add('hidden');
         homeView.classList.remove('hidden');
       }
     }
 
+    window.addEventListener('beforeunload', notifyLeaveBeforeExit);
+
+    // 1. HOST: Tạo phòng (2 - 4 người)
     createBtn.addEventListener('click', async () => {
-      unlockAudio();
-      try { localStream = await getMic(); } catch { return; }
+      const rawCustom = customCodeInput.value;
+      const customCode = sanitizeCode(rawCustom);
+      if (rawCustom.trim() !== '' && customCode.length < 3) {
+        alert('Mã tự đặt cần ít nhất 3 ký tự (chữ không dấu hoặc số).');
+        return;
+      }
 
-      const roomCode = genCode();
-      showRoom(true);
-      codeDisplay.textContent = roomCode;
+      try { await initProcessedMic(); } catch { return; }
+
+      isHost = true;
+      maxRoomUsers = selectedMaxUsers;
+      currentRoomCode = customCode.length >= 3 ? customCode : genCode();
+      hostPeerId = APP_PREFIX + currentRoomCode;
+
+      homeView.classList.add('hidden');
+      roomView.classList.remove('hidden');
+      codeDisplay.textContent = currentRoomCode;
       setStatus('Đang tạo phòng...');
+      renderMembers();
 
-      peer = new Peer(APP_PREFIX + roomCode, getPeerConfig());
-      peer.on('open', () => setStatus('Phòng đã sẵn sàng. Đang chờ người kia nhập mã...'));
-      peer.on('connection', (conn) => setupDataConn(conn));
-      peer.on('call', (call) => {
-        if (currentCall) { call.close(); return; }
-        setStatus('Có người đang vào phòng...');
-        call.answer(localStream);
-        setupCall(call);
+      peer = new Peer(hostPeerId, getPeerConfig());
+
+      peer.on('open', () => {
+        renderMembers();
+        startStatsLoop();
       });
+
+      peer.on('connection', (conn) => {
+        const guestId = conn.peer;
+
+        conn.on('data', (msg) => {
+          if (!msg || typeof msg !== 'object') return;
+
+          if (msg.type === 'join') {
+            const currentCount = 1 + hostGuestConns.size;
+            if (currentCount >= maxRoomUsers) {
+              try { conn.send({ type: 'room-full', max: maxRoomUsers }); } catch {}
+              setTimeout(() => { try { conn.close(); } catch {} }, 300);
+              return;
+            }
+
+            const existingGuestIds = Array.from(hostGuestConns.keys());
+            hostGuestConns.set(guestId, conn);
+            ensureRemotePeerEntry(guestId);
+            renderMembers();
+
+            conn.send({
+              type: 'welcome',
+              max: maxRoomUsers,
+              peers: existingGuestIds
+            });
+
+            existingGuestIds.forEach((oldId) => {
+              const oldConn = hostGuestConns.get(oldId);
+              if (oldConn && oldConn.open) {
+                try { oldConn.send({ type: 'peer-joined', peerId: guestId }); } catch {}
+              }
+            });
+          } else if (msg.type === 'leave') {
+            handleGuestDisconnect(guestId);
+          }
+        });
+
+        conn.on('close', () => handleGuestDisconnect(guestId));
+        conn.on('error', () => handleGuestDisconnect(guestId));
+      });
+
+      peer.on('call', (call) => {
+        if (!hostGuestConns.has(call.peer) && (1 + remotePeers.size) >= maxRoomUsers) {
+          call.close();
+          return;
+        }
+        call.answer(outgoingStream);
+        bindMediaCall(call);
+      });
+
       peer.on('disconnected', () => {
         if (peer && !peer.destroyed) peer.reconnect();
       });
-      peer.on('error', (err) => cleanup('Lỗi kết nối máy chủ: ' + err.type, true));
+
+      peer.on('error', (err) => {
+        if (err.type === 'unavailable-id') {
+          cleanup(`Mã "${currentRoomCode}" đang có người dùng, hãy chọn mã khác!`, true);
+        } else {
+          cleanup('Lỗi kết nối máy chủ: ' + err.type, true);
+        }
+      });
     });
 
+    function handleGuestDisconnect(guestId) {
+      if (!hostGuestConns.has(guestId)) return;
+      hostGuestConns.delete(guestId);
+      removeRemotePeer(guestId);
+
+      hostGuestConns.forEach((conn) => {
+        if (conn.open) {
+          try { conn.send({ type: 'peer-left', peerId: guestId }); } catch {}
+        }
+      });
+    }
+
+    // 2. GUEST: Nhập mã để vào phòng
     joinBtn.addEventListener('click', async () => {
-      unlockAudio();
-      const code = codeInput.value.trim().toUpperCase();
-      if (code.length < 4) { alert('Vui lòng nhập đúng mã phòng.'); return; }
+      const code = sanitizeCode(codeInput.value);
+      if (code.length < 3) {
+        alert('Vui lòng nhập đúng mã phòng (tối thiểu 3 ký tự).');
+        return;
+      }
 
-      try { localStream = await getMic(); } catch { return; }
+      try { await initProcessedMic(); } catch { return; }
 
-      showRoom(false);
-      setStatus('Đang kết nối tới phòng ' + code + '...');
+      isHost = false;
+      currentRoomCode = code;
+      hostPeerId = APP_PREFIX + code;
+
+      homeView.classList.add('hidden');
+      roomView.classList.remove('hidden');
+      codeDisplay.textContent = currentRoomCode;
+      setStatus('Đang xin vào phòng ' + code + '...');
+      renderMembers();
 
       peer = new Peer(undefined, getPeerConfig());
+
       peer.on('open', () => {
-        const hostId = APP_PREFIX + code;
-        setupDataConn(peer.connect(hostId));
-        setupCall(peer.call(hostId, localStream));
+        startStatsLoop();
+        const conn = peer.connect(hostPeerId, { reliable: true });
+        guestHostConn = conn;
+
+        conn.on('open', () => {
+          conn.send({ type: 'join' });
+        });
+
+        conn.on('data', (msg) => {
+          if (!msg || typeof msg !== 'object') return;
+
+          if (msg.type === 'room-full') {
+            cleanup(`Phòng đã đầy (tối đa ${msg.max}/${msg.max} người)!`, true);
+          } else if (msg.type === 'welcome') {
+            maxRoomUsers = msg.max || 4;
+            renderMembers();
+
+            const hostCall = peer.call(hostPeerId, outgoingStream);
+            bindMediaCall(hostCall, 'Chủ phòng (Host)');
+
+            (msg.peers || []).forEach((otherPeerId) => {
+              if (otherPeerId !== peer.id && !remotePeers.has(otherPeerId)) {
+                const peerCall = peer.call(otherPeerId, outgoingStream);
+                bindMediaCall(peerCall);
+              }
+            });
+          } else if (msg.type === 'peer-joined') {
+            ensureRemotePeerEntry(msg.peerId);
+            renderMembers();
+          } else if (msg.type === 'peer-left') {
+            removeRemotePeer(msg.peerId);
+          } else if (msg.type === 'host-closed') {
+            cleanup('Chủ phòng đã kết thúc cuộc gọi.');
+          }
+        });
+
+        conn.on('close', () => {
+          if (peer && !peer.destroyed) {
+            cleanup('Mất kết nối với chủ phòng.', true);
+          }
+        });
       });
+
+      peer.on('call', (call) => {
+        call.answer(outgoingStream);
+        bindMediaCall(call);
+      });
+
       peer.on('disconnected', () => {
         if (peer && !peer.destroyed) peer.reconnect();
       });
+
       peer.on('error', (err) => {
         if (err.type === 'peer-unavailable') {
           cleanup('Không tìm thấy mã phòng này hoặc Host chưa mở.', true);
@@ -503,6 +1190,10 @@
           cleanup('Lỗi kết nối: ' + err.type, true);
         }
       });
+    });
+
+    customCodeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') createBtn.click();
     });
 
     codeInput.addEventListener('keydown', (e) => {
@@ -518,11 +1209,13 @@
     });
 
     muteBtn.addEventListener('click', () => {
-      if (!localStream) return;
+      if (!rawMicStream) return;
       isMuted = !isMuted;
-      localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+      rawMicStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+      if (voiceFX) voiceFX.setMuted(isMuted);
       muteBtn.textContent = isMuted ? 'Bật mic' : 'Tắt mic';
       muteBtn.classList.toggle('active', isMuted);
+      renderMembers();
     });
 
     hangupBtn.addEventListener('click', () => cleanup('Bạn đã kết thúc cuộc gọi.'));
