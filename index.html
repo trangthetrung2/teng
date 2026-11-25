@@ -53,11 +53,12 @@
       background: #0f172a; font-size: 0.9rem; color: #cbd5e1;
     }
     .status.ok { color: #34d399; border: 1px solid #065f46; }
+    .status.warn { color: #fbbf24; border: 1px solid #78350f; }
     .status.err { color: #f87171; border: 1px solid #7f1d1d; }
     .diag {
       font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px; min-height: 18px;
     }
-    .diag.warn { color: #fbbf24; }
+    .diag.warn { color: #fbbf24; font-weight: 500; }
     .mic-wrap {
       background: #0f172a; border-radius: 99px; height: 8px; overflow: hidden;
       margin: 10px 0 16px; border: 1px solid #334155;
@@ -75,6 +76,7 @@
     <h1>Phòng Gọi Thoại</h1>
     <p class="sub">Kết nối trực tiếp qua mã phòng</p>
 
+    <!-- Màn hình chính -->
     <div id="homeView">
       <button id="createBtn" class="btn btn-primary">Tạo phòng (Host)</button>
       <div class="divider">hoặc vào phòng có sẵn</div>
@@ -84,6 +86,7 @@
       </div>
     </div>
 
+    <!-- Màn hình trong phòng -->
     <div id="roomView" class="hidden">
       <div id="codeBox" class="code-box hidden" title="Bấm để sao chép">
         <div class="code-label">MÃ PHÒNG CỦA BẠN</div>
@@ -109,12 +112,14 @@
 
   <script>
     const APP_PREFIX = 'cf-voice-call-vn-9x2k-';
+    const AUTO_HANGUP_SECONDS = 15; // Tự tắt nếu nhận 0 KB mới liên tục trong 15 giây
+
     const PEER_CONFIG = {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' }
-          // Dán thêm TURN của Metered.ca vào đây nếu báo "0 bytes nhận được"
+          // Dán thêm cấu hình TURN của Metered Open Relay vào đây để gọi qua 4G/5G
         ]
       }
     };
@@ -146,7 +151,7 @@
     let audioCtx = null;
     let seconds = 0;
 
-    // Mở khóa audio ngay trong thao tác bấm nút (bắt buộc cho iOS Safari)
+    // Mở khóa loa ngay khi bấm nút (bắt buộc trên iOS Safari)
     function unlockAudio() {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -191,30 +196,42 @@
       micBar.style.width = '0%';
     }
 
+    // Giám sát dữ liệu âm thanh thực tế & tự ngắt sau 15s nếu 0 KB tăng thêm
     function startStatsMonitor(pc) {
       stopStatsMonitor();
-      let checks = 0;
+      let lastBytes = 0;
+      let silentSeconds = 0;
+
       statsInterval = setInterval(async () => {
-        if (!pc) return;
-        checks++;
+        if (!pc || !currentCall) return;
         try {
           const stats = await pc.getStats();
-          let bytesReceived = 0;
+          let totalBytes = 0;
           stats.forEach((report) => {
-            if (report.type === 'inbound-rtp' && report.kind === 'audio') {
-              bytesReceived = report.bytesReceived || 0;
+            if (report.type === 'inbound-rtp' && (report.kind === 'audio' || report.mediaType === 'audio')) {
+              totalBytes += report.bytesReceived || 0;
             }
           });
 
-          if (bytesReceived > 0) {
-            diagEl.textContent = `Đang nhận âm thanh (${Math.round(bytesReceived / 1024)} KB)`;
+          const delta = totalBytes - lastBytes;
+          lastBytes = totalBytes;
+
+          if (delta > 0) {
+            silentSeconds = 0;
+            diagEl.textContent = `Đang nhận âm thanh (${Math.round(totalBytes / 1024)} KB)`;
             diagEl.className = 'diag';
-          } else if (checks >= 2) {
-            diagEl.textContent = `Chưa nhận được gói tiếng (ICE: ${pc.iceConnectionState}) — Cần thêm TURN!`;
+          } else {
+            silentSeconds++;
+            const remain = AUTO_HANGUP_SECONDS - silentSeconds;
+            if (remain <= 0) {
+              cleanup(`Tự động tắt do không nhận được âm thanh (0 KB) trong ${AUTO_HANGUP_SECONDS} giây.`, true);
+              return;
+            }
+            diagEl.textContent = `Không có dữ liệu tiếng (0 KB) — Tự tắt sau ${remain}s...`;
             diagEl.className = 'diag warn';
           }
         } catch {}
-      }, 2000);
+      }, 1000);
     }
 
     function stopStatsMonitor() {
@@ -297,8 +314,12 @@
       if (call.peerConnection) {
         call.peerConnection.oniceconnectionstatechange = () => {
           const state = call.peerConnection.iceConnectionState;
-          if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+          if (state === 'failed' || state === 'closed') {
             cleanup('Đối phương đã ngắt kết nối.');
+          } else if (state === 'disconnected') {
+            setStatus('Mạng chập chờn, đang thử nối lại...', 'warn');
+          } else if (state === 'connected' || state === 'completed') {
+            setStatus('Đã kết nối!', 'ok');
           }
         };
       }
@@ -337,13 +358,14 @@
         setTimeout(() => {
           roomView.classList.add('hidden');
           homeView.classList.remove('hidden');
-        }, 1800);
+        }, 2000);
       } else {
         roomView.classList.add('hidden');
         homeView.classList.remove('hidden');
       }
     }
 
+    // 1. HOST: Tạo phòng
     createBtn.addEventListener('click', async () => {
       unlockAudio();
       try { localStream = await getMic(); } catch { return; }
@@ -362,9 +384,13 @@
         call.answer(localStream);
         setupCall(call);
       });
+      peer.on('disconnected', () => {
+        if (peer && !peer.destroyed) peer.reconnect();
+      });
       peer.on('error', (err) => cleanup('Lỗi kết nối máy chủ: ' + err.type, true));
     });
 
+    // 2. GUEST: Nhập mã để vào phòng
     joinBtn.addEventListener('click', async () => {
       unlockAudio();
       const code = codeInput.value.trim().toUpperCase();
@@ -381,6 +407,9 @@
         setupDataConn(peer.connect(hostId));
         setupCall(peer.call(hostId, localStream));
       });
+      peer.on('disconnected', () => {
+        if (peer && !peer.destroyed) peer.reconnect();
+      });
       peer.on('error', (err) => {
         if (err.type === 'peer-unavailable') {
           cleanup('Không tìm thấy mã phòng này hoặc Host chưa mở.', true);
@@ -388,6 +417,10 @@
           cleanup('Lỗi kết nối: ' + err.type, true);
         }
       });
+    });
+
+    codeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') joinBtn.click();
     });
 
     codeBox.addEventListener('click', async () => {
