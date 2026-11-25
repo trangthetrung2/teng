@@ -17,7 +17,7 @@
       text-align: center;
     }
     h1 { font-size: 1.4rem; margin-bottom: 6px; }
-    .sub { color: #94a3b8; font-size: 0.9rem; margin-bottom: 24px; }
+    .sub { color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px; }
     .btn {
       width: 100%; padding: 14px; border: none; border-radius: 12px;
       font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.15s;
@@ -31,16 +31,21 @@
     .btn-muted { background: #334155; color: #e2e8f0; }
     .btn-muted.active { background: #f59e0b; color: #0f172a; }
     .divider {
-      display: flex; align-items: center; gap: 12px; margin: 20px 0; color: #64748b; font-size: 0.85rem;
+      display: flex; align-items: center; gap: 12px; margin: 18px 0; color: #64748b; font-size: 0.85rem;
     }
     .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #334155; }
     .join-row { display: flex; gap: 8px; }
-    input {
+    input[type="text"] {
       flex: 1; padding: 14px; border-radius: 12px; border: 1px solid #475569;
       background: #0f172a; color: #fff; font-size: 1.05rem; text-align: center;
       letter-spacing: 3px; text-transform: uppercase; outline: none;
     }
-    input:focus { border-color: #3b82f6; }
+    input[type="text"]:focus { border-color: #3b82f6; }
+    .opt-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 16px; font-size: 0.85rem; color: #cbd5e1; cursor: pointer; user-select: none;
+    }
+    .opt-row input { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; }
     .code-box {
       background: #0f172a; border: 2px dashed #3b82f6; border-radius: 14px;
       padding: 16px; margin: 16px 0; cursor: pointer;
@@ -56,7 +61,7 @@
     .status.warn { color: #fbbf24; border: 1px solid #78350f; }
     .status.err { color: #f87171; border: 1px solid #7f1d1d; }
     .diag {
-      font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px; min-height: 18px;
+      font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px; min-height: 18px; line-height: 1.4;
     }
     .diag.warn { color: #fbbf24; font-weight: 500; }
     .mic-wrap {
@@ -74,7 +79,7 @@
 <body>
   <div class="card">
     <h1>Phòng Gọi Thoại</h1>
-    <p class="sub">Kết nối trực tiếp qua mã phòng</p>
+    <p class="sub">v2.1 • Kết nối trực tiếp & TURN</p>
 
     <!-- Màn hình chính -->
     <div id="homeView">
@@ -84,6 +89,10 @@
         <input id="codeInput" type="text" maxlength="6" placeholder="NHẬP MÃ" autocomplete="off" />
         <button id="joinBtn" class="btn btn-success" style="width:auto; padding: 0 20px;">Vào</button>
       </div>
+      <label class="opt-row" title="Bật khi gọi giữa 4G/5G hoặc Wi-Fi công ty bị chặn">
+        <input id="forceRelayChk" type="checkbox" />
+        <span>Ép qua TURN (bật nếu gọi 4G khó nối)</span>
+      </label>
     </div>
 
     <!-- Màn hình trong phòng -->
@@ -112,36 +121,44 @@
 
   <script>
     const APP_PREFIX = 'cf-voice-call-vn-9x2k-';
-    const AUTO_HANGUP_SECONDS = 15; // Tự tắt nếu nhận 0 KB mới liên tục trong 15 giây
+    const CONNECT_TIMEOUT_SECONDS = 25; // Chờ tối đa 25s để bắt tay qua 4G/TURN
+    const SILENT_HANGUP_SECONDS = 15;   // Sau khi đã nối, tự tắt nếu mất hẳn dữ liệu tiếng 15s
 
-    const PEER_CONFIG = {
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun.relay.metered.ca:80' },
-          {
-            urls: 'turn:global.relay.metered.ca:80',
-            username: '2f50aac419dcb5e14ea6161f',
-            credential: 'pdjLgii+aijstW2B'
-          },
-          {
-            urls: 'turn:global.relay.metered.ca:80?transport=tcp',
-            username: '2f50aac419dcb5e14ea6161f',
-            credential: 'pdjLgii+aijstW2B'
-          },
-          {
-            urls: 'turn:global.relay.metered.ca:443',
-            username: '2f50aac419dcb5e14ea6161f',
-            credential: 'pdjLgii+aijstW2B'
-          },
-          {
-            urls: 'turns:global.relay.metered.ca:443?transport=tcp',
-            username: '2f50aac419dcb5e14ea6161f',
-            credential: 'pdjLgii+aijstW2B'
-          }
-        ]
+    const BASE_ICE_SERVERS = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun.relay.metered.ca:80' },
+      {
+        urls: 'turn:global.relay.metered.ca:80',
+        username: '2f50aac419dcb5e14ea6161f',
+        credential: 'pdjLgii+aijstW2B'
+      },
+      {
+        urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+        username: '2f50aac419dcb5e14ea6161f',
+        credential: 'pdjLgii+aijstW2B'
+      },
+      {
+        urls: 'turn:global.relay.metered.ca:443',
+        username: '2f50aac419dcb5e14ea6161f',
+        credential: 'pdjLgii+aijstW2B'
+      },
+      {
+        urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+        username: '2f50aac419dcb5e14ea6161f',
+        credential: 'pdjLgii+aijstW2B'
       }
-    };
+    ];
+
+    function getPeerConfig() {
+      const forceRelay = document.getElementById('forceRelayChk').checked;
+      return {
+        config: {
+          iceServers: BASE_ICE_SERVERS,
+          iceTransportPolicy: forceRelay ? 'relay' : 'all',
+          iceCandidatePoolSize: 4
+        }
+      };
+    }
 
     const homeView = document.getElementById('homeView');
     const roomView = document.getElementById('roomView');
@@ -169,6 +186,7 @@
     let micAnimFrame = null;
     let audioCtx = null;
     let seconds = 0;
+    let hasRelayCandidate = false;
 
     function unlockAudio() {
       try {
@@ -217,16 +235,26 @@
     function startStatsMonitor(pc) {
       stopStatsMonitor();
       let lastBytes = 0;
+      let waitingSeconds = 0;
       let silentSeconds = 0;
+      let everReceivedAudio = false;
 
       statsInterval = setInterval(async () => {
         if (!pc || !currentCall) return;
         try {
           const stats = await pc.getStats();
           let totalBytes = 0;
+          let routeType = '';
+
           stats.forEach((report) => {
             if (report.type === 'inbound-rtp' && (report.kind === 'audio' || report.mediaType === 'audio')) {
               totalBytes += report.bytesReceived || 0;
+            }
+            if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+              const localCand = stats.get(report.localCandidateId);
+              if (localCand) {
+                routeType = localCand.candidateType === 'relay' ? 'Qua TURN' : 'Trực tiếp';
+              }
             }
           });
 
@@ -234,17 +262,31 @@
           lastBytes = totalBytes;
 
           if (delta > 0) {
+            everReceivedAudio = true;
             silentSeconds = 0;
-            diagEl.textContent = `Đang nhận âm thanh (${Math.round(totalBytes / 1024)} KB)`;
+            const badge = routeType ? ` [${routeType}]` : '';
+            diagEl.textContent = `Đang nhận âm thanh (${Math.round(totalBytes / 1024)} KB)${badge}`;
             diagEl.className = 'diag';
-          } else {
-            silentSeconds++;
-            const remain = AUTO_HANGUP_SECONDS - silentSeconds;
+          } else if (!everReceivedAudio) {
+            // Giai đoạn đang bắt tay qua 4G/TURN (cho phép tối đa 25s)
+            waitingSeconds++;
+            const remain = CONNECT_TIMEOUT_SECONDS - waitingSeconds;
             if (remain <= 0) {
-              cleanup(`Tự động tắt do không nhận được âm thanh (0 KB) trong ${AUTO_HANGUP_SECONDS} giây.`, true);
+              cleanup(`Quá ${CONNECT_TIMEOUT_SECONDS}s không thông âm thanh (Relay: ${hasRelayCandidate ? 'OK' : 'Lỗi TURN'}).`, true);
               return;
             }
-            diagEl.textContent = `Không có dữ liệu tiếng (0 KB) — Tự tắt sau ${remain}s...`;
+            const relayNote = hasRelayCandidate ? 'TURN sẵn sàng' : 'Đang lấy cổng TURN...';
+            diagEl.textContent = `Đang nối đường tiếng (${relayNote}) • Còn ${remain}s...`;
+            diagEl.className = 'diag warn';
+          } else {
+            // Đã từng nghe được nhưng bị mất tín hiệu giữa chừng
+            silentSeconds++;
+            const remain = SILENT_HANGUP_SECONDS - silentSeconds;
+            if (remain <= 0) {
+              cleanup(`Mất luồng âm thanh liên tục ${SILENT_HANGUP_SECONDS} giây.`, true);
+              return;
+            }
+            diagEl.textContent = `Mất tín hiệu tiếng — Tự tắt sau ${remain}s...`;
             diagEl.className = 'diag warn';
           }
         } catch {}
@@ -309,17 +351,23 @@
       codeBox.classList.toggle('hidden', !showCode);
     }
 
+    function attachStreamToAudio(stream) {
+      if (!stream) return;
+      remoteAudio.srcObject = stream;
+      remoteAudio.muted = false;
+      remoteAudio.volume = 1.0;
+      remoteAudio.play().catch((e) => {
+        diagEl.textContent = 'Trình duyệt chặn tự phát loa: ' + e.name;
+        diagEl.className = 'diag warn';
+      });
+    }
+
     function setupCall(call) {
       currentCall = call;
+      hasRelayCandidate = false;
 
       call.on('stream', (remoteStream) => {
-        remoteAudio.srcObject = remoteStream;
-        remoteAudio.muted = false;
-        remoteAudio.volume = 1.0;
-        remoteAudio.play().catch((e) => {
-          diagEl.textContent = 'Trình duyệt chặn tự phát loa: ' + e.name;
-          diagEl.className = 'diag warn';
-        });
+        attachStreamToAudio(remoteStream);
         setStatus('Đã kết nối!', 'ok');
         startTimer();
         if (call.peerConnection) startStatsMonitor(call.peerConnection);
@@ -329,10 +377,22 @@
       call.on('error', () => cleanup('Mất kết nối cuộc gọi.', true));
 
       if (call.peerConnection) {
-        call.peerConnection.oniceconnectionstatechange = () => {
-          const state = call.peerConnection.iceConnectionState;
+        const pc = call.peerConnection;
+
+        pc.addEventListener('icecandidate', (e) => {
+          if (e.candidate && e.candidate.candidate && e.candidate.candidate.includes(' typ relay ')) {
+            hasRelayCandidate = true;
+          }
+        });
+
+        pc.addEventListener('track', (e) => {
+          if (e.streams && e.streams[0]) attachStreamToAudio(e.streams[0]);
+        });
+
+        pc.oniceconnectionstatechange = () => {
+          const state = pc.iceConnectionState;
           if (state === 'failed' || state === 'closed') {
-            cleanup('Đối phương đã ngắt kết nối.');
+            cleanup('Đối phương đã ngắt kết nối hoặc mạng bị chặn.');
           } else if (state === 'disconnected') {
             setStatus('Mạng chập chờn, đang thử nối lại...', 'warn');
           } else if (state === 'connected' || state === 'completed') {
@@ -375,7 +435,7 @@
         setTimeout(() => {
           roomView.classList.add('hidden');
           homeView.classList.remove('hidden');
-        }, 2000);
+        }, 2500);
       } else {
         roomView.classList.add('hidden');
         homeView.classList.remove('hidden');
@@ -392,7 +452,7 @@
       codeDisplay.textContent = roomCode;
       setStatus('Đang tạo phòng...');
 
-      peer = new Peer(APP_PREFIX + roomCode, PEER_CONFIG);
+      peer = new Peer(APP_PREFIX + roomCode, getPeerConfig());
       peer.on('open', () => setStatus('Phòng đã sẵn sàng. Đang chờ người kia nhập mã...'));
       peer.on('connection', (conn) => setupDataConn(conn));
       peer.on('call', (call) => {
@@ -418,7 +478,7 @@
       showRoom(false);
       setStatus('Đang kết nối tới phòng ' + code + '...');
 
-      peer = new Peer(undefined, PEER_CONFIG);
+      peer = new Peer(undefined, getPeerConfig());
       peer.on('open', () => {
         const hostId = APP_PREFIX + code;
         setupDataConn(peer.connect(hostId));
