@@ -3,28 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Roleplay Voice Studio • Luyện Nói Tiếng Anh 1-1</title>
+  <title>Roleplay Voice Studio • Luyện Nói Tiếng Anh</title>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body {
       min-height: 100vh; display: flex; align-items: flex-start; justify-content: center;
-      background: #0f172a; color: #f8fafc; padding: 16px 12px 40px;
+      background: #0f172a; color: #f8fafc; padding: 16px 12px 44px;
     }
     .app-wrap {
-      width: 100%; max-width: 540px; background: #1e293b; border: 1px solid #334155;
+      width: 100%; max-width: 560px; background: #1e293b; border: 1px solid #334155;
       border-radius: 20px; padding: 20px 18px; box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+      position: relative;
     }
     .header-top { text-align: center; margin-bottom: 16px; }
     h1 { font-size: 1.3rem; font-weight: 800; color: #f8fafc; }
     .sub { color: #94a3b8; font-size: 0.8rem; margin-top: 3px; }
 
+    /* Toast thông báo nổi */
+    .toast-stack {
+      position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+      z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+      width: min(92vw, 440px); pointer-events: none;
+    }
+    .toast {
+      background: #1e293b; color: #f8fafc; border: 1px solid #3b82f6;
+      border-left: 4px solid #3b82f6; border-radius: 11px; padding: 10px 14px;
+      font-size: 0.84rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+      animation: toastIn 0.2s ease-out;
+    }
+    .toast.join { border-color: #10b981; border-left-color: #10b981; color: #d1fae5; }
+    .toast.leave { border-color: #f59e0b; border-left-color: #f59e0b; color: #fef3c7; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Buttons & Inputs */
     .btn {
       width: 100%; padding: 12px 14px; border: none; border-radius: 12px;
-      font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: 0.15s;
+      font-size: 0.94rem; font-weight: 600; cursor: pointer; transition: 0.15s;
     }
-    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-primary { background: #3b82f6; color: #fff; }
     .btn-primary:hover:not(:disabled) { background: #2563eb; }
     .btn-success { background: #10b981; color: #fff; }
@@ -33,10 +53,10 @@
     .btn-danger:hover:not(:disabled) { background: #dc2626; }
     .btn-muted { background: #334155; color: #e2e8f0; }
     .btn-muted.active { background: #f59e0b; color: #0f172a; }
-    .btn-warn { background: #f59e0b; color: #0f172a; margin-bottom: 10px; font-size: 0.88rem; padding: 10px; }
+    .btn-warn { background: #f59e0b; color: #0f172a; margin-bottom: 10px; font-size: 0.86rem; padding: 10px; }
     .btn-outline {
       background: #0f172a; color: #cbd5e1; border: 1px solid #334155;
-      padding: 9px 12px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      padding: 8px 12px; border-radius: 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
     }
     .btn-outline:hover:not(:disabled) { border-color: #60a5fa; color: #fff; }
 
@@ -51,7 +71,7 @@
     }
     .box-title {
       font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;
-      letter-spacing: 0.5px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+      letter-spacing: 0.4px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px;
     }
 
     select, input[type="text"] {
@@ -64,12 +84,6 @@
     }
 
     .row-gap { display: flex; gap: 8px; align-items: center; }
-    .role-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-    .role-pill {
-      padding: 9px; border-radius: 10px; border: 1px solid #334155; background: #1e293b;
-      color: #94a3b8; font-size: 0.84rem; font-weight: 600; cursor: pointer; text-align: center;
-    }
-    .role-pill.selected { background: #2563eb; border-color: #60a5fa; color: #fff; }
 
     .opt-row {
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -83,9 +97,7 @@
       background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 10px 12px;
       margin-bottom: 10px;
     }
-    .code-pill {
-      cursor: pointer; display: flex; flex-direction: column;
-    }
+    .code-pill { cursor: pointer; display: flex; flex-direction: column; }
     .code-pill small { font-size: 0.68rem; color: #94a3b8; }
     .code-pill strong { font-size: 1.25rem; letter-spacing: 3px; color: #60a5fa; }
     .call-meta { text-align: right; }
@@ -96,6 +108,59 @@
     }
     .conn-badge.ok { background: #064e3b; color: #34d399; }
     .conn-badge.warn { background: #78350f; color: #fbbf24; }
+
+    /* Host context bar inside room */
+    .host-ctx-box {
+      background: #0f172a; border: 1px solid #1d4ed8; border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 10px;
+    }
+    .host-ctx-head {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.74rem; font-weight: 700; color: #93c5fd; margin-bottom: 8px;
+    }
+
+    /* Members & Role Manager */
+    .members-box {
+      background: #0f172a; border: 1px solid #334155; border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 10px;
+    }
+    .members-head {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+      font-size: 0.74rem; font-weight: 700; color: #94a3b8; margin-bottom: 8px;
+    }
+    .rotate-btn {
+      padding: 4px 10px; border-radius: 8px; border: 1px solid #475569;
+      background: #1e293b; color: #cbd5e1; font-size: 0.72rem; font-weight: 700; cursor: pointer;
+    }
+    .rotate-btn.active {
+      background: #7c3aed; border-color: #a78bfa; color: #fff;
+    }
+    .rotate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .member-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 0; border-top: 1px solid #1e293b; font-size: 0.82rem; flex-wrap: wrap;
+    }
+    .member-row:first-of-type { border-top: none; }
+    .member-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .net-pill {
+      font-size: 0.67rem; padding: 2px 6px; border-radius: 99px;
+      background: #1e293b; color: #94a3b8;
+    }
+    .net-pill.ok { background: #064e3b; color: #34d399; }
+    .net-pill.turn { background: #1e3a8a; color: #93c5fd; }
+    .role-chip {
+      font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 7px;
+      background: #1e293b; color: #cbd5e1; border: 1px solid #334155;
+    }
+    .role-chip.r1 { background: #1d4ed8; border-color: #3b82f6; color: #fff; }
+    .role-chip.r2 { background: #0f766e; border-color: #14b8a6; color: #fff; }
+    .role-chip.spec { background: #334155; border-color: #475569; color: #cbd5e1; }
+    .role-chip.turn-now { background: #7c3aed; border-color: #c4b5fd; color: #fff; }
+    .role-chip.turn-next { background: #312e81; border-color: #6366f1; color: #c7d2fe; }
+    .role-select-sm {
+      width: auto; padding: 4px 8px; font-size: 0.74rem; border-radius: 8px;
+      background: #1e293b; color: #f8fafc; border: 1px solid #475569; cursor: pointer;
+    }
 
     /* Collapsible Voice FX drawer */
     details.fx-drawer {
@@ -118,6 +183,14 @@
     .pitch-slider-wrap { margin-top: 8px; padding-top: 8px; border-top: 1px solid #1e293b; }
     .pitch-slider-head { display: flex; justify-content: space-between; font-size: 0.73rem; color: #94a3b8; margin-bottom: 4px; }
     .pitch-slider-wrap input[type="range"] { width: 100%; accent-color: #ec4899; }
+
+    /* Free call banner */
+    .freecall-card {
+      background: #0f172a; border: 1px dashed #334155; border-radius: 14px;
+      padding: 18px 14px; text-align: center; margin-bottom: 10px;
+    }
+    .freecall-card h3 { font-size: 0.96rem; color: #e2e8f0; margin-bottom: 4px; }
+    .freecall-card p { font-size: 0.8rem; color: #94a3b8; line-height: 1.45; }
 
     /* Study Modes Bar */
     .study-bar {
@@ -151,10 +224,9 @@
       background: #1e293b; color: #38bdf8; border: 1px solid #0369a1;
     }
 
-    /* Partner Last Bubble */
     .partner-bubble {
       background: #1e293b; border-left: 3px solid #10b981; border-radius: 10px;
-      padding: 10px 12px; margin-bottom: 12px; position: relative;
+      padding: 10px 12px; margin-bottom: 12px;
     }
     .partner-bubble .who {
       font-size: 0.72rem; font-weight: 700; color: #34d399; margin-bottom: 4px;
@@ -163,9 +235,7 @@
     .partner-bubble .en { font-size: 0.96rem; font-weight: 600; color: #f8fafc; line-height: 1.4; }
     .partner-bubble .ipa { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
     .partner-bubble .vi { font-size: 0.8rem; color: #cbd5e1; margin-top: 3px; font-style: italic; }
-    .blurred-text {
-      filter: blur(6px); user-select: none; cursor: pointer; transition: filter 0.2s;
-    }
+    .blurred-text { filter: blur(6px); user-select: none; cursor: pointer; transition: filter 0.2s; }
     .blurred-text.revealed { filter: none; }
 
     .system-notice {
@@ -173,7 +243,6 @@
       font-size: 0.8rem; padding: 8px 10px; border-radius: 9px; margin-bottom: 10px;
     }
 
-    /* Choice Cards */
     .turn-prompt {
       font-size: 0.82rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;
       display: flex; justify-content: space-between; align-items: center;
@@ -181,9 +250,9 @@
     .choices-list { display: flex; flex-direction: column; gap: 9px; }
     .choice-card {
       background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-      padding: 11px 12px; text-align: left; transition: 0.15s;
+      padding: 11px 12px; text-align: left;
     }
-    .choice-card:hover { border-color: #3b82f6; background: #1e293b; }
+    .choice-card:hover { border-color: #3b82f6; }
     .choice-img {
       width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px;
       background: #020617; margin-bottom: 8px; border: 1px solid #334155;
@@ -191,9 +260,7 @@
     .choice-en { font-size: 0.96rem; font-weight: 700; color: #f8fafc; line-height: 1.4; }
     .choice-ipa { font-size: 0.79rem; color: #38bdf8; margin-top: 3px; }
     .choice-vi { font-size: 0.82rem; color: #cbd5e1; margin-top: 4px; }
-    .choice-actions {
-      display: flex; gap: 8px; margin-top: 9px; align-items: center;
-    }
+    .choice-actions { display: flex; gap: 8px; margin-top: 9px; align-items: center; }
     .btn-speak-select {
       flex: 1; padding: 8px 10px; border-radius: 8px; border: none;
       background: #2563eb; color: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer;
@@ -205,23 +272,20 @@
     }
 
     .wait-box {
-      text-align: center; padding: 22px 12px; color: #94a3b8; font-size: 0.88rem;
-      background: #1e293b; border-radius: 12px; border: 1px dashed #334155;
+      text-align: center; padding: 20px 12px; color: #94a3b8; font-size: 0.86rem;
+      background: #1e293b; border-radius: 12px; border: 1px dashed #334155; line-height: 1.5;
     }
 
-    /* Remedy Phrases Bar (UNDO / REPEAT / EARLY_END) */
     .remedy-bar {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px;
     }
     .remedy-btn {
       padding: 8px 6px; border-radius: 9px; border: 1px solid #334155;
-      background: #0f172a; color: #cbd5e1; font-size: 0.75rem; font-weight: 600; cursor: pointer;
-      text-align: center;
+      background: #0f172a; color: #cbd5e1; font-size: 0.74rem; font-weight: 600; cursor: pointer;
     }
     .remedy-btn:hover:not(:disabled) { border-color: #f59e0b; color: #fbbf24; }
     .remedy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Modal / Drawer for Common Phrases */
     .phrase-picker {
       background: #1e293b; border: 1px solid #f59e0b; border-radius: 12px;
       padding: 10px; margin-bottom: 10px;
@@ -237,13 +301,12 @@
     .phrase-opt:hover { border-color: #fbbf24; }
     .phrase-opt small { display: block; color: #94a3b8; font-size: 0.74rem; margin-top: 2px; }
 
-    /* Debrief Summary */
     .debrief-box {
       background: #0f172a; border: 1px solid #10b981; border-radius: 14px; padding: 14px; margin-bottom: 10px;
     }
     .debrief-title { font-size: 1rem; font-weight: 800; color: #34d399; margin-bottom: 6px; }
     .history-list {
-      max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 10px 0;
+      max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 10px 0;
     }
     .hist-item {
       background: #1e293b; border-radius: 9px; padding: 8px 10px; font-size: 0.82rem;
@@ -252,7 +315,6 @@
     .hist-item .h-en { color: #f8fafc; font-weight: 600; margin-top: 2px; }
     .hist-item .h-ipa { color: #94a3b8; font-size: 0.74rem; }
 
-    /* Mic & Bottom Controls */
     .mic-wrap {
       background: #0f172a; border-radius: 99px; height: 6px; overflow: hidden;
       margin: 6px 0 10px; border: 1px solid #334155;
@@ -264,41 +326,37 @@
   </style>
 </head>
 <body>
+  <div id="toastStack" class="toast-stack"></div>
+
   <div class="app-wrap">
     <div class="header-top">
       <h1>Roleplay Voice Studio</h1>
-      <p class="sub">v4.0 • Luyện Nói Tiếng Anh 1-1 Theo Cây Kịch Bản</p>
+      <p class="sub">v5.0 • Gọi Thoại Nhóm & Nhập Vai Tiếng Anh (2–4 người)</p>
     </div>
 
     <!-- ==================== MÀN HÌNH CHÍNH ==================== -->
     <div id="homeView">
       <div class="box">
         <div class="box-title">
-          <span>1. Chọn địa điểm & vai nhập vai (Host)</span>
+          <span>Chọn bối cảnh</span>
           <button type="button" id="refreshDriveBtn" class="btn-outline" style="padding:3px 8px; font-size:0.72rem;">Tải lại Drive</button>
         </div>
 
         <select id="scenarioSelect">
-          <option value="BUILTIN_HOSPITAL">Hospital (Mẫu tích hợp sẵn - Khám Đau Ngực)</option>
+          <option value="FREE_CALL" selected>Cuộc gọi thông thường</option>
         </select>
-        <div id="driveStatus" class="small-note">Đang kiểm tra thư mục Google Drive...</div>
+        <div id="driveStatus" class="small-note">Đang tải danh sách bối cảnh từ Google Drive...</div>
 
-        <div style="margin-top:10px; font-size:0.78rem; color:#cbd5e1; font-weight:600;">Bạn muốn đóng vai nào trước?</div>
-        <div class="role-pills" id="hostRolePills">
-          <div class="role-pill selected" data-role="ROLE_A">Vai 1 (VD: Doctor)</div>
-          <div class="role-pill" data-role="ROLE_B">Vai 2 (VD: Patient)</div>
-        </div>
-
-        <div class="row-gap" style="margin-top:10px;">
+        <div class="row-gap" style="margin-top:12px;">
           <input id="customCodeInput" class="code-input" type="text" maxlength="12" placeholder="MÃ PHÒNG (TÙY CHỌN)" autocomplete="off" />
-          <button id="createBtn" class="btn btn-primary" style="flex:1.3;">Tạo phòng</button>
+          <button id="createBtn" class="btn btn-primary" style="flex:1.2;">Tạo phòng</button>
         </div>
       </div>
 
-      <div class="divider">hoặc vào phòng của bạn học</div>
+      <div class="divider">hoặc vào phòng có sẵn</div>
 
       <div class="box">
-        <div class="box-title"><span>2. Nhập mã phòng để tham gia (Guest)</span></div>
+        <div class="box-title"><span>Nhập mã phòng để tham gia</span></div>
         <div class="row-gap">
           <input id="codeInput" class="code-input" type="text" maxlength="12" placeholder="NHẬP MÃ PHÒNG" autocomplete="off" />
           <button id="joinBtn" class="btn btn-success" style="width:auto; padding:11px 22px;">Vào</button>
@@ -320,17 +378,46 @@
         </div>
         <div class="call-meta">
           <div id="timer" class="timer">00:00</div>
-          <div id="connBadge" class="conn-badge">Đang chờ bạn học...</div>
+          <div id="connBadge" class="conn-badge">1/4 người</div>
         </div>
       </div>
 
       <button id="resumeAudioBtn" class="btn btn-warn hidden">Chạm để mở lại loa (iOS)</button>
 
-      <!-- Ngăn xếp chỉnh giọng nói (thu gọn cho đỡ chiếm màn hình học) -->
+      <!-- Bảng điều khiển bối cảnh dành riêng cho Host -->
+      <div id="hostContextPanel" class="host-ctx-box hidden">
+        <div class="host-ctx-head">
+          <span>CHỌN BỐI CẢNH (HOST)</span>
+          <button type="button" id="roomRefreshDriveBtn" class="btn-outline" style="padding:2px 7px; font-size:0.7rem;">Tải lại Drive</button>
+        </div>
+        <div id="hostSwitchWrap" class="row-gap">
+          <select id="roomScenarioSelect" style="flex:1; padding:8px 10px; font-size:0.84rem;">
+            <option value="FREE_CALL">Cuộc gọi thông thường</option>
+          </select>
+          <button type="button" id="applyContextBtn" class="btn btn-primary" style="width:auto; padding:8px 14px; font-size:0.82rem;">Bắt đầu</button>
+        </div>
+        <div id="hostEndWrap" class="hidden">
+          <div class="row-gap" style="justify-content:space-between;">
+            <span id="activeCtxLabel" style="font-size:0.8rem; color:#e2e8f0; font-weight:600;">Đang chạy bối cảnh...</span>
+            <button type="button" id="hostEndScenarioBtn" class="btn btn-danger" style="width:auto; padding:7px 12px; font-size:0.78rem;">Kết thúc bối cảnh</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danh sách thành viên & phân vai / xoay vai -->
+      <div class="members-box">
+        <div class="members-head">
+          <span>THÀNH VIÊN (<span id="memberCountText">1/4</span>)</span>
+          <button type="button" id="toggleRotationBtn" class="rotate-btn hidden" disabled>🔄 Xoay vai: TẮT</button>
+        </div>
+        <div id="membersList"></div>
+      </div>
+
+      <!-- Bộ chỉnh giọng nói thu gọn -->
       <details class="fx-drawer">
         <summary>
-          <span>Chế độ giọng nói: <strong id="fxLabel" style="color:#f472b6;">Bình thường</strong></span>
-          <span style="color:#64748b; font-size:0.74rem;">Mở chỉnh giọng ▼</span>
+          <span>Giọng nói: <strong id="fxLabel" style="color:#f472b6;">Bình thường</strong></span>
+          <span style="color:#64748b; font-size:0.74rem;">Chỉnh giọng ▼</span>
         </summary>
         <div class="fx-grid" id="fxGrid">
           <button type="button" class="fx-btn active" data-fx="normal">Gốc</button>
@@ -351,70 +438,73 @@
         </label>
       </details>
 
-      <!-- Thanh vai trò & chế độ luyện tập -->
-      <div class="study-bar">
-        <span id="myRoleBadge" class="role-tag">Vai của bạn: ---</span>
-        <div class="mode-toggles">
-          <button type="button" id="challengeToggle" class="toggle-chip" title="Ẩn tiếng Anh, chỉ hiện gợi ý tiếng Việt">Phản xạ (Ẩn EN)</button>
-          <button type="button" id="listenToggle" class="toggle-chip" title="Làm mờ câu đối phương vừa nói">Luyện nghe</button>
-        </div>
+      <!-- Chế độ Cuộc gọi thông thường -->
+      <div id="freeCallArea" class="freecall-card">
+        <h3>Cuộc gọi thông thường</h3>
+        <p id="freeCallHint">Mọi người đang trò chuyện tự do. Chủ phòng có thể chọn bối cảnh phía trên để chuyển sang nhập vai bất cứ lúc nào.</p>
       </div>
 
-      <!-- Khu vực cây kịch bản chính -->
-      <div id="scenarioStage" class="stage-box">
-        <div class="stage-breadcrumb">
-          <span id="crumbSheet">Chủ đề: ---</span>
-          <span id="crumbStep">Lượt #1</span>
-        </div>
-
-        <div id="ctxTagsBar" class="tag-list hidden"></div>
-        <div id="systemNotice" class="system-notice hidden"></div>
-
-        <!-- Câu đối phương vừa nói -->
-        <div id="partnerBubble" class="partner-bubble hidden">
-          <div class="who">
-            <span id="partnerWho">Đối phương vừa nói:</span>
-            <span id="blurHint" class="hidden" style="color:#a78bfa; cursor:pointer;">Chạm vào chữ để xem</span>
-          </div>
-          <div id="partnerTextWrap">
-            <div id="partnerEn" class="en"></div>
-            <div id="partnerIpa" class="ipa"></div>
-            <div id="partnerVi" class="vi"></div>
+      <!-- Khu vực Nhập vai (ẩn khi ở Cuộc gọi thông thường) -->
+      <div id="roleplayWrapper" class="hidden">
+        <div class="study-bar">
+          <span id="myRoleBadge" class="role-tag">Vai của bạn: ---</span>
+          <div class="mode-toggles">
+            <button type="button" id="challengeToggle" class="toggle-chip" title="Ẩn tiếng Anh, chỉ hiện gợi ý tiếng Việt">Phản xạ (Ẩn EN)</button>
+            <button type="button" id="listenToggle" class="toggle-chip" title="Làm mờ câu đối phương vừa nói">Luyện nghe</button>
           </div>
         </div>
 
-        <!-- Khu vực lựa chọn của lượt hiện tại -->
-        <div id="turnArea"></div>
-      </div>
+        <div id="scenarioStage" class="stage-box">
+          <div class="stage-breadcrumb">
+            <span id="crumbSheet">Bối cảnh: ---</span>
+            <span id="crumbStep">Lượt #1</span>
+          </div>
 
-      <!-- Khu vực tổng kết cuối buổi -->
-      <div id="debriefStage" class="debrief-box hidden">
-        <div class="debrief-title" id="debriefHeading">Hoàn thành tình huống!</div>
-        <div id="debriefSummary" class="small-note" style="color:#cbd5e1;"></div>
-        <div id="historyList" class="history-list"></div>
-        <div class="row-gap">
-          <button type="button" id="swapRolesBtn" class="btn btn-primary">Đổi vai & Luyện lại</button>
-          <button type="button" id="restartSameBtn" class="btn btn-outline" style="padding:12px;">Chơi lại từ đầu</button>
+          <div id="ctxTagsBar" class="tag-list hidden"></div>
+          <div id="systemNotice" class="system-notice hidden"></div>
+
+          <div id="partnerBubble" class="partner-bubble hidden">
+            <div class="who">
+              <span id="partnerWho">Vừa nói:</span>
+              <span id="blurHint" class="hidden" style="color:#a78bfa; cursor:pointer;">Chạm để hiện chữ</span>
+            </div>
+            <div id="partnerTextWrap">
+              <div id="partnerEn" class="en"></div>
+              <div id="partnerIpa" class="ipa"></div>
+              <div id="partnerVi" class="vi"></div>
+            </div>
+          </div>
+
+          <div id="turnArea"></div>
+        </div>
+
+        <div id="debriefStage" class="debrief-box hidden">
+          <div class="debrief-title" id="debriefHeading">Hoàn thành bối cảnh!</div>
+          <div id="debriefSummary" class="small-note" style="color:#cbd5e1;"></div>
+          <div id="historyList" class="history-list"></div>
+          <div id="debriefHostActions" class="row-gap hidden">
+            <button type="button" id="swapRolesBtn" class="btn btn-primary" style="font-size:0.84rem; padding:10px;">Đổi vai & Chơi lại</button>
+            <button type="button" id="restartSameBtn" class="btn btn-outline" style="padding:10px;">Chơi lại</button>
+            <button type="button" id="backFreeCallBtn" class="btn btn-outline" style="padding:10px;">Cuộc gọi thường</button>
+          </div>
+        </div>
+
+        <div id="phrasePicker" class="phrase-picker hidden">
+          <div class="phrase-picker-head">
+            <span id="phrasePickerTitle">Chọn câu giao tiếp:</span>
+            <button type="button" id="closePhrasePicker" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-weight:700;">✕ Đóng</button>
+          </div>
+          <div id="phraseOptions"></div>
+        </div>
+
+        <div id="remedyBar" class="remedy-bar">
+          <button type="button" id="btnUndo" class="remedy-btn" disabled>↩ Nói nhầm (Undo)</button>
+          <button type="button" id="btnRepeat" class="remedy-btn">🔁 Xin nghe lại</button>
+          <button type="button" id="btnEarlyEnd" class="remedy-btn">⏱ Bận / Dừng sớm</button>
         </div>
       </div>
 
-      <!-- Khung chọn câu chức năng chung (UNDO / REPEAT / EARLY_END) -->
-      <div id="phrasePicker" class="phrase-picker hidden">
-        <div class="phrase-picker-head">
-          <span id="phrasePickerTitle">Chọn câu giao tiếp:</span>
-          <button type="button" id="closePhrasePicker" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-weight:700;">✕ Đóng</button>
-        </div>
-        <div id="phraseOptions"></div>
-      </div>
-
-      <!-- 3 nút giao tiếp cứu nguy -->
-      <div class="remedy-bar">
-        <button type="button" id="btnUndo" class="remedy-btn" disabled>↩ Nói nhầm (Undo)</button>
-        <button type="button" id="btnRepeat" class="remedy-btn">🔁 Xin nghe lại</button>
-        <button type="button" id="btnEarlyEnd" class="remedy-btn">⏱ Bận / Dừng sớm</button>
-      </div>
-
-      <!-- Thanh âm lượng mic & nút cuộc gọi -->
+      <!-- Thanh âm lượng mic & nút điều khiển cuộc gọi -->
       <div class="mic-wrap"><div id="micBar" class="mic-bar"></div></div>
       <div class="controls">
         <button id="muteBtn" class="btn btn-muted">Tắt mic</button>
@@ -427,10 +517,11 @@
 
   <script>
     // =========================================================================
-    // 1. CẤU HÌNH API GOOGLE APPS SCRIPT & DỮ LIỆU MẪU TÍCH HỢP SẴN
+    // 1. CẤU HÌNH API & MẪU CÂU CHỨC NĂNG CHUNG MẶC ĐỊNH
     // =========================================================================
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxeILbjho8qJJKgglKr_qAd7Wt4wfACk_KDrfOe0c4Y6khVVd_2JPMnmGrFwZGBpxY-/exec';
-    const APP_PREFIX = 'cf-roleplay-en-v4-';
+    const APP_PREFIX = 'cf-roleplay-en-v5-';
+    const MAX_ROOM_USERS = 4;
 
     const DEFAULT_COMMON_PHRASES = [
       { Action: 'UNDO', Role: 'ANY', Text_EN: 'Oops, my bad. Let me say that again.', IPA: '/ʊps maɪ bæd let mi seɪ ðæt əˈɡen/' },
@@ -442,182 +533,8 @@
       { Action: 'EARLY_END', Role: 'PATIENT', Text_EN: 'Sorry doctor, something urgent came up. I have to go.', IPA: '/ˈsɒri ˈdɒktə ˈsʌmθɪŋ ˈɜːdʒənt keɪm ʌp aɪ hæv tu ɡəʊ/' }
     ];
 
-    // Kịch bản mẫu đầy đủ luồng: Tiếp cận -> Tim mạch / Tiêu hóa -> Giải thích CLS (RETURN) -> Loại trừ quay đầu -> Kết thúc
-    const BUILTIN_HOSPITAL_SCENARIO = {
-      fileName: 'Hospital (Mẫu Demo Đau Ngực)',
-      firstSheet: 'Tiếp cận',
-      sheetNames: ['Tiếp cận', 'Tim mạch', 'Tiêu hóa', 'Giải thích CLS', 'Kết thúc', 'Common_Phrases'],
-      sheets: {
-        'Tiếp cận': [
-          {
-            ID: 'START', Role: 'DOCTOR',
-            Text_EN: 'Hi, I am Dr. Minh. What brought you along today?',
-            IPA: '/haɪ aɪ æm ˈdɒktə mɪn wɒt brɔːt ju əˈlɒŋ təˈdeɪ/',
-            Hint_VI: 'Chào hỏi và hỏi lý do bệnh nhân đến khám hôm nay',
-            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'CHIEF_COMPLAINT'
-          },
-          {
-            ID: 'START', Role: 'DOCTOR',
-            Text_EN: 'Hello! Have a seat. How are you feeling right now?',
-            IPA: '/həˈləʊ hæv ə siːt haʊ ɑː ju ˈfiːlɪŋ raɪt naʊ/',
-            Hint_VI: 'Mời ngồi và hỏi thăm tình trạng hiện tại',
-            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'CHIEF_COMPLAINT'
-          },
-          {
-            ID: 'CHIEF_COMPLAINT', Role: 'PATIENT',
-            Text_EN: "I've been having a tight pain in my chest since this morning.",
-            IPA: '/aɪv biːn ˈhævɪŋ ə taɪt peɪn ɪn maɪ tʃest sɪns ðɪs ˈmɔːnɪŋ/',
-            Hint_VI: 'Than phiền cảm giác đau thắt ngực từ sáng nay',
-            Image: '', Add_Tags: 'DAU_NGUC', Require_Tags: '', Next_Sheet: '', Next_ID: 'CHEST_HUB'
-          },
-          {
-            ID: 'CHIEF_COMPLAINT', Role: 'PATIENT',
-            Text_EN: 'My chest feels heavy and burning, especially after eating.',
-            IPA: '/maɪ tʃest fiːlz ˈhevi ænd ˈbɜːnɪŋ ɪˈspeʃəli ˈɑːftər ˈiːtɪŋ/',
-            Hint_VI: 'Nặng ngực và nóng rát sau xương ức, nhất là sau khi ăn',
-            Image: '', Add_Tags: 'DAU_NGUC', Require_Tags: '', Next_Sheet: '', Next_ID: 'CHEST_HUB'
-          },
-          {
-            ID: 'CHEST_HUB', Role: 'DOCTOR',
-            Text_EN: 'Does the pain spread to your left arm or jaw, or get worse when you walk?',
-            IPA: '/dʌz ðə peɪn spred tu jɔː left ɑːm ɔː dʒɔː/',
-            Hint_VI: 'Khai thác hướng lan và yếu tố gắng sức (hướng Tim mạch)',
-            Image: '', Add_Tags: '', Require_Tags: '!LOAI_TRU_TIM', Next_Sheet: 'Tim mạch', Next_ID: 'START'
-          },
-          {
-            ID: 'CHEST_HUB', Role: 'DOCTOR',
-            Text_EN: 'Do you get a sour taste in your mouth or heartburn when lying down?',
-            IPA: '/du ju ɡet ə ˈsaʊə teɪst ɪn jɔː maʊθ ɔː ˈhɑːtbɜːn/',
-            Hint_VI: 'Hỏi triệu chứng trào ngược dạ dày thực quản (hướng Tiêu hóa)',
-            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: 'Tiêu hóa', Next_ID: 'START'
-          }
-        ],
-        'Tim mạch': [
-          {
-            ID: 'START', Role: 'PATIENT',
-            Text_EN: 'Yes, it feels like a heavy weight on my chest when I climb stairs.',
-            IPA: '/jes ɪt fiːlz laɪk ə ˈhevi weɪt ɒn maɪ tʃest wen aɪ klaɪm steəz/',
-            Hint_VI: 'Xác nhận nặng ngực tăng lên khi leo cầu thang',
-            Image: '', Add_Tags: 'NGHI_TIM_MACH', Require_Tags: '', Next_Sheet: '', Next_ID: 'CARDIO_TEST'
-          },
-          {
-            ID: 'START', Role: 'PATIENT',
-            Text_EN: 'Not really, it does not change when I move around.',
-            IPA: '/nɒt ˈrɪəli ɪt dʌz nɒt tʃeɪndʒ wen aɪ muːv əˈraʊnd/',
-            Hint_VI: 'Không liên quan tới vận động gắng sức',
-            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'CARDIO_TEST'
-          },
-          {
-            ID: 'CARDIO_TEST', Role: 'DOCTOR',
-            Text_EN: 'To be safe, I need to run an ECG to check your heart rhythm first.',
-            IPA: '/tu bi seɪf aɪ niːd tu rʌn ən ˌiːsiːˈdʒiː tu tʃek jɔː hɑːt ˈrɪðəm/',
-            Hint_VI: 'Chỉ định làm điện tâm đồ (ECG) kiểm tra nhịp tim',
-            Image: '', Add_Tags: 'LAM_ECG', Require_Tags: '', Next_Sheet: '', Next_ID: 'PATIENT_TEST_REACT'
-          },
-          {
-            ID: 'CARDIO_TEST', Role: 'DOCTOR',
-            Text_EN: 'I would like to do an echocardiogram to look at your heart valves.',
-            IPA: '/aɪ wʊd laɪk tu du ən ˌekəʊˈkɑːdiəʊɡræm/',
-            Hint_VI: 'Chỉ định siêu âm tim kiểm tra cấu trúc và van tim',
-            Image: '', Add_Tags: 'LAM_ECHO', Require_Tags: '', Next_Sheet: '', Next_ID: 'PATIENT_TEST_REACT'
-          },
-          {
-            ID: 'PATIENT_TEST_REACT', Role: 'PATIENT',
-            Text_EN: 'Sure doctor, let us do it right away.',
-            IPA: '/ʃʊə ˈdɒktə let ʌs du ɪt raɪt əˈweɪ/',
-            Hint_VI: 'Đồng ý làm xét nghiệm ngay',
-            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'CARDIO_RESULT'
-          },
-          {
-            ID: 'PATIENT_TEST_REACT', Role: 'PATIENT',
-            Text_EN: 'Will this test hurt or take a long time, doctor?',
-            IPA: '/wɪl ðɪs test hɜːt ɔː teɪk ə lɒŋ taɪm ˈdɒktə/',
-            Hint_VI: 'Hỏi xem xét nghiệm có đau hay tốn nhiều thời gian không (rẽ ngang giải thích)',
-            Image: '', Add_Tags: 'BN_LO_LANG', Require_Tags: '', Next_Sheet: 'Giải thích CLS', Next_ID: 'START'
-          },
-          {
-            ID: 'CARDIO_RESULT', Role: 'DOCTOR',
-            Text_EN: 'Good news: your ECG is completely normal. Let us check your stomach instead.',
-            IPA: '/ɡʊd njuːz jɔːr ˌiːsiːˈdʒiː ɪz kəmˈpliːtli ˈnɔːml/',
-            Hint_VI: 'ECG bình thường -> Loại trừ tim mạch, quay lại Tiếp cận khám tiêu hóa',
-            Image: '', Add_Tags: 'LOAI_TRU_TIM', Require_Tags: 'LAM_ECG', Next_Sheet: 'Tiếp cận', Next_ID: 'CHEST_HUB'
-          },
-          {
-            ID: 'CARDIO_RESULT', Role: 'DOCTOR',
-            Text_EN: 'Your ECG shows signs of reduced blood flow. We need to treat this right away.',
-            IPA: '/jɔːr ˌiːsiːˈdʒiː ʃəʊz saɪnz ɒv rɪˈdjuːst blʌd fləʊ/',
-            Hint_VI: 'ECG có dấu hiệu thiếu máu cơ tim -> Chẩn đoán xác định & điều trị',
-            Image: '', Add_Tags: 'THIEU_MAU_CO_TIM', Require_Tags: 'LAM_ECG', Next_Sheet: 'Kết thúc', Next_ID: 'START'
-          },
-          {
-            ID: 'CARDIO_RESULT', Role: 'DOCTOR',
-            Text_EN: 'Your echocardiogram looks normal. Let us check other causes for your pain.',
-            IPA: '/jɔːr ˌekəʊˈkɑːdiəʊɡræm lʊks ˈnɔːml/',
-            Hint_VI: 'Siêu âm tim bình thường -> Quay lại Tiếp cận tìm nguyên nhân khác',
-            Image: '', Add_Tags: 'LOAI_TRU_TIM', Require_Tags: 'LAM_ECHO', Next_Sheet: 'Tiếp cận', Next_ID: 'CHEST_HUB'
-          }
-        ],
-        'Tiêu hóa': [
-          {
-            ID: 'START', Role: 'PATIENT',
-            Text_EN: 'Yes! I often get heartburn and a sour taste after spicy meals.',
-            IPA: '/jes aɪ ˈɒfn ɡet ˈhɑːtbɜːn ænd ə ˈsaʊə teɪst ˈɑːftə ˈspaɪsi miːlz/',
-            Hint_VI: 'Xác nhận hay ợ nóng và chua miệng sau khi ăn đồ cay',
-            Image: '', Add_Tags: 'TRIEU_CHUNG_GERD', Require_Tags: '', Next_Sheet: '', Next_ID: 'GI_PLAN'
-          },
-          {
-            ID: 'GI_PLAN', Role: 'DOCTOR',
-            Text_EN: 'This sounds like acid reflux (GERD). I will prescribe medication to reduce stomach acid.',
-            IPA: '/ðɪs saʊndz laɪk ˈæsɪd ˈriːflʌks aɪ wɪl prɪˈskraɪb ˌmedɪˈkeɪʃn/',
-            Hint_VI: 'Chẩn đoán trào ngược dạ dày thực quản và kê thuốc giảm tiết axit',
-            Image: '', Add_Tags: 'CHAN_DOAN_GERD', Require_Tags: '', Next_Sheet: 'Kết thúc', Next_ID: 'START'
-          }
-        ],
-        'Giải thích CLS': [
-          {
-            ID: 'START', Role: 'DOCTOR',
-            Text_EN: 'Not at all. We just place small stickers on your chest for 5 minutes—completely painless.',
-            IPA: '/nɒt æt ɔːl wi dʒʌst pleɪs smɔːl ˈstɪkəz ɒn jɔː tʃest fɔː faɪv ˈmɪnɪts/',
-            Hint_VI: 'Giải thích ECG chỉ dán điện cực ngoài da 5 phút, hoàn toàn không đau',
-            Image: '', Add_Tags: '', Require_Tags: 'LAM_ECG', Next_Sheet: '', Next_ID: 'CONFIRM_TEST'
-          },
-          {
-            ID: 'START', Role: 'DOCTOR',
-            Text_EN: 'It is completely painless. We simply use a warm gel and ultrasound probe on your chest.',
-            IPA: '/ɪt ɪz kəmˈpliːtli ˈpeɪnləs wi ˈsɪmpli juːz ə wɔːm dʒel/',
-            Hint_VI: 'Giải thích siêu âm tim chỉ bôi gel và dùng đầu dò ngoài ngực, không đau',
-            Image: '', Add_Tags: '', Require_Tags: 'LAM_ECHO', Next_Sheet: '', Next_ID: 'CONFIRM_TEST'
-          },
-          {
-            ID: 'CONFIRM_TEST', Role: 'PATIENT',
-            Text_EN: 'Oh, that sounds easy. Okay, I am ready now!',
-            IPA: '/əʊ ðæt saʊndz ˈiːzi əʊˈkeɪ aɪ æm ˈredi naʊ/',
-            Hint_VI: 'Yên tâm và đồng ý thực hiện xét nghiệm (tự động quay lại trục chính)',
-            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: 'RETURN', Next_ID: ''
-          }
-        ],
-        'Kết thúc': [
-          {
-            ID: 'START', Role: 'PATIENT',
-            Text_EN: 'Thank you so much for explaining everything clearly, doctor.',
-            IPA: '/θæŋk ju səʊ mʌtʃ fɔːr ɪkˈspleɪnɪŋ ˈevriθɪŋ ˈklɪəli ˈdɒktə/',
-            Hint_VI: 'Cảm ơn bác sĩ đã giải thích rõ ràng',
-            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'GOODBYE'
-          },
-          {
-            ID: 'GOODBYE', Role: 'DOCTOR',
-            Text_EN: 'You are very welcome. Take your medication as directed and see you at your follow-up.',
-            IPA: '/ju ɑː ˈveri ˈwelkəm teɪk jɔː ˌmedɪˈkeɪʃn æz daɪˈrektɪd/',
-            Hint_VI: 'Dặn dò uống thuốc đúng hướng dẫn và hẹn tái khám (Kết thúc ca)',
-            Image: '', Add_Tags: '', Require_Tags: '', Next_Sheet: '', Next_ID: 'END'
-          }
-        ],
-        'Common_Phrases': DEFAULT_COMMON_PHRASES
-      }
-    };
-
     // =========================================================================
-    // 2. WEBRTC & VOICE FX (4-GRAIN HANN PITCH SHIFTER TỪ BẢN v3.4)
+    // 2. WEBRTC ICE & VOICE FX (4-GRAIN HANN PITCH SHIFTER)
     // =========================================================================
     const BASE_ICE_SERVERS = [
       { urls: 'stun:stun.l.google.com:19302' },
@@ -667,8 +584,7 @@
             if (this.phase >= 1.0) this.phase -= 1.0;
             let sum = 0.0;
             for (let k = 0; k < 4; k++) {
-              let p = this.phase + k * 0.25;
-              if (p >= 1.0) p -= 1.0;
+              let p = this.phase + k * 0.25; if (p >= 1.0) p -= 1.0;
               const delay = r > 1.0 ? (this.minDelay + (1.0 - p) * this.grainSize) : (this.minDelay + p * this.grainSize);
               const readPos = this.writeIdx - delay;
               const idx0 = Math.floor(readPos), frac = readPos - idx0;
@@ -769,9 +685,7 @@
       const dest = ctx.createMediaStreamDestination();
       compressor.connect(dest);
 
-      function applySemitones(semi) {
-        pitchEngine.setRatio(Math.pow(2, semi / 12));
-      }
+      function applySemitones(semi) { pitchEngine.setRatio(Math.pow(2, semi / 12)); }
 
       function setMode(mode) {
         currentFxMode = mode;
@@ -823,142 +737,246 @@
     }
 
     // =========================================================================
-    // 3. QUẢN LÝ TRẠNG THÁI KỊCH BẢN & ĐỒNG BỘ P2P
+    // 3. BIẾN TRẠNG THÁI TOÀN CỤC (PHÒNG 2–4 NGƯỜI + ĐỒNG BỘ BỐI CẢNH)
     // =========================================================================
     let isHost = false;
-    let hostRoleChoice = 'ROLE_A'; // ROLE_A = vai đầu tiên tìm thấy, ROLE_B = vai thứ 2
+    let myPeerId = '';
     let currentRoomCode = '';
     let hostPeerId = '';
     let peer = null;
-    let dataConn = null;
-    let mediaCall = null;
+
+    // Kết nối dữ liệu (Mô hình sao: Host <-> các Guest)
+    const hostGuestConns = new Map(); // guestPeerId -> DataConnection
+    let guestHostConn = null;
+
+    // Kết nối âm thanh (Mô hình lưới Mesh: mọi người nối trực tiếp nhau)
+    const remoteAudioPeers = new Map(); // peerId -> { call, dummyAudio, sourceNode, bytesKB, route }
+
     let rawMicStream = null;
     let outgoingStream = null;
     let voiceFX = null;
     let currentFxMode = 'normal';
     let audioCtx = null;
-    let remoteDummyAudio = null;
-    let remoteSourceNode = null;
     let isMuted = false;
     let timerInterval = null;
+    let statsInterval = null;
     let micAnimFrame = null;
     let seconds = 0;
+    let guestSequence = 1;
 
-    // Dữ liệu kịch bản & trạng thái cuộc khám
-    let activeScenario = null; // { fileName, firstSheet, sheets, roles: [roleA, roleB] }
-    let gameState = null;      // Nguồn sự thật duy nhất (Single Source of Truth)
-    let stateSnapshots = [];   // Lịch sử snapshot để UNDO 1 bước chính xác tuyệt đối
+    // Danh sách bối cảnh Drive
+    let driveScenariosList = [];
 
-    // Chế độ học tập cục bộ trên từng máy
-    let challengeMode = false; // Ẩn EN trên thẻ lựa chọn
-    let listenMode = false;    // Làm mờ câu đối phương vừa nói
+    // Trạng thái phòng đồng bộ từ Host (Single Source of Truth)
+    let roomState = null;
+    /* Cấu trúc roomState:
+      {
+        version: 1,
+        roomMode: 'FREE_CALL' | 'ROLEPLAY',
+        participants: [ { peerId, label, isHost, role } ], // role: roles[0] | roles[1] | 'SPECTATOR'
+        scenario: null | { fileId, fileName, firstSheet, sheets, roles: [r1, r2] },
+        gameState: null | {
+          currentSheet, currentID, navStack, tags, history, lastTurn,
+          systemNotice, status: 'ACTIVE'|'ENDED'|'EARLY_ENDED', endReason,
+          rotationMode: boolean, rotationIndex: number, activeSpeakerPeerId: string
+        }
+      }
+    */
+    let stateSnapshots = []; // Lưu lịch sử snapshot gameState trên Host để Undo chuẩn xác
+
+    // Chế độ học cục bộ trên máy cá nhân
+    let challengeMode = false;
+    let listenMode = false;
 
     // =========================================================================
-    // 4. TẢI DANH SÁCH & NỘI DUNG TỪ GOOGLE DRIVE APPS SCRIPT
+    // 4. THÔNG BÁO TOAST & ÂM THANH NHẸ KHI CÓ NGƯỜI VÀO / RA PHÒNG
+    // =========================================================================
+    function showToast(message, type = '') {
+      const stack = document.getElementById('toastStack');
+      const div = document.createElement('div');
+      div.className = 'toast' + (type ? ' ' + type : '');
+      div.textContent = message;
+      stack.appendChild(div);
+      setTimeout(() => {
+        div.style.opacity = '0';
+        div.style.transition = 'opacity 0.25s';
+        setTimeout(() => div.remove(), 260);
+      }, 3600);
+    }
+
+    function playChime(kind = 'join') {
+      try {
+        if (!audioCtx || audioCtx.state !== 'running') return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        if (kind === 'join') {
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.09);
+        } else {
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(349.23, now + 0.09);
+        }
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.08, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } catch {}
+    }
+
+    // =========================================================================
+    // 5. TẢI DANH SÁCH & NỘI DUNG BỐI CẢNH TỪ GOOGLE DRIVE
     // =========================================================================
     const scenarioSelect = document.getElementById('scenarioSelect');
+    const roomScenarioSelect = document.getElementById('roomScenarioSelect');
     const driveStatus = document.getElementById('driveStatus');
 
+    function populateScenarioDropdowns() {
+      [scenarioSelect, roomScenarioSelect].forEach((sel) => {
+        const prevVal = sel.value || 'FREE_CALL';
+        sel.innerHTML = '';
+
+        const freeOpt = document.createElement('option');
+        freeOpt.value = 'FREE_CALL';
+        freeOpt.textContent = 'Cuộc gọi thông thường';
+        sel.appendChild(freeOpt);
+
+        driveScenariosList.forEach((item) => {
+          const opt = document.createElement('option');
+          opt.value = item.id;
+          opt.textContent = item.name;
+          sel.appendChild(opt);
+        });
+
+        const hasPrev = Array.from(sel.options).some(o => o.value === prevVal);
+        sel.value = hasPrev ? prevVal : 'FREE_CALL';
+      });
+    }
+
     async function fetchDriveScenarios() {
-      driveStatus.textContent = 'Đang quét thư mục Google Drive...';
+      driveStatus.textContent = 'Đang quét bối cảnh trên Google Drive...';
       try {
         const res = await fetch(`${APPS_SCRIPT_URL}?action=list`);
         const json = await res.json();
         if (!json.ok) throw new Error(json.error || 'Lỗi API');
 
-        scenarioSelect.innerHTML = '';
-        (json.scenarios || []).forEach((item) => {
-          const opt = document.createElement('option');
-          opt.value = item.id;
-          opt.textContent = `${item.name} (Google Sheets)`;
-          scenarioSelect.appendChild(opt);
-        });
+        driveScenariosList = json.scenarios || [];
+        populateScenarioDropdowns();
 
-        // Luôn giữ kịch bản Demo ở cuối để dự phòng
-        const demoOpt = document.createElement('option');
-        demoOpt.value = 'BUILTIN_HOSPITAL';
-        demoOpt.textContent = 'Hospital (Mẫu tích hợp sẵn - Khám Đau Ngực)';
-        scenarioSelect.appendChild(demoOpt);
-
-        if ((json.scenarios || []).length > 0) {
-          driveStatus.textContent = `Đã tìm thấy ${json.scenarios.length} kịch bản trên Drive của bạn.`;
+        if (driveScenariosList.length > 0) {
+          driveStatus.textContent = `Đã sẵn sàng ${driveScenariosList.length} bối cảnh (mặc định: Cuộc gọi thông thường).`;
         } else {
-          driveStatus.textContent = 'Thư mục Drive chưa có file Sheet nào. Dùng tạm mẫu tích hợp sẵn bên trên.';
+          driveStatus.textContent = 'Thư mục Drive chưa có bối cảnh nào. Đang dùng Cuộc gọi thông thường.';
         }
-      } catch (err) {
-        driveStatus.textContent = 'Không kết nối được Drive (dùng mẫu tích hợp sẵn).';
+      } catch {
+        driveScenariosList = [];
+        populateScenarioDropdowns();
+        driveStatus.textContent = 'Chưa tải được danh sách Drive. Vẫn gọi được Cuộc gọi thông thường.';
       }
     }
 
     document.getElementById('refreshDriveBtn').addEventListener('click', fetchDriveScenarios);
+    document.getElementById('roomRefreshDriveBtn').addEventListener('click', async () => {
+      await fetchDriveScenarios();
+      showToast('Đã làm mới danh sách bối cảnh từ Drive.');
+    });
     fetchDriveScenarios();
 
-    async function loadSelectedScenarioData(val) {
-      if (val === 'BUILTIN_HOSPITAL') {
-        return normalizeScenario(BUILTIN_HOSPITAL_SCENARIO);
-      }
-      const cacheKey = 'roleplay_cache_' + val;
+    async function loadScenarioFromDrive(fileId) {
+      const cacheKey = 'roleplay_v5_cache_' + fileId;
       try {
-        const res = await fetch(`${APPS_SCRIPT_URL}?action=load&fileId=${encodeURIComponent(val)}`);
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=load&fileId=${encodeURIComponent(fileId)}`);
         const json = await res.json();
-        if (!json.ok) throw new Error(json.error || 'Không đọc được file Sheet');
+        if (!json.ok) throw new Error(json.error || 'Không đọc được bối cảnh');
         localStorage.setItem(cacheKey, JSON.stringify(json));
-        return normalizeScenario(json);
+        return normalizeScenario(fileId, json);
       } catch (err) {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
-          alert('Mạng yếu, đang nạp bản kịch bản đã lưu tạm trong máy.');
-          return normalizeScenario(JSON.parse(cached));
+          showToast('Mạng yếu, đang dùng bản lưu tạm trong máy.', 'leave');
+          return normalizeScenario(fileId, JSON.parse(cached));
         }
         throw err;
       }
     }
 
-    function normalizeScenario(raw) {
+    function normalizeScenario(fileId, raw) {
       const rolesFound = [];
       Object.entries(raw.sheets || {}).forEach(([sheetName, rows]) => {
         if (sheetName.toLowerCase() === 'common_phrases') return;
         (rows || []).forEach((r) => {
           const role = (r.Role || '').trim().toUpperCase();
-          if (role && role !== 'ANY' && !rolesFound.includes(role)) {
-            rolesFound.push(role);
-          }
+          if (role && role !== 'ANY' && !rolesFound.includes(role)) rolesFound.push(role);
         });
       });
       if (rolesFound.length === 0) rolesFound.push('DOCTOR', 'PATIENT');
       if (rolesFound.length === 1) rolesFound.push(rolesFound[0] === 'DOCTOR' ? 'PATIENT' : 'DOCTOR');
 
       return {
-        fileName: raw.fileName || 'Kịch bản',
-        firstSheet: raw.firstSheet || Object.keys(raw.sheets)[0] || '',
+        fileId,
+        fileName: raw.fileName || 'Bối cảnh',
+        firstSheet: raw.firstSheet || Object.keys(raw.sheets || {})[0] || '',
         sheets: raw.sheets || {},
         roles: [rolesFound[0], rolesFound[1]]
       };
     }
 
     // =========================================================================
-    // 5. BỘ MÁY XỬ LÝ CÂY KỊCH BẢN (STACK + CONTEXT TAGS + FILTER)
+    // 6. LOGIC PHÂN VAI, XOAY VAI & CÂY KỊCH BẢN (CHẠY TẠI HOST)
     // =========================================================================
-    function createInitialGameState(scen, hostRoleKey) {
-      const roleA = scen.roles[0];
-      const roleB = scen.roles[1];
-      const hostRole = hostRoleKey === 'ROLE_B' ? roleB : roleA;
-      const guestRole = hostRole === roleA ? roleB : roleA;
+    function assignDefaultRolesForScenario(participants, roles) {
+      participants.forEach((p, idx) => {
+        if (idx === 0) p.role = roles[0];      // Host mặc định Vai 1
+        else if (idx === 1) p.role = roles[1]; // Người thứ 2 mặc định Vai 2
+        else p.role = 'SPECTATOR';             // Người thứ 3, 4 mặc định Dự thính
+      });
+    }
+
+    function assignRoleForNewGuest(participants, scenario) {
+      if (!scenario) return 'SPECTATOR';
+      const [r1, r2] = scenario.roles;
+      const hasR1 = participants.some(p => p.role === r1);
+      const hasR2 = participants.some(p => p.role === r2);
+      if (!hasR1) return r1;
+      if (!hasR2) return r2;
+      return 'SPECTATOR';
+    }
+
+    function createInitialGameState(scenario, participants, keepRotation = false) {
+      const canRotate = keepRotation && participants.length >= 3;
+      const firstRole = getFirstNodeRole(scenario);
+      let firstSpeaker = participants[0];
+      if (!canRotate) {
+        const holder = participants.find(p => p.role === firstRole);
+        if (holder) firstSpeaker = holder;
+      }
 
       return {
         stepIndex: 1,
-        hostRole,
-        guestRole,
-        currentSheet: scen.firstSheet,
+        currentSheet: scenario.firstSheet,
         currentID: 'START',
-        navStack: [],     // Lưu { sheet, id } trước khi rẽ ngang giải thích
-        tags: [],         // Túi nhãn ngữ cảnh (Add_Tags)
-        history: [],      // Lịch sử hội thoại đã chọn
-        lastTurn: null,   // { role, en, ipa, vi }
-        systemNotice: '', // Thông báo phụ (VD: đối phương xin nghe lại / đính chính)
-        status: 'ACTIVE', // ACTIVE | ENDED | EARLY_ENDED
-        endReason: ''
+        navStack: [],
+        tags: [],
+        history: [],
+        lastTurn: null,
+        systemNotice: '',
+        status: 'ACTIVE',
+        endReason: '',
+        rotationMode: canRotate,
+        rotationIndex: Math.max(0, participants.indexOf(firstSpeaker)),
+        activeSpeakerPeerId: firstSpeaker ? firstSpeaker.peerId : ''
       };
+    }
+
+    function getFirstNodeRole(scenario) {
+      const rows = (scenario.sheets && scenario.sheets[scenario.firstSheet]) || [];
+      const startRow = rows.find(r => String(r.ID || '').trim().toUpperCase() === 'START');
+      const role = startRow ? String(startRow.Role || '').trim().toUpperCase() : '';
+      return (role && role !== 'ANY') ? role : scenario.roles[0];
     }
 
     function parseTagList(str) {
@@ -970,30 +988,30 @@
       const reqs = parseTagList(reqStr);
       if (reqs.length === 0) return true;
       return reqs.every((req) => {
-        if (req.startsWith('!')) {
-          const forbidden = req.slice(1);
-          return !activeTags.includes(forbidden);
-        }
+        if (req.startsWith('!')) return !activeTags.includes(req.slice(1));
         return activeTags.includes(req);
       });
     }
 
-    function getAvailableChoices(scen, state) {
-      if (!scen || !state || state.status !== 'ACTIVE') return [];
-      const rows = scen.sheets[state.currentSheet] || [];
-      const targetId = String(state.currentID || '').trim().toUpperCase();
-
-      // Lọc các dòng khớp ID hiện tại và thỏa điều kiện Require_Tags
-      let matched = rows.filter((r) => {
-        const rowId = String(r.ID || '').trim().toUpperCase();
-        return rowId === targetId && matchRequireTags(r.Require_Tags, state.tags);
-      });
-
-      // Nếu lọc Require_Tags quá chặt khiến rỗng nhưng ID vẫn tồn tại -> nới điều kiện để không kẹt
+    function getAvailableChoices(scenario, gameState) {
+      if (!scenario || !gameState || gameState.status !== 'ACTIVE') return [];
+      const rows = scenario.sheets[gameState.currentSheet] || [];
+      const targetId = String(gameState.currentID || '').trim().toUpperCase();
+      let matched = rows.filter(r =>
+        String(r.ID || '').trim().toUpperCase() === targetId &&
+        matchRequireTags(r.Require_Tags, gameState.tags)
+      );
       if (matched.length === 0) {
         matched = rows.filter(r => String(r.ID || '').trim().toUpperCase() === targetId);
       }
       return matched;
+    }
+
+    function getCurrentTurnRole(scenario, gameState) {
+      const choices = getAvailableChoices(scenario, gameState);
+      if (choices.length === 0) return scenario ? scenario.roles[0] : '';
+      const r = String(choices[0].Role || '').trim().toUpperCase();
+      return (r && r !== 'ANY') ? r : (scenario ? scenario.roles[0] : '');
     }
 
     function convertDriveImageUrl(url) {
@@ -1006,76 +1024,9 @@
       return clean;
     }
 
-    function applyChoiceTransition(choiceRow) {
-      if (!isHost || !gameState || !activeScenario) return;
-
-      // Lưu snapshot trước khi bước tiếp để hỗ trợ UNDO 1 bước
-      stateSnapshots.push(JSON.parse(JSON.stringify(gameState)));
-      if (stateSnapshots.length > 10) stateSnapshots.shift();
-
-      const speakerRole = (choiceRow.Role && choiceRow.Role.toUpperCase() !== 'ANY')
-        ? choiceRow.Role.toUpperCase()
-        : getCurrentTurnRole();
-
-      // 1. Cộng thêm nhãn ngữ cảnh mới
-      const newTags = parseTagList(choiceRow.Add_Tags);
-      newTags.forEach((t) => {
-        if (!gameState.tags.includes(t)) gameState.tags.push(t);
-      });
-
-      // 2. Ghi lịch sử câu nói
-      const turnRecord = {
-        role: speakerRole,
-        en: choiceRow.Text_EN || '',
-        ipa: choiceRow.IPA || '',
-        vi: choiceRow.Hint_VI || ''
-      };
-      gameState.history.push(turnRecord);
-      gameState.lastTurn = turnRecord;
-      gameState.systemNotice = '';
-      gameState.stepIndex++;
-
-      // 3. Tính tọa độ tiếp theo (Hỗ trợ nhảy tab & lệnh RETURN qua Stack)
-      const rawNextSheet = String(choiceRow.Next_Sheet || '').trim();
-      const rawNextId = String(choiceRow.Next_ID || '').trim();
-
-      if (rawNextId.toUpperCase() === 'END' || rawNextSheet.toUpperCase() === 'END') {
-        gameState.status = 'ENDED';
-        gameState.endReason = 'Hoàn thành trọn vẹn tình huống giao tiếp.';
-      } else if (rawNextSheet.toUpperCase() === 'RETURN') {
-        const backPos = gameState.navStack.pop();
-        if (backPos) {
-          gameState.currentSheet = backPos.sheet;
-          gameState.currentID = backPos.id;
-        } else {
-          gameState.status = 'ENDED';
-          gameState.endReason = 'Kết thúc nhánh hội thoại.';
-        }
-      } else if (rawNextSheet && rawNextSheet !== gameState.currentSheet) {
-        // Nếu nhảy sang tab phụ (như Giải thích CLS), đẩy tọa độ hiện tại vào Stack để lát RETURN
-        // Xác định nút tiếp theo trên tab cũ nếu quay về (mặc định tìm dòng kế tiếp hoặc giữ ID hiện tại)
-        const returnId = findFallbackReturnId(activeScenario, gameState.currentSheet, gameState.currentID);
-        gameState.navStack.push({ sheet: gameState.currentSheet, id: returnId });
-
-        gameState.currentSheet = rawNextSheet;
-        gameState.currentID = rawNextId || 'START';
-      } else {
-        gameState.currentID = rawNextId || 'END';
-        if (gameState.currentID.toUpperCase() === 'END') {
-          gameState.status = 'ENDED';
-          gameState.endReason = 'Hoàn thành tình huống.';
-        }
-      }
-
-      broadcastGameState();
-      renderStage();
-    }
-
-    // Tìm nút hợp lý để quay về khi kết thúc nhánh giải thích phụ
     function findFallbackReturnId(scen, sheetName, currentId) {
       const rows = scen.sheets[sheetName] || [];
       const curUpper = String(currentId || '').toUpperCase();
-      // Tìm xem ở nút hiện tại có nhánh nào đi tiếp trong cùng sheet không để làm điểm quay về
       const sameSheetBranch = rows.find(r =>
         String(r.ID || '').toUpperCase() === curUpper &&
         (!r.Next_Sheet || r.Next_Sheet === sheetName) &&
@@ -1084,93 +1035,130 @@
       return sameSheetBranch ? sameSheetBranch.Next_ID : currentId;
     }
 
-    function getMyRole() {
-      if (!gameState) return '';
-      return isHost ? gameState.hostRole : gameState.guestRole;
-    }
+    // Host xử lý khi 1 thành viên bấm chọn nhánh nói xong
+    function applyChoiceOnHost(choiceRow, actorPeerId) {
+      if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
+      const gs = roomState.gameState;
+      const scen = roomState.scenario;
+      if (gs.status !== 'ACTIVE') return;
 
-    function getCurrentTurnRole() {
-      const choices = getAvailableChoices(activeScenario, gameState);
-      if (choices.length === 0) return getMyRole();
-      const firstRole = String(choices[0].Role || '').trim().toUpperCase();
-      if (!firstRole || firstRole === 'ANY') return getMyRole();
-      return firstRole;
-    }
+      const actor = roomState.participants.find(p => p.peerId === actorPeerId);
+      if (!actor) return;
 
-    // =========================================================================
-    // 6. XỬ LÝ 3 NÚT GIAO TIẾP CỨU NGUY (UNDO / REPEAT / EARLY_END)
-    // =========================================================================
-    function getCommonPhrasesForAction(action) {
-      const sheetPhrases = (activeScenario && activeScenario.sheets && activeScenario.sheets['Common_Phrases'])
-        ? activeScenario.sheets['Common_Phrases']
-        : DEFAULT_COMMON_PHRASES;
-      const myRole = getMyRole();
-
-      return sheetPhrases.filter((p) => {
-        const act = String(p.Action || '').trim().toUpperCase();
-        const role = String(p.Role || 'ANY').trim().toUpperCase();
-        return act === action && (role === 'ANY' || role === myRole);
-      });
-    }
-
-    function openPhrasePicker(action, titleText) {
-      const list = getCommonPhrasesForAction(action);
-      const picker = document.getElementById('phrasePicker');
-      const titleEl = document.getElementById('phrasePickerTitle');
-      const optsEl = document.getElementById('phraseOptions');
-
-      titleEl.textContent = titleText;
-      optsEl.innerHTML = '';
-
-      list.forEach((item) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'phrase-opt';
-        btn.innerHTML = `<strong>${escapeHtml(item.Text_EN)}</strong><small>${escapeHtml(item.IPA || '')}</small>`;
-        btn.addEventListener('click', () => {
-          picker.classList.add('hidden');
-          triggerRemedyAction(action, item);
-        });
-        optsEl.appendChild(btn);
-      });
-
-      picker.classList.remove('hidden');
-    }
-
-    function triggerRemedyAction(action, phraseObj) {
-      const payload = {
-        type: 'remedy',
-        action,
-        byRole: getMyRole(),
-        phrase: phraseObj
-      };
-
-      if (isHost) {
-        processRemedyOnHost(payload);
-      } else if (dataConn && dataConn.open) {
-        dataConn.send(payload);
+      // Xác thực đúng người có quyền bấm (chống bấm đè)
+      const turnRole = getCurrentTurnRole(scen, gs);
+      if (gs.rotationMode) {
+        if (gs.activeSpeakerPeerId !== actorPeerId) return;
+      } else {
+        if (actor.role === 'SPECTATOR') return;
+        const rowRole = String(choiceRow.Role || '').trim().toUpperCase();
+        if (rowRole && rowRole !== 'ANY' && actor.role !== rowRole) return;
       }
+
+      // Lưu snapshot trước khi bước tiếp (giữ nguyên rotationIndex & activeSpeakerPeerId để Undo quay đúng người)
+      stateSnapshots.push(JSON.parse(JSON.stringify(gs)));
+      if (stateSnapshots.length > 12) stateSnapshots.shift();
+
+      const speakerRole = (choiceRow.Role && choiceRow.Role.toUpperCase() !== 'ANY')
+        ? choiceRow.Role.toUpperCase()
+        : (gs.rotationMode ? turnRole : actor.role);
+
+      parseTagList(choiceRow.Add_Tags).forEach((t) => {
+        if (!gs.tags.includes(t)) gs.tags.push(t);
+      });
+
+      const turnRecord = {
+        peerId: actorPeerId,
+        speakerLabel: actor.label,
+        role: speakerRole,
+        en: choiceRow.Text_EN || '',
+        ipa: choiceRow.IPA || '',
+        vi: choiceRow.Hint_VI || ''
+      };
+      gs.history.push(turnRecord);
+      gs.lastTurn = turnRecord;
+      gs.systemNotice = '';
+      gs.stepIndex++;
+
+      const rawNextSheet = String(choiceRow.Next_Sheet || '').trim();
+      const rawNextId = String(choiceRow.Next_ID || '').trim();
+
+      if (rawNextId.toUpperCase() === 'END' || rawNextSheet.toUpperCase() === 'END') {
+        gs.status = 'ENDED';
+        gs.endReason = 'Hoàn thành trọn vẹn bối cảnh giao tiếp.';
+      } else if (rawNextSheet.toUpperCase() === 'RETURN') {
+        const backPos = gs.navStack.pop();
+        if (backPos) {
+          gs.currentSheet = backPos.sheet;
+          gs.currentID = backPos.id;
+        } else {
+          gs.status = 'ENDED';
+          gs.endReason = 'Kết thúc nhánh hội thoại.';
+        }
+      } else if (rawNextSheet && rawNextSheet !== gs.currentSheet) {
+        const returnId = findFallbackReturnId(scen, gs.currentSheet, gs.currentID);
+        gs.navStack.push({ sheet: gs.currentSheet, id: returnId });
+        gs.currentSheet = rawNextSheet;
+        gs.currentID = rawNextId || 'START';
+      } else {
+        gs.currentID = rawNextId || 'END';
+        if (gs.currentID.toUpperCase() === 'END') {
+          gs.status = 'ENDED';
+          gs.endReason = 'Hoàn thành bối cảnh.';
+        }
+      }
+
+      // Nếu đang bật Xoay vai và bối cảnh còn chạy -> xoay sang người kế tiếp
+      if (gs.rotationMode && gs.status === 'ACTIVE' && roomState.participants.length > 0) {
+        const curIdx = roomState.participants.findIndex(p => p.peerId === actorPeerId);
+        const baseIdx = curIdx >= 0 ? curIdx : gs.rotationIndex;
+        const nextIdx = (baseIdx + 1) % roomState.participants.length;
+        gs.rotationIndex = nextIdx;
+        gs.activeSpeakerPeerId = roomState.participants[nextIdx].peerId;
+      }
+
+      broadcastRoomState();
+      renderAll();
     }
 
+    // Host xử lý 3 nút chức năng chung (UNDO / REPEAT / EARLY_END)
     function processRemedyOnHost(payload) {
-      if (!isHost || !gameState) return;
-      const { action, byRole, phrase } = payload;
+      if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
+      const gs = roomState.gameState;
+      const { action, byPeerId, byLabel, byRole, phrase } = payload;
 
       if (action === 'UNDO') {
-        if (stateSnapshots.length > 0) {
-          const prev = stateSnapshots.pop();
-          prev.stepIndex = gameState.stepIndex + 1;
-          prev.systemNotice = `${byRole} vừa đính chính: "${phrase.Text_EN}" — Mời chọn lại.`;
-          gameState = prev;
+        // Chỉ cho phép đúng người vừa nói câu trước đó hoàn tác
+        if (!gs.lastTurn || gs.lastTurn.peerId !== byPeerId) return;
+        if (stateSnapshots.length === 0) return;
+
+        const curRotationMode = gs.rotationMode;
+        const prev = stateSnapshots.pop();
+        prev.stepIndex = gs.stepIndex + 1;
+        prev.rotationMode = curRotationMode;
+
+        // Giữ chắc chắn lượt nói lại thuộc về đúng người vừa bấm Undo (không xoay sang người tiếp theo!)
+        if (curRotationMode) {
+          const speakerIdx = roomState.participants.findIndex(p => p.peerId === byPeerId);
+          if (speakerIdx >= 0) {
+            prev.rotationIndex = speakerIdx;
+            prev.activeSpeakerPeerId = byPeerId;
+          }
         }
+
+        prev.systemNotice = `${byLabel} (${byRole}) đính chính: "${phrase.Text_EN}" — Mời ${byLabel} nói lại.`;
+        roomState.gameState = prev;
       } else if (action === 'REPEAT') {
-        gameState.stepIndex++;
-        gameState.systemNotice = `${byRole} xin nghe lại: "${phrase.Text_EN}"`;
+        // Xin nghe lại: KHÔNG thay đổi lượt, KHÔNG xoay vai sang người tiếp theo
+        gs.stepIndex++;
+        gs.systemNotice = `${byLabel} xin nghe lại: "${phrase.Text_EN}"`;
       } else if (action === 'EARLY_END') {
-        gameState.stepIndex++;
-        gameState.status = 'EARLY_ENDED';
-        gameState.endReason = `${byRole} báo bận và xin phép dừng sớm: "${phrase.Text_EN}"`;
-        gameState.history.push({
+        gs.stepIndex++;
+        gs.status = 'EARLY_ENDED';
+        gs.endReason = `${byLabel} (${byRole}) báo bận và xin phép dừng sớm: "${phrase.Text_EN}"`;
+        gs.history.push({
+          peerId: byPeerId,
+          speakerLabel: byLabel,
           role: byRole,
           en: phrase.Text_EN,
           ipa: phrase.IPA || '',
@@ -1178,25 +1166,134 @@
         });
       }
 
-      broadcastGameState();
-      renderStage();
+      broadcastRoomState();
+      renderAll();
     }
 
-    document.getElementById('btnUndo').addEventListener('click', () => {
-      openPhrasePicker('UNDO', 'Đọc câu xin đính chính rồi bấm chọn:');
-    });
-    document.getElementById('btnRepeat').addEventListener('click', () => {
-      openPhrasePicker('REPEAT', 'Đọc câu xin nghe lại rồi bấm chọn:');
-    });
-    document.getElementById('btnEarlyEnd').addEventListener('click', () => {
-      openPhrasePicker('EARLY_END', 'Đọc câu xin phép dừng sớm rồi bấm chọn:');
-    });
-    document.getElementById('closePhrasePicker').addEventListener('click', () => {
-      document.getElementById('phrasePicker').classList.add('hidden');
+    // Host đổi vai cho từng thành viên (có thể đổi ngay giữa bài nói)
+    function hostAssignRole(targetPeerId, newRole) {
+      if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.scenario) return;
+      const target = roomState.participants.find(p => p.peerId === targetPeerId);
+      if (!target || target.role === newRole) return;
+
+      const [r1, r2] = roomState.scenario.roles;
+      const oldRole = target.role;
+
+      if (newRole === 'SPECTATOR') {
+        target.role = 'SPECTATOR';
+      } else if (newRole === r1 || newRole === r2) {
+        const existingHolder = roomState.participants.find(p => p.peerId !== targetPeerId && p.role === newRole);
+        if (existingHolder) {
+          existingHolder.role = (oldRole === r1 || oldRole === r2) ? oldRole : 'SPECTATOR';
+        }
+        target.role = newRole;
+      }
+
+      broadcastRoomState(`Chủ phòng đã cập nhật vai trò (${target.label} → ${newRole === 'SPECTATOR' ? 'Dự thính' : newRole})`);
+      renderAll();
+    }
+
+    // Host bật/tắt chế độ xoay vai khi có 3 hoặc 4 người
+    document.getElementById('toggleRotationBtn').addEventListener('click', () => {
+      if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
+      if (roomState.participants.length < 3) return;
+
+      const gs = roomState.gameState;
+      const nextVal = !gs.rotationMode;
+      gs.rotationMode = nextVal;
+
+      if (nextVal) {
+        const turnRole = getCurrentTurnRole(roomState.scenario, gs);
+        const currentHolderIdx = roomState.participants.findIndex(p => p.role === turnRole);
+        const startIdx = currentHolderIdx >= 0 ? currentHolderIdx : 0;
+        gs.rotationIndex = startIdx;
+        gs.activeSpeakerPeerId = roomState.participants[startIdx].peerId;
+        broadcastRoomState('Chủ phòng đã BẬT chế độ xoay vai tự động (không có dự thính).');
+      } else {
+        broadcastRoomState('Chủ phòng đã TẮT chế độ xoay vai tự động.');
+      }
+      renderAll();
     });
 
+    // Host đổi bối cảnh hoặc chuyển về cuộc gọi thông thường ngay trong phòng
+    document.getElementById('applyContextBtn').addEventListener('click', async () => {
+      if (!isHost || !roomState) return;
+      const chosenVal = roomScenarioSelect.value;
+      const btn = document.getElementById('applyContextBtn');
+
+      if (chosenVal === 'FREE_CALL') {
+        switchHostToFreeCall();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Đang tải...';
+      try {
+        const scen = await loadScenarioFromDrive(chosenVal);
+        roomState.roomMode = 'ROLEPLAY';
+        roomState.scenario = scen;
+        assignDefaultRolesForScenario(roomState.participants, scen.roles);
+        stateSnapshots = [];
+        roomState.gameState = createInitialGameState(scen, roomState.participants, false);
+        broadcastRoomState(`Chủ phòng đã mở bối cảnh: ${scen.fileName}`);
+        renderAll();
+      } catch (err) {
+        alert('Không tải được bối cảnh: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Bắt đầu';
+      }
+    });
+
+    function switchHostToFreeCall() {
+      if (!isHost || !roomState) return;
+      roomState.roomMode = 'FREE_CALL';
+      roomState.scenario = null;
+      roomState.gameState = null;
+      stateSnapshots = [];
+      roomState.participants.forEach(p => { p.role = ''; });
+      roomScenarioSelect.value = 'FREE_CALL';
+      broadcastRoomState('Đã chuyển sang Cuộc gọi thông thường.');
+      renderAll();
+    }
+
+    // Host END bối cảnh hiện tại để có thể đổi bối cảnh khác
+    document.getElementById('hostEndScenarioBtn').addEventListener('click', () => {
+      if (!isHost || !roomState || !roomState.gameState) return;
+      roomState.gameState.status = 'ENDED';
+      roomState.gameState.endReason = 'Chủ phòng đã kết thúc bối cảnh này.';
+      broadcastRoomState('Chủ phòng đã kết thúc bối cảnh hiện tại.');
+      renderAll();
+    });
+
+    // Nút ở màn hình tổng kết (Debrief)
+    document.getElementById('swapRolesBtn').addEventListener('click', () => {
+      if (!isHost || !roomState || !roomState.scenario) return;
+      const [r1, r2] = roomState.scenario.roles;
+      roomState.participants.forEach((p) => {
+        if (p.role === r1) p.role = r2;
+        else if (p.role === r2) p.role = r1;
+      });
+      const keepRot = roomState.gameState ? roomState.gameState.rotationMode : false;
+      stateSnapshots = [];
+      roomState.gameState = createInitialGameState(roomState.scenario, roomState.participants, keepRot);
+      broadcastRoomState('Đã đổi vai và bắt đầu lại bối cảnh!');
+      renderAll();
+    });
+
+    document.getElementById('restartSameBtn').addEventListener('click', () => {
+      if (!isHost || !roomState || !roomState.scenario) return;
+      const keepRot = roomState.gameState ? roomState.gameState.rotationMode : false;
+      stateSnapshots = [];
+      roomState.gameState = createInitialGameState(roomState.scenario, roomState.participants, keepRot);
+      broadcastRoomState('Bắt đầu lại bối cảnh từ đầu!');
+      renderAll();
+    });
+
+    document.getElementById('backFreeCallBtn').addEventListener('click', switchHostToFreeCall);
+
     // =========================================================================
-    // 7. HIỂN THỊ GIAO DIỆN KỊCH BẢN (RENDER STAGE & DEBRIEF)
+    // 7. HIỂN THỊ GIAO DIỆN PHÒNG, THÀNH VIÊN & CÂY KỊCH BẢN
     // =========================================================================
     function escapeHtml(str) {
       return String(str || '')
@@ -1204,76 +1301,247 @@
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function renderStage() {
-      if (!gameState || !activeScenario) return;
+    function getMyParticipant() {
+      if (!roomState) return null;
+      return roomState.participants.find(p => p.peerId === myPeerId) || null;
+    }
 
-      const myRole = getMyRole();
-      document.getElementById('myRoleBadge').textContent = `Vai của bạn: ${myRole}`;
+    function renderAll() {
+      if (!roomState) return;
+      renderHostContextPanel();
+      renderMembersPanel();
+      renderMainArea();
+    }
 
-      // Nếu đã kết thúc hoặc dừng sớm -> hiện bảng tổng kết
-      if (gameState.status === 'ENDED' || gameState.status === 'EARLY_ENDED') {
+    function renderHostContextPanel() {
+      const panel = document.getElementById('hostContextPanel');
+      if (!isHost) {
+        panel.classList.add('hidden');
+        return;
+      }
+      panel.classList.remove('hidden');
+
+      const switchWrap = document.getElementById('hostSwitchWrap');
+      const endWrap = document.getElementById('hostEndWrap');
+      const isScenarioRunning = roomState.roomMode === 'ROLEPLAY' && roomState.gameState && roomState.gameState.status === 'ACTIVE';
+
+      if (isScenarioRunning) {
+        switchWrap.classList.add('hidden');
+        endWrap.classList.remove('hidden');
+        document.getElementById('activeCtxLabel').textContent = `Đang chạy: ${roomState.scenario.fileName}`;
+      } else {
+        switchWrap.classList.remove('hidden');
+        endWrap.classList.add('hidden');
+      }
+    }
+
+    function renderMembersPanel() {
+      const listEl = document.getElementById('membersList');
+      const countEl = document.getElementById('memberCountText');
+      const connBadge = document.getElementById('connBadge');
+      const rotBtn = document.getElementById('toggleRotationBtn');
+
+      const total = roomState.participants.length;
+      countEl.textContent = `${total}/${MAX_ROOM_USERS}`;
+      connBadge.textContent = total > 1 ? `Đang gọi (${total}/${MAX_ROOM_USERS})` : `Chờ người vào (1/${MAX_ROOM_USERS})`;
+      connBadge.className = 'conn-badge ' + (total > 1 ? 'ok' : '');
+
+      const isRoleplay = roomState.roomMode === 'ROLEPLAY' && roomState.scenario && roomState.gameState;
+      const gs = roomState.gameState;
+
+      // Nút bật/tắt Xoay vai cho Host
+      if (isHost && isRoleplay && gs.status === 'ACTIVE') {
+        rotBtn.classList.remove('hidden');
+        const enoughUsers = total >= 3;
+        rotBtn.disabled = !enoughUsers;
+        rotBtn.classList.toggle('active', gs.rotationMode);
+        rotBtn.textContent = enoughUsers
+          ? (gs.rotationMode ? '🔄 Xoay vai: BẬT' : '🔄 Xoay vai: TẮT')
+          : '🔄 Xoay vai (cần 3–4 người)';
+      } else {
+        rotBtn.classList.add('hidden');
+      }
+
+      const turnRole = isRoleplay ? getCurrentTurnRole(roomState.scenario, gs) : '';
+      const nextRotIdx = (isRoleplay && gs.rotationMode && total > 0)
+        ? (gs.rotationIndex + 1) % total
+        : -1;
+
+      listEl.innerHTML = '';
+
+      roomState.participants.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = 'member-row';
+
+        const left = document.createElement('div');
+        left.className = 'member-left';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.style.fontWeight = p.peerId === myPeerId ? '700' : '500';
+        nameSpan.textContent = p.peerId === myPeerId ? `${p.label} (Bạn)` : p.label;
+        left.appendChild(nameSpan);
+
+        // Hiển thị trạng thái mạng / mic
+        const netPill = document.createElement('span');
+        if (p.peerId === myPeerId) {
+          netPill.className = 'net-pill ok';
+          netPill.textContent = isMuted ? 'Tắt mic' : 'Mic bật';
+        } else {
+          const audioInfo = remoteAudioPeers.get(p.peerId);
+          if (audioInfo && audioInfo.bytesKB > 0) {
+            netPill.className = 'net-pill ' + (audioInfo.route === 'TURN' ? 'turn' : 'ok');
+            netPill.textContent = `${audioInfo.bytesKB} KB${audioInfo.route ? ' • ' + audioInfo.route : ''}`;
+          } else {
+            netPill.className = 'net-pill';
+            netPill.textContent = 'Đang nối...';
+          }
+        }
+        left.appendChild(netPill);
+
+        const right = document.createElement('div');
+
+        if (isRoleplay) {
+          if (gs.rotationMode) {
+            const chip = document.createElement('span');
+            if (gs.status === 'ACTIVE' && p.peerId === gs.activeSpeakerPeerId) {
+              chip.className = 'role-chip turn-now';
+              chip.textContent = `Đang nói • ${turnRole}`;
+            } else if (gs.status === 'ACTIVE' && idx === nextRotIdx) {
+              chip.className = 'role-chip turn-next';
+              chip.textContent = 'Kế tiếp';
+            } else {
+              chip.className = 'role-chip';
+              chip.textContent = 'Chờ lượt xoay';
+            }
+            right.appendChild(chip);
+          } else if (isHost) {
+            // Host có dropdown đổi chức năng từng người ngay giữa bài nói
+            const [r1, r2] = roomState.scenario.roles;
+            const sel = document.createElement('select');
+            sel.className = 'role-select-sm';
+            [
+              { val: r1, text: `Vai 1 (${r1})` },
+              { val: r2, text: `Vai 2 (${r2})` },
+              { val: 'SPECTATOR', text: 'Dự thính' }
+            ].forEach((opt) => {
+              const o = document.createElement('option');
+              o.value = opt.val;
+              o.textContent = opt.text;
+              if (p.role === opt.val) o.selected = true;
+              sel.appendChild(o);
+            });
+            sel.addEventListener('change', () => hostAssignRole(p.peerId, sel.value));
+            right.appendChild(sel);
+          } else {
+            const [r1, r2] = roomState.scenario.roles;
+            const chip = document.createElement('span');
+            if (p.role === r1) { chip.className = 'role-chip r1'; chip.textContent = r1; }
+            else if (p.role === r2) { chip.className = 'role-chip r2'; chip.textContent = r2; }
+            else { chip.className = 'role-chip spec'; chip.textContent = 'Dự thính'; }
+            right.appendChild(chip);
+          }
+        }
+
+        row.append(left, right);
+        listEl.appendChild(row);
+      });
+    }
+
+    function renderMainArea() {
+      const freeCallArea = document.getElementById('freeCallArea');
+      const roleplayWrapper = document.getElementById('roleplayWrapper');
+
+      if (roomState.roomMode === 'FREE_CALL' || !roomState.scenario || !roomState.gameState) {
+        freeCallArea.classList.remove('hidden');
+        roleplayWrapper.classList.add('hidden');
+        document.getElementById('freeCallHint').textContent = isHost
+          ? 'Mọi người đang trò chuyện tự do. Bạn có thể chọn một bối cảnh ở bảng phía trên để bắt đầu nhập vai bất cứ lúc nào.'
+          : 'Mọi người đang trò chuyện tự do. Khi chủ phòng chọn bối cảnh, màn hình nhập vai sẽ tự động hiện lên.';
+        return;
+      }
+
+      freeCallArea.classList.add('hidden');
+      roleplayWrapper.classList.remove('hidden');
+
+      const scen = roomState.scenario;
+      const gs = roomState.gameState;
+      const me = getMyParticipant();
+      const myRole = me ? me.role : 'SPECTATOR';
+      const turnRole = getCurrentTurnRole(scen, gs);
+
+      // Cập nhật nhãn vai trò hiện tại của bản thân
+      const badgeEl = document.getElementById('myRoleBadge');
+      if (gs.rotationMode) {
+        badgeEl.textContent = gs.activeSpeakerPeerId === myPeerId
+          ? `Xoay vai • Lượt bạn (${turnRole})`
+          : 'Xoay vai • Đang chờ lượt';
+      } else {
+        badgeEl.textContent = myRole === 'SPECTATOR' ? 'Chế độ: Dự thính' : `Vai của bạn: ${myRole}`;
+      }
+
+      // Kiểm tra đã kết thúc bối cảnh chưa
+      if (gs.status === 'ENDED' || gs.status === 'EARLY_ENDED') {
         document.getElementById('scenarioStage').classList.add('hidden');
+        document.getElementById('remedyBar').classList.add('hidden');
+        document.getElementById('phrasePicker').classList.add('hidden');
         document.getElementById('debriefStage').classList.remove('hidden');
+
         document.getElementById('debriefHeading').textContent =
-          gameState.status === 'EARLY_ENDED' ? 'Đã tạm dừng tình huống' : 'Hoàn thành buổi nhập vai!';
-        document.getElementById('debriefSummary').textContent = gameState.endReason;
+          gs.status === 'EARLY_ENDED' ? 'Đã tạm dừng bối cảnh' : 'Kết thúc bối cảnh!';
+        document.getElementById('debriefSummary').textContent = gs.endReason || '';
 
         const histEl = document.getElementById('historyList');
         histEl.innerHTML = '';
-        gameState.history.forEach((h, idx) => {
+        gs.history.forEach((h, idx) => {
           const div = document.createElement('div');
           div.className = 'hist-item';
           div.innerHTML = `
-            <div class="h-role">#${idx + 1} • ${escapeHtml(h.role)}</div>
+            <div class="h-role">#${idx + 1} • ${escapeHtml(h.speakerLabel || '')} (${escapeHtml(h.role)})</div>
             <div class="h-en">${escapeHtml(h.en)}</div>
             ${h.ipa ? `<div class="h-ipa">${escapeHtml(h.ipa)}</div>` : ''}
           `;
           histEl.appendChild(div);
         });
 
-        // Chỉ Host mới điều khiển nút đổi vai / chơi lại đồng bộ cho cả 2
-        document.getElementById('swapRolesBtn').classList.toggle('hidden', !isHost);
-        document.getElementById('restartSameBtn').classList.toggle('hidden', !isHost);
+        document.getElementById('debriefHostActions').classList.toggle('hidden', !isHost);
         return;
       }
 
       document.getElementById('scenarioStage').classList.remove('hidden');
+      document.getElementById('remedyBar').classList.remove('hidden');
       document.getElementById('debriefStage').classList.add('hidden');
 
-      // Breadcrumb & Context Tags
-      document.getElementById('crumbSheet').textContent = `${activeScenario.fileName} › ${gameState.currentSheet}`;
-      document.getElementById('crumbStep').textContent = `Lượt #${gameState.stepIndex}`;
+      document.getElementById('crumbSheet').textContent = `${scen.fileName} › ${gs.currentSheet}`;
+      document.getElementById('crumbStep').textContent = `Lượt #${gs.stepIndex}`;
 
       const tagsBar = document.getElementById('ctxTagsBar');
-      if (gameState.tags.length > 0) {
+      if (gs.tags.length > 0) {
         tagsBar.classList.remove('hidden');
-        tagsBar.innerHTML = gameState.tags.map(t => `<span class="ctx-tag">#${escapeHtml(t)}</span>`).join('');
+        tagsBar.innerHTML = gs.tags.map(t => `<span class="ctx-tag">#${escapeHtml(t)}</span>`).join('');
       } else {
         tagsBar.classList.add('hidden');
       }
 
-      // Thông báo phụ (Undo / Repeat)
       const noticeEl = document.getElementById('systemNotice');
-      if (gameState.systemNotice) {
-        noticeEl.textContent = gameState.systemNotice;
+      if (gs.systemNotice) {
+        noticeEl.textContent = gs.systemNotice;
         noticeEl.classList.remove('hidden');
       } else {
         noticeEl.classList.add('hidden');
       }
 
-      // Nút Undo chỉ bật khi có snapshot và lượt vừa rồi là của chính mình (hoặc Host)
+      // Nút Undo: chỉ bật cho đúng người vừa nói lượt ngay trước đó
       const btnUndo = document.getElementById('btnUndo');
-      const canUndo = gameState.lastTurn && gameState.lastTurn.role === myRole;
-      btnUndo.disabled = !canUndo;
+      btnUndo.disabled = !(gs.lastTurn && gs.lastTurn.peerId === myPeerId);
 
-      // Bong bóng câu đối phương vừa nói
+      // Bong bóng câu vừa nói gần nhất
       const bubbleEl = document.getElementById('partnerBubble');
-      if (gameState.lastTurn && gameState.lastTurn.role !== myRole) {
+      if (gs.lastTurn && gs.lastTurn.peerId !== myPeerId) {
         bubbleEl.classList.remove('hidden');
-        document.getElementById('partnerWho').textContent = `${gameState.lastTurn.role} vừa nói:`;
-        document.getElementById('partnerEn').textContent = gameState.lastTurn.en;
-        document.getElementById('partnerIpa').textContent = gameState.lastTurn.ipa;
-        document.getElementById('partnerVi').textContent = gameState.lastTurn.vi;
+        document.getElementById('partnerWho').textContent = `${gs.lastTurn.speakerLabel} (${gs.lastTurn.role}) vừa nói:`;
+        document.getElementById('partnerEn').textContent = gs.lastTurn.en;
+        document.getElementById('partnerIpa').textContent = gs.lastTurn.ipa;
+        document.getElementById('partnerVi').textContent = gs.lastTurn.vi;
 
         const wrap = document.getElementById('partnerTextWrap');
         const hint = document.getElementById('blurHint');
@@ -1289,50 +1557,55 @@
         bubbleEl.classList.add('hidden');
       }
 
-      // Danh sách lựa chọn của lượt hiện tại
+      // Danh sách thẻ lựa chọn của lượt hiện tại
       const turnArea = document.getElementById('turnArea');
       turnArea.innerHTML = '';
 
-      const choices = getAvailableChoices(activeScenario, gameState);
-
-      // Chống đường cụt (Dead-end fallback) nếu nhập sai ID trong Sheet
+      const choices = getAvailableChoices(scen, gs);
       if (choices.length === 0) {
         const fb = document.createElement('div');
         fb.className = 'wait-box';
         fb.innerHTML = `
-          <div style="margin-bottom:8px;">Không tìm thấy nhánh tiếp theo (ID: <strong>${escapeHtml(gameState.currentID)}</strong> tại tab <strong>${escapeHtml(gameState.currentSheet)}</strong>).</div>
-          <button type="button" id="deadEndRecoverBtn" class="btn btn-primary" style="width:auto; padding:8px 16px;">Quay lại trục chính / Kết thúc</button>
+          <div style="margin-bottom:8px;">Không tìm thấy nhánh tiếp theo (ID: <strong>${escapeHtml(gs.currentID)}</strong> tại tab <strong>${escapeHtml(gs.currentSheet)}</strong>).</div>
+          ${isHost ? '<button type="button" id="deadEndRecoverBtn" class="btn btn-primary" style="width:auto; padding:8px 16px;">Kết thúc bối cảnh</button>' : ''}
         `;
         turnArea.appendChild(fb);
-        document.getElementById('deadEndRecoverBtn').addEventListener('click', () => {
-          const recoveryChoice = {
-            Role: myRole,
-            Text_EN: 'Let us wrap up our session here.',
-            IPA: '',
-            Hint_VI: '(Tự động thoát nhánh cụt)',
-            Next_Sheet: gameState.navStack.length > 0 ? 'RETURN' : 'END',
-            Next_ID: 'END'
-          };
-          if (isHost) applyChoiceTransition(recoveryChoice);
-          else if (dataConn && dataConn.open) dataConn.send({ type: 'select-choice', choice: recoveryChoice });
-        });
+        const recBtn = document.getElementById('deadEndRecoverBtn');
+        if (recBtn) recBtn.addEventListener('click', () => document.getElementById('hostEndScenarioBtn').click());
         return;
       }
 
-      const turnRole = String(choices[0].Role || '').trim().toUpperCase();
-      const isMyTurn = (turnRole === 'ANY' || turnRole === myRole);
+      const rawChoiceRole = String(choices[0].Role || '').trim().toUpperCase();
+      let isMyTurn = false;
+      let activeSpeakerName = '';
+
+      if (gs.rotationMode) {
+        isMyTurn = (gs.activeSpeakerPeerId === myPeerId);
+        const sp = roomState.participants.find(p => p.peerId === gs.activeSpeakerPeerId);
+        activeSpeakerName = sp ? `${sp.label} (vai ${turnRole})` : turnRole;
+      } else {
+        if (myRole !== 'SPECTATOR') {
+          isMyTurn = (rawChoiceRole === 'ANY' || rawChoiceRole === myRole);
+        }
+        const holder = roomState.participants.find(p => p.role === rawChoiceRole);
+        activeSpeakerName = holder ? `${holder.label} (vai ${rawChoiceRole})` : `vai ${rawChoiceRole} (chưa có người giữ)`;
+      }
 
       if (!isMyTurn) {
         const waitDiv = document.createElement('div');
         waitDiv.className = 'wait-box';
-        waitDiv.innerHTML = `Đang tới lượt của <strong>${escapeHtml(turnRole)}</strong> nói...<br><small style="color:#64748b;">Hãy lắng nghe qua micro, màn hình sẽ tự lật khi đối phương chọn xong.</small>`;
+        const specNote = (!gs.rotationMode && myRole === 'SPECTATOR')
+          ? '<br><small style="color:#60a5fa;">Bạn đang ở chế độ Dự thính — nghe và theo dõi hội thoại trực tiếp.</small>'
+          : '<br><small style="color:#64748b;">Hãy lắng nghe qua micro, màn hình sẽ tự lật khi đến lượt bạn.</small>';
+        waitDiv.innerHTML = `Đang tới lượt của <strong>${escapeHtml(activeSpeakerName)}</strong> nói...${specNote}`;
         turnArea.appendChild(waitDiv);
         return;
       }
 
       const promptHead = document.createElement('div');
       promptHead.className = 'turn-prompt';
-      promptHead.innerHTML = `<span>Lượt của bạn (${escapeHtml(myRole)}) — Hãy nói rồi chọn thẻ:</span>`;
+      const displayRole = gs.rotationMode ? turnRole : myRole;
+      promptHead.innerHTML = `<span>Lượt của bạn (${escapeHtml(displayRole)}) — Nói xong rồi chọn thẻ:</span>`;
       turnArea.appendChild(promptHead);
 
       const listDiv = document.createElement('div');
@@ -1347,7 +1620,7 @@
           const img = document.createElement('img');
           img.className = 'choice-img';
           img.src = imgUrl;
-          img.alt = 'Tình huống minh họa';
+          img.alt = 'Minh họa';
           card.appendChild(img);
         }
 
@@ -1391,9 +1664,9 @@
         selectBtn.textContent = 'Đã nói xong • Đi tiếp ➔';
         selectBtn.addEventListener('click', () => {
           if (isHost) {
-            applyChoiceTransition(choice);
-          } else if (dataConn && dataConn.open) {
-            dataConn.send({ type: 'select-choice', choice });
+            applyChoiceOnHost(choice, myPeerId);
+          } else if (guestHostConn && guestHostConn.open) {
+            guestHostConn.send({ type: 'select-choice', choice });
           }
         });
 
@@ -1406,126 +1679,461 @@
     }
 
     // =========================================================================
-    // 8. ĐỒNG BỘ MẠNG PEERJS (DATA + AUDIO CALL)
+    // 8. MẪU CÂU CHỨC NĂNG CHUNG (UNDO / REPEAT / EARLY_END)
     // =========================================================================
-    function broadcastGameState() {
-      if (!isHost || !dataConn || !dataConn.open) return;
-      dataConn.send({
-        type: 'sync-state',
-        scenario: activeScenario,
-        state: gameState
+    function getEffectiveRoleForRemedy(action) {
+      const gs = roomState && roomState.gameState;
+      const scen = roomState && roomState.scenario;
+      const me = getMyParticipant();
+      if (action === 'UNDO' && gs && gs.lastTurn && gs.lastTurn.peerId === myPeerId) {
+        return gs.lastTurn.role;
+      }
+      if (gs && gs.rotationMode) {
+        return getCurrentTurnRole(scen, gs);
+      }
+      return me && me.role && me.role !== 'SPECTATOR' ? me.role : 'ANY';
+    }
+
+    function openPhrasePicker(action, titleText) {
+      if (!roomState || !roomState.scenario) return;
+      const sheetPhrases = (roomState.scenario.sheets && roomState.scenario.sheets['Common_Phrases'])
+        ? roomState.scenario.sheets['Common_Phrases']
+        : DEFAULT_COMMON_PHRASES;
+      const effRole = getEffectiveRoleForRemedy(action);
+
+      const list = sheetPhrases.filter((p) => {
+        const act = String(p.Action || '').trim().toUpperCase();
+        const role = String(p.Role || 'ANY').trim().toUpperCase();
+        return act === action && (role === 'ANY' || role === effRole);
+      });
+
+      const picker = document.getElementById('phrasePicker');
+      const titleEl = document.getElementById('phrasePickerTitle');
+      const optsEl = document.getElementById('phraseOptions');
+      titleEl.textContent = titleText;
+      optsEl.innerHTML = '';
+
+      list.forEach((item) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'phrase-opt';
+        btn.innerHTML = `<strong>${escapeHtml(item.Text_EN)}</strong><small>${escapeHtml(item.IPA || '')}</small>`;
+        btn.addEventListener('click', () => {
+          picker.classList.add('hidden');
+          const me = getMyParticipant();
+          const payload = {
+            type: 'remedy',
+            action,
+            byPeerId: myPeerId,
+            byLabel: me ? me.label : 'Thành viên',
+            byRole: effRole,
+            phrase: item
+          };
+          if (isHost) processRemedyOnHost(payload);
+          else if (guestHostConn && guestHostConn.open) guestHostConn.send(payload);
+        });
+        optsEl.appendChild(btn);
+      });
+
+      picker.classList.remove('hidden');
+    }
+
+    document.getElementById('btnUndo').addEventListener('click', () => {
+      openPhrasePicker('UNDO', 'Đọc câu xin đính chính rồi bấm chọn:');
+    });
+    document.getElementById('btnRepeat').addEventListener('click', () => {
+      openPhrasePicker('REPEAT', 'Đọc câu xin nghe lại rồi bấm chọn:');
+    });
+    document.getElementById('btnEarlyEnd').addEventListener('click', () => {
+      openPhrasePicker('EARLY_END', 'Đọc câu xin phép dừng sớm rồi bấm chọn:');
+    });
+    document.getElementById('closePhrasePicker').addEventListener('click', () => {
+      document.getElementById('phrasePicker').classList.add('hidden');
+    });
+
+    // =========================================================================
+    // 9. ĐỒNG BỘ PHÒNG & GỌI THOẠI LƯỚI 2–4 NGƯỜI (PEERJS)
+    // =========================================================================
+    function broadcastRoomState(toastMsg = '', toastType = '') {
+      if (!isHost || !roomState) return;
+      roomState.version++;
+      if (toastMsg) showToast(toastMsg, toastType);
+
+      hostGuestConns.forEach((conn) => {
+        if (conn.open) {
+          try {
+            conn.send({
+              type: 'sync-room',
+              roomState,
+              toastMsg,
+              toastType
+            });
+          } catch {}
+        }
       });
     }
 
-    function setupDataConnection(conn) {
-      dataConn = conn;
-      conn.on('open', () => {
-        updateConnBadge('Đã kết nối 2 máy', 'ok');
-        if (isHost) {
-          broadcastGameState();
-        } else {
-          conn.send({ type: 'request-sync' });
-        }
+    function attachRemoteAudio(peerId, stream) {
+      let info = remoteAudioPeers.get(peerId);
+      if (!info) {
+        info = { call: null, dummyAudio: null, sourceNode: null, bytesKB: 0, route: '' };
+        remoteAudioPeers.set(peerId, info);
+      }
+      if (!stream) return;
+
+      if (info.dummyAudio) {
+        info.dummyAudio.srcObject = stream;
+        info.dummyAudio.play().catch(() => {});
+        return;
+      }
+
+      const dummy = document.createElement('audio');
+      dummy.srcObject = stream;
+      dummy.muted = true;
+      dummy.playsInline = true;
+      dummy.autoplay = true;
+      document.getElementById('audioSink').appendChild(dummy);
+      dummy.play().catch(() => {});
+      info.dummyAudio = dummy;
+
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const srcNode = audioCtx.createMediaStreamSource(stream);
+        srcNode.connect(audioCtx.destination);
+        info.sourceNode = srcNode;
+      } catch {
+        dummy.muted = false;
+      }
+      startTimerIfNeeded();
+      updateAudioResumeButton();
+    }
+
+    function bindMediaCall(call) {
+      const peerId = call.peer;
+      let info = remoteAudioPeers.get(peerId);
+      if (!info) {
+        info = { call: null, dummyAudio: null, sourceNode: null, bytesKB: 0, route: '' };
+        remoteAudioPeers.set(peerId, info);
+      }
+      info.call = call;
+
+      call.on('stream', (remoteStream) => {
+        attachRemoteAudio(peerId, remoteStream);
+        renderMembersPanel();
       });
 
-      conn.on('data', (msg) => {
-        if (!msg || typeof msg !== 'object') return;
+      if (call.peerConnection) {
+        call.peerConnection.addEventListener('track', (e) => {
+          const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+          attachRemoteAudio(peerId, stream);
+        });
+      }
 
-        if (msg.type === 'request-sync' && isHost) {
-          broadcastGameState();
-        } else if (msg.type === 'sync-state' && !isHost) {
-          if (!gameState || msg.state.stepIndex >= gameState.stepIndex) {
-            activeScenario = msg.scenario;
-            gameState = msg.state;
-            renderStage();
+      call.on('close', () => cleanupRemoteAudioPeer(peerId));
+      call.on('error', () => cleanupRemoteAudioPeer(peerId));
+    }
+
+    function cleanupRemoteAudioPeer(peerId) {
+      const info = remoteAudioPeers.get(peerId);
+      if (!info) return;
+      try { if (info.call) info.call.close(); } catch {}
+      try { if (info.sourceNode) info.sourceNode.disconnect(); } catch {}
+      if (info.dummyAudio) {
+        info.dummyAudio.srcObject = null;
+        info.dummyAudio.remove();
+      }
+      remoteAudioPeers.delete(peerId);
+      if (roomState) renderMembersPanel();
+    }
+
+    function startStatsLoop() {
+      stopStatsLoop();
+      statsInterval = setInterval(async () => {
+        for (const [, info] of remoteAudioPeers.entries()) {
+          if (!info.call || !info.call.peerConnection) continue;
+          try {
+            const stats = await info.call.peerConnection.getStats();
+            let totalBytes = 0;
+            let routeType = '';
+            stats.forEach((r) => {
+              if (r.type === 'inbound-rtp' && (r.kind === 'audio' || r.mediaType === 'audio')) {
+                totalBytes += r.bytesReceived || 0;
+              }
+              if (r.type === 'candidate-pair' && r.state === 'succeeded') {
+                const cand = stats.get(r.localCandidateId);
+                if (cand) routeType = cand.candidateType === 'relay' ? 'TURN' : 'P2P';
+              }
+            });
+            info.bytesKB = Math.round(totalBytes / 1024);
+            if (routeType) info.route = routeType;
+          } catch {}
+        }
+        if (roomState) renderMembersPanel();
+      }, 1500);
+    }
+
+    function stopStatsLoop() {
+      if (statsInterval) clearInterval(statsInterval);
+      statsInterval = null;
+    }
+
+    function handleGuestLeaveOnHost(guestId) {
+      if (!hostGuestConns.has(guestId)) return;
+      hostGuestConns.delete(guestId);
+      cleanupRemoteAudioPeer(guestId);
+
+      const idx = roomState.participants.findIndex(p => p.peerId === guestId);
+      const leftLabel = idx >= 0 ? roomState.participants[idx].label : 'Một thành viên';
+      if (idx >= 0) roomState.participants.splice(idx, 1);
+
+      playChime('leave');
+
+      let extraNote = '';
+      if (roomState.roomMode === 'ROLEPLAY' && roomState.gameState) {
+        const gs = roomState.gameState;
+        if (gs.rotationMode && roomState.participants.length < 3) {
+          gs.rotationMode = false;
+          extraNote = ' (dưới 3 người, đã tắt xoay vai)';
+          assignDefaultRolesForScenario(roomState.participants, roomState.scenario.roles);
+        } else if (gs.rotationMode && gs.activeSpeakerPeerId === guestId && roomState.participants.length > 0) {
+          gs.rotationIndex = gs.rotationIndex % roomState.participants.length;
+          gs.activeSpeakerPeerId = roomState.participants[gs.rotationIndex].peerId;
+        }
+      }
+
+      broadcastRoomState(`${leftLabel} đã rời phòng.${extraNote}`, 'leave');
+      renderAll();
+    }
+
+    // 1. HOST TẠO PHÒNG
+    document.getElementById('createBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('createBtn');
+      const rawCustom = document.getElementById('customCodeInput').value;
+      const customCode = sanitizeCode(rawCustom);
+      if (rawCustom.trim() !== '' && customCode.length < 3) {
+        alert('Mã phòng tự đặt cần ít nhất 3 ký tự.');
+        return;
+      }
+
+      const chosenCtx = scenarioSelect.value || 'FREE_CALL';
+      btn.disabled = true;
+      btn.textContent = chosenCtx === 'FREE_CALL' ? 'Đang tạo phòng...' : 'Đang nạp bối cảnh...';
+
+      let loadedScenario = null;
+      try {
+        if (chosenCtx !== 'FREE_CALL') {
+          loadedScenario = await loadScenarioFromDrive(chosenCtx);
+        }
+        await initProcessedMic();
+      } catch (err) {
+        alert('Lỗi khởi tạo: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Tạo phòng';
+        return;
+      }
+
+      isHost = true;
+      guestSequence = 1;
+      currentRoomCode = customCode.length >= 3 ? customCode : genCode();
+      hostPeerId = APP_PREFIX + currentRoomCode;
+      myPeerId = hostPeerId;
+
+      const hostMember = {
+        peerId: myPeerId,
+        label: 'Chủ phòng',
+        isHost: true,
+        role: loadedScenario ? loadedScenario.roles[0] : ''
+      };
+
+      stateSnapshots = [];
+      roomState = {
+        version: 1,
+        roomMode: loadedScenario ? 'ROLEPLAY' : 'FREE_CALL',
+        participants: [hostMember],
+        scenario: loadedScenario,
+        gameState: loadedScenario ? createInitialGameState(loadedScenario, [hostMember], false) : null
+      };
+
+      roomScenarioSelect.value = chosenCtx;
+      document.getElementById('homeView').classList.add('hidden');
+      document.getElementById('roomView').classList.remove('hidden');
+      document.getElementById('codeDisplay').textContent = currentRoomCode;
+      renderAll();
+
+      peer = new Peer(hostPeerId, getPeerConfig());
+
+      peer.on('open', () => {
+        startStatsLoop();
+        showToast(`Đã tạo phòng ${currentRoomCode}!`, 'join');
+      });
+
+      peer.on('connection', (conn) => {
+        const guestId = conn.peer;
+
+        conn.on('data', (msg) => {
+          if (!msg || typeof msg !== 'object') return;
+
+          if (msg.type === 'join') {
+            if (roomState.participants.length >= MAX_ROOM_USERS) {
+              try { conn.send({ type: 'room-full', max: MAX_ROOM_USERS }); } catch {}
+              setTimeout(() => { try { conn.close(); } catch {} }, 300);
+              return;
+            }
+
+            const existingGuestIds = Array.from(hostGuestConns.keys());
+            hostGuestConns.set(guestId, conn);
+
+            guestSequence++;
+            const newMember = {
+              peerId: guestId,
+              label: `Thành viên #${guestSequence}`,
+              isHost: false,
+              role: roomState.roomMode === 'ROLEPLAY'
+                ? assignRoleForNewGuest(roomState.participants, roomState.scenario)
+                : ''
+            };
+            roomState.participants.push(newMember);
+            playChime('join');
+
+            // Gửi welcome cho khách mới kèm danh sách peer hiện có để nối audio lưới
+            conn.send({
+              type: 'welcome',
+              peers: existingGuestIds,
+              roomState
+            });
+
+            broadcastRoomState(`${newMember.label} đã tham gia phòng!`, 'join');
+            renderAll();
+          } else if (msg.type === 'select-choice') {
+            applyChoiceOnHost(msg.choice, guestId);
+          } else if (msg.type === 'remedy') {
+            processRemedyOnHost(msg);
+          } else if (msg.type === 'leave') {
+            handleGuestLeaveOnHost(guestId);
           }
-        } else if (msg.type === 'select-choice' && isHost) {
-          applyChoiceTransition(msg.choice);
-        } else if (msg.type === 'remedy' && isHost) {
-          processRemedyOnHost(msg);
-        }
+        });
+
+        conn.on('close', () => handleGuestLeaveOnHost(guestId));
+        conn.on('error', () => handleGuestLeaveOnHost(guestId));
       });
 
-      conn.on('close', () => {
-        updateConnBadge('Bạn học đã ngắt kết nối', 'warn');
+      peer.on('call', (call) => {
+        call.answer(outgoingStream);
+        bindMediaCall(call);
       });
-    }
 
-    // Đổi vai & Chơi lại (Host điều khiển)
-    document.getElementById('swapRolesBtn').addEventListener('click', () => {
-      if (!isHost || !activeScenario || !gameState) return;
-      const oldHostRole = gameState.hostRole;
-      const oldGuestRole = gameState.guestRole;
-      stateSnapshots = [];
-      gameState = createInitialGameState(activeScenario, 'ROLE_A');
-      gameState.hostRole = oldGuestRole;
-      gameState.guestRole = oldHostRole;
-      broadcastGameState();
-      renderStage();
+      peer.on('disconnected', () => {
+        if (peer && !peer.destroyed) peer.reconnect();
+      });
+
+      peer.on('error', (err) => {
+        alert(err.type === 'unavailable-id' ? `Mã "${currentRoomCode}" đang có người dùng, hãy chọn mã khác!` : 'Lỗi kết nối: ' + err.type);
+        cleanupRoom();
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Tạo phòng';
     });
 
-    document.getElementById('restartSameBtn').addEventListener('click', () => {
-      if (!isHost || !activeScenario || !gameState) return;
-      const keepHostRole = gameState.hostRole;
-      const keepGuestRole = gameState.guestRole;
-      stateSnapshots = [];
-      gameState = createInitialGameState(activeScenario, 'ROLE_A');
-      gameState.hostRole = keepHostRole;
-      gameState.guestRole = keepGuestRole;
-      broadcastGameState();
-      renderStage();
+    // 2. GUEST VÀO PHÒNG
+    document.getElementById('joinBtn').addEventListener('click', async () => {
+      const code = sanitizeCode(document.getElementById('codeInput').value);
+      if (code.length < 3) {
+        alert('Vui lòng nhập đúng mã phòng.');
+        return;
+      }
+
+      try {
+        await initProcessedMic();
+      } catch {
+        alert('Cần cấp quyền Micro để tham gia phòng.');
+        return;
+      }
+
+      isHost = false;
+      currentRoomCode = code;
+      hostPeerId = APP_PREFIX + code;
+
+      document.getElementById('homeView').classList.add('hidden');
+      document.getElementById('roomView').classList.remove('hidden');
+      document.getElementById('codeDisplay').textContent = currentRoomCode;
+
+      peer = new Peer(undefined, getPeerConfig());
+
+      peer.on('open', (assignedId) => {
+        myPeerId = assignedId;
+        startStatsLoop();
+
+        const conn = peer.connect(hostPeerId, { reliable: true });
+        guestHostConn = conn;
+
+        conn.on('open', () => conn.send({ type: 'join' }));
+
+        conn.on('data', (msg) => {
+          if (!msg || typeof msg !== 'object') return;
+
+          if (msg.type === 'room-full') {
+            alert(`Phòng đã đầy (tối đa ${msg.max} người).`);
+            cleanupRoom();
+          } else if (msg.type === 'welcome') {
+            roomState = msg.roomState;
+            renderAll();
+            showToast(`Đã tham gia phòng ${currentRoomCode}!`, 'join');
+
+            // Gọi audio tới Host và toàn bộ thành viên cũ đang có trong phòng
+            const hostCall = peer.call(hostPeerId, outgoingStream);
+            bindMediaCall(hostCall);
+
+            (msg.peers || []).forEach((otherId) => {
+              if (otherId !== myPeerId && !remoteAudioPeers.has(otherId)) {
+                const c = peer.call(otherId, outgoingStream);
+                bindMediaCall(c);
+              }
+            });
+          } else if (msg.type === 'sync-room') {
+            if (!roomState || msg.roomState.version >= roomState.version) {
+              roomState = msg.roomState;
+              if (msg.toastMsg) {
+                if (msg.toastType === 'join') playChime('join');
+                else if (msg.toastType === 'leave') playChime('leave');
+                showToast(msg.toastMsg, msg.toastType || '');
+              }
+              renderAll();
+            }
+          } else if (msg.type === 'host-closed') {
+            alert('Chủ phòng đã kết thúc cuộc gọi.');
+            cleanupRoom();
+          }
+        });
+
+        conn.on('close', () => {
+          if (peer && !peer.destroyed) {
+            alert('Mất kết nối với chủ phòng.');
+            cleanupRoom();
+          }
+        });
+      });
+
+      peer.on('call', (call) => {
+        call.answer(outgoingStream);
+        bindMediaCall(call);
+      });
+
+      peer.on('disconnected', () => {
+        if (peer && !peer.destroyed) peer.reconnect();
+      });
+
+      peer.on('error', (err) => {
+        alert(err.type === 'peer-unavailable' ? 'Không tìm thấy mã phòng này hoặc Host chưa mở.' : 'Lỗi kết nối: ' + err.type);
+        cleanupRoom();
+      });
     });
 
     // =========================================================================
-    // 9. CÁC SỰ KIỆN UI & CUỘC GỌI THOẠI
+    // 10. TIỆN ÍCH AUDIO, MIC, UI CONTROLS & DỌN DẸP
     // =========================================================================
-    document.getElementById('hostRolePills').addEventListener('click', (e) => {
-      const pill = e.target.closest('.role-pill');
-      if (!pill) return;
-      hostRoleChoice = pill.dataset.role;
-      document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('selected'));
-      pill.classList.add('selected');
-    });
-
-    document.getElementById('challengeToggle').addEventListener('click', (e) => {
-      challengeMode = !challengeMode;
-      e.target.classList.toggle('on', challengeMode);
-      renderStage();
-    });
-
-    document.getElementById('listenToggle').addEventListener('click', (e) => {
-      listenMode = !listenMode;
-      e.target.classList.toggle('on', listenMode);
-      renderStage();
-    });
-
-    document.getElementById('partnerTextWrap').addEventListener('click', (e) => {
-      if (listenMode) e.currentTarget.classList.toggle('revealed');
-    });
-
-    // Voice FX UI
-    const FX_NAMES = { normal: 'Bình thường', female: 'Giọng Nữ', male: 'Giọng Nam', high: 'Trẻ con' };
-    document.getElementById('fxGrid').addEventListener('click', (e) => {
-      const btn = e.target.closest('.fx-btn');
-      if (!btn) return;
-      const mode = btn.dataset.fx;
-      document.querySelectorAll('.fx-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('fxLabel').textContent = FX_NAMES[mode];
-      if (voiceFX) voiceFX.setMode(mode);
-      else currentFxMode = mode;
-    });
-
-    document.getElementById('semitoneSlider').addEventListener('input', (e) => {
-      const v = parseFloat(e.target.value);
-      document.getElementById('semitoneVal').textContent = (v > 0 ? '+' : '') + v.toFixed(1);
-      if (voiceFX) voiceFX.applySemitones(v);
-    });
-
-    document.getElementById('selfMonitorChk').addEventListener('change', (e) => {
-      if (voiceFX) voiceFX.setSelfMonitor(e.target.checked);
-    });
-
     function unlockAudio() {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1551,6 +2159,10 @@
       if (audioCtx) audioCtx.resume().then(updateAudioResumeButton);
     });
 
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateAudioResumeButton();
+    });
+
     async function initProcessedMic() {
       unlockAudio();
       rawMicStream = await navigator.mediaDevices.getUserMedia({
@@ -1572,27 +2184,6 @@
       tick();
     }
 
-    function attachRemoteAudio(stream) {
-      if (!stream) return;
-      if (!remoteDummyAudio) {
-        remoteDummyAudio = document.createElement('audio');
-        remoteDummyAudio.muted = true; remoteDummyAudio.playsInline = true; remoteDummyAudio.autoplay = true;
-        document.getElementById('audioSink').appendChild(remoteDummyAudio);
-      }
-      remoteDummyAudio.srcObject = stream;
-      remoteDummyAudio.play().catch(() => {});
-      try {
-        if (!remoteSourceNode) {
-          remoteSourceNode = audioCtx.createMediaStreamSource(stream);
-          remoteSourceNode.connect(audioCtx.destination);
-        }
-      } catch {
-        remoteDummyAudio.muted = false;
-      }
-      startTimerIfNeeded();
-      updateAudioResumeButton();
-    }
-
     function startTimerIfNeeded() {
       if (timerInterval) return;
       seconds = 0;
@@ -1601,12 +2192,6 @@
         seconds++;
         timerEl.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
       }, 1000);
-    }
-
-    function updateConnBadge(text, cls = '') {
-      const el = document.getElementById('connBadge');
-      el.textContent = text;
-      el.className = 'conn-badge' + (cls ? ' ' + cls : '');
     }
 
     function sanitizeCode(raw) {
@@ -1620,115 +2205,44 @@
       return out;
     }
 
-    // TẠO PHÒNG (HOST)
-    document.getElementById('createBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('createBtn');
-      btn.disabled = true;
-      btn.textContent = 'Đang nạp kịch bản...';
-
-      try {
-        activeScenario = await loadSelectedScenarioData(scenarioSelect.value);
-        await initProcessedMic();
-      } catch (err) {
-        alert('Lỗi khởi tạo: ' + err.message);
-        btn.disabled = false;
-        btn.textContent = 'Tạo phòng';
-        return;
+    function notifyBeforeExit() {
+      if (isHost) {
+        hostGuestConns.forEach((conn) => {
+          if (conn.open) try { conn.send({ type: 'host-closed' }); } catch {}
+        });
+      } else if (guestHostConn && guestHostConn.open) {
+        try { guestHostConn.send({ type: 'leave' }); } catch {}
       }
+    }
 
-      isHost = true;
-      stateSnapshots = [];
-      gameState = createInitialGameState(activeScenario, hostRoleChoice);
-
-      const rawCustom = document.getElementById('customCodeInput').value;
-      const customCode = sanitizeCode(rawCustom);
-      currentRoomCode = customCode.length >= 3 ? customCode : genCode();
-      hostPeerId = APP_PREFIX + currentRoomCode;
-
-      document.getElementById('homeView').classList.add('hidden');
-      document.getElementById('roomView').classList.remove('hidden');
-      document.getElementById('codeDisplay').textContent = currentRoomCode;
-      renderStage();
-
-      peer = new Peer(hostPeerId, getPeerConfig());
-
-      peer.on('open', () => updateConnBadge('Chờ người thứ 2 vào mã phòng...'));
-      peer.on('connection', (conn) => setupDataConnection(conn));
-      peer.on('call', (call) => {
-        mediaCall = call;
-        call.answer(outgoingStream);
-        call.on('stream', attachRemoteAudio);
-      });
-      peer.on('error', (err) => {
-        alert(err.type === 'unavailable-id' ? 'Mã phòng này đang có người dùng, hãy chọn mã khác!' : 'Lỗi kết nối: ' + err.type);
-        cleanupRoom();
-      });
-
-      btn.disabled = false;
-      btn.textContent = 'Tạo phòng';
-    });
-
-    // VÀO PHÒNG (GUEST)
-    document.getElementById('joinBtn').addEventListener('click', async () => {
-      const code = sanitizeCode(document.getElementById('codeInput').value);
-      if (code.length < 3) {
-        alert('Vui lòng nhập đúng mã phòng.');
-        return;
-      }
-
-      try {
-        await initProcessedMic();
-      } catch {
-        alert('Cần cấp quyền Micro để vào phòng luyện nói.');
-        return;
-      }
-
-      isHost = false;
-      currentRoomCode = code;
-      hostPeerId = APP_PREFIX + code;
-
-      document.getElementById('homeView').classList.add('hidden');
-      document.getElementById('roomView').classList.remove('hidden');
-      document.getElementById('codeDisplay').textContent = currentRoomCode;
-      updateConnBadge('Đang kết nối tới Host...');
-
-      peer = new Peer(undefined, getPeerConfig());
-
-      peer.on('open', () => {
-        const conn = peer.connect(hostPeerId, { reliable: true });
-        setupDataConnection(conn);
-
-        const call = peer.call(hostPeerId, outgoingStream);
-        mediaCall = call;
-        call.on('stream', attachRemoteAudio);
-      });
-
-      peer.on('call', (call) => {
-        mediaCall = call;
-        call.answer(outgoingStream);
-        call.on('stream', attachRemoteAudio);
-      });
-
-      peer.on('error', (err) => {
-        alert(err.type === 'peer-unavailable' ? 'Không tìm thấy phòng này hoặc Host chưa mở.' : 'Lỗi kết nối: ' + err.type);
-        cleanupRoom();
-      });
-    });
+    window.addEventListener('beforeunload', notifyBeforeExit);
 
     function cleanupRoom() {
+      notifyBeforeExit();
       if (timerInterval) clearInterval(timerInterval); timerInterval = null;
+      stopStatsLoop();
       if (micAnimFrame) cancelAnimationFrame(micAnimFrame); micAnimFrame = null;
-      if (mediaCall) { try { mediaCall.close(); } catch {} mediaCall = null; }
-      if (dataConn) { try { dataConn.close(); } catch {} dataConn = null; }
+
+      remoteAudioPeers.forEach((_, pid) => cleanupRemoteAudioPeer(pid));
+      remoteAudioPeers.clear();
+
+      hostGuestConns.forEach(c => { try { c.close(); } catch {} });
+      hostGuestConns.clear();
+      if (guestHostConn) { try { guestHostConn.close(); } catch {} guestHostConn = null; }
+
       if (peer) { try { peer.destroy(); } catch {} peer = null; }
       if (voiceFX) { voiceFX.destroy(); voiceFX = null; }
       if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
-      if (remoteSourceNode) { try { remoteSourceNode.disconnect(); } catch {} remoteSourceNode = null; }
-      if (remoteDummyAudio) { remoteDummyAudio.srcObject = null; remoteDummyAudio.remove(); remoteDummyAudio = null; }
+      outgoingStream = null;
+      roomState = null;
+      stateSnapshots = [];
 
       isMuted = false;
+      document.getElementById('timer').textContent = '00:00';
+      document.getElementById('micBar').style.width = '0%';
       document.getElementById('muteBtn').textContent = 'Tắt mic';
       document.getElementById('muteBtn').classList.remove('active');
+      document.getElementById('selfMonitorChk').checked = false;
       document.getElementById('roomView').classList.add('hidden');
       document.getElementById('homeView').classList.remove('hidden');
     }
@@ -1743,6 +2257,7 @@
       const btn = document.getElementById('muteBtn');
       btn.textContent = isMuted ? 'Bật mic' : 'Tắt mic';
       btn.classList.toggle('active', isMuted);
+      if (roomState) renderMembersPanel();
     });
 
     document.getElementById('codeBox').addEventListener('click', async () => {
@@ -1751,6 +2266,53 @@
         document.getElementById('copyHint').textContent = 'ĐÃ SAO CHÉP MÃ!';
         setTimeout(() => document.getElementById('copyHint').textContent = 'MÃ PHÒNG (BẤM COPY)', 1500);
       } catch {}
+    });
+
+    // Study toggles
+    document.getElementById('challengeToggle').addEventListener('click', (e) => {
+      challengeMode = !challengeMode;
+      e.target.classList.toggle('on', challengeMode);
+      if (roomState) renderMainArea();
+    });
+
+    document.getElementById('listenToggle').addEventListener('click', (e) => {
+      listenMode = !listenMode;
+      e.target.classList.toggle('on', listenMode);
+      if (roomState) renderMainArea();
+    });
+
+    document.getElementById('partnerTextWrap').addEventListener('click', (e) => {
+      if (listenMode) e.currentTarget.classList.toggle('revealed');
+    });
+
+    // Voice FX controls
+    const FX_NAMES = { normal: 'Bình thường', female: 'Giọng Nữ', male: 'Giọng Nam', high: 'Trẻ con' };
+    document.getElementById('fxGrid').addEventListener('click', (e) => {
+      const btn = e.target.closest('.fx-btn');
+      if (!btn) return;
+      const mode = btn.dataset.fx;
+      document.querySelectorAll('.fx-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('fxLabel').textContent = FX_NAMES[mode];
+      if (voiceFX) voiceFX.setMode(mode);
+      else currentFxMode = mode;
+    });
+
+    document.getElementById('semitoneSlider').addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      document.getElementById('semitoneVal').textContent = (v > 0 ? '+' : '') + v.toFixed(1);
+      if (voiceFX) voiceFX.applySemitones(v);
+    });
+
+    document.getElementById('selfMonitorChk').addEventListener('change', (e) => {
+      if (voiceFX) voiceFX.setSelfMonitor(e.target.checked);
+    });
+
+    document.getElementById('customCodeInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('createBtn').click();
+    });
+    document.getElementById('codeInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('joinBtn').click();
     });
   </script>
 </body>
