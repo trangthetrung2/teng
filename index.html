@@ -61,7 +61,7 @@
     .btn-outline:hover:not(:disabled) { border-color: #60a5fa; color: #fff; }
 
     .divider {
-      display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #64748b; font-size: 0.82rem;
+      display: flex; align-items: center; gap: 12px; margin: 14px 0; color: #64748b; font-size: 0.82rem;
     }
     .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #334155; }
 
@@ -85,9 +85,22 @@
 
     .row-gap { display: flex; gap: 8px; align-items: center; }
 
+    /* Chọn số người tối đa (2, 3, 4) */
+    .size-pills {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;
+    }
+    .size-pill {
+      padding: 9px 6px; border-radius: 10px; border: 1px solid #334155;
+      background: #1e293b; color: #94a3b8; font-size: 0.84rem; font-weight: 700;
+      cursor: pointer; text-align: center; transition: 0.15s;
+    }
+    .size-pill.selected {
+      background: #2563eb; border-color: #60a5fa; color: #fff;
+    }
+
     .opt-row {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 12px; font-size: 0.82rem; color: #cbd5e1; cursor: pointer; user-select: none;
+      margin-top: 10px; font-size: 0.82rem; color: #cbd5e1; cursor: pointer; user-select: none;
     }
     .opt-row input { width: 15px; height: 15px; accent-color: #3b82f6; }
 
@@ -132,9 +145,7 @@
       padding: 4px 10px; border-radius: 8px; border: 1px solid #475569;
       background: #1e293b; color: #cbd5e1; font-size: 0.72rem; font-weight: 700; cursor: pointer;
     }
-    .rotate-btn.active {
-      background: #7c3aed; border-color: #a78bfa; color: #fff;
-    }
+    .rotate-btn.active { background: #7c3aed; border-color: #a78bfa; color: #fff; }
     .rotate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .member-row {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -142,6 +153,10 @@
     }
     .member-row:first-of-type { border-top: none; }
     .member-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .host-tag {
+      font-size: 0.64rem; font-weight: 700; padding: 1px 6px; border-radius: 5px;
+      background: #1e3a8a; color: #93c5fd;
+    }
     .net-pill {
       font-size: 0.67rem; padding: 2px 6px; border-radius: 99px;
       background: #1e293b; color: #94a3b8;
@@ -208,7 +223,7 @@
     }
     .toggle-chip.on { background: #7c3aed; border-color: #a78bfa; color: #fff; }
 
-    /* Scenario Stage */
+    /* Scenario Stage & Live Conversation Log */
     .stage-box {
       background: #0f172a; border: 1px solid #334155; border-radius: 14px;
       padding: 12px; margin-bottom: 10px;
@@ -224,17 +239,39 @@
       background: #1e293b; color: #38bdf8; border: 1px solid #0369a1;
     }
 
-    .partner-bubble {
-      background: #1e293b; border-left: 3px solid #10b981; border-radius: 10px;
-      padding: 10px 12px; margin-bottom: 12px;
+    /* Live Conversation Log (hiển thị cho tất cả mọi người trong phòng) */
+    .live-log-wrap {
+      background: #020617; border: 1px solid #1e293b; border-radius: 11px;
+      padding: 9px 10px; margin-bottom: 12px;
     }
-    .partner-bubble .who {
-      font-size: 0.72rem; font-weight: 700; color: #34d399; margin-bottom: 4px;
-      display: flex; justify-content: space-between;
+    .live-log-head {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.71rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;
+      margin-bottom: 7px; letter-spacing: 0.4px;
     }
-    .partner-bubble .en { font-size: 0.96rem; font-weight: 600; color: #f8fafc; line-height: 1.4; }
-    .partner-bubble .ipa { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
-    .partner-bubble .vi { font-size: 0.8rem; color: #cbd5e1; margin-top: 3px; font-style: italic; }
+    .live-log-list {
+      max-height: 225px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px;
+      padding-right: 2px;
+    }
+    .log-empty {
+      text-align: center; color: #64748b; font-size: 0.78rem; padding: 12px 6px;
+    }
+    .log-msg {
+      background: #1e293b; border-left: 3px solid #10b981; border-radius: 9px;
+      padding: 8px 10px; font-size: 0.84rem;
+    }
+    .log-msg.mine {
+      background: #172554; border-left-color: #3b82f6;
+    }
+    .log-msg-meta {
+      display: flex; justify-content: space-between; align-items: center; gap: 6px;
+      font-size: 0.7rem; font-weight: 700; color: #34d399; margin-bottom: 3px;
+    }
+    .log-msg.mine .log-msg-meta { color: #60a5fa; }
+    .log-msg-en { color: #f8fafc; font-weight: 600; line-height: 1.38; font-size: 0.9rem; }
+    .log-msg-ipa { color: #94a3b8; font-size: 0.76rem; margin-top: 2px; }
+    .log-msg-vi { color: #cbd5e1; font-size: 0.76rem; margin-top: 2px; font-style: italic; }
+
     .blurred-text { filter: blur(6px); user-select: none; cursor: pointer; transition: filter 0.2s; }
     .blurred-text.revealed { filter: none; }
 
@@ -272,7 +309,7 @@
     }
 
     .wait-box {
-      text-align: center; padding: 20px 12px; color: #94a3b8; font-size: 0.86rem;
+      text-align: center; padding: 16px 12px; color: #94a3b8; font-size: 0.85rem;
       background: #1e293b; border-radius: 12px; border: 1px dashed #334155; line-height: 1.5;
     }
 
@@ -331,11 +368,24 @@
   <div class="app-wrap">
     <div class="header-top">
       <h1>Roleplay Voice Studio</h1>
-      <p class="sub">v5.0 • Gọi Thoại Nhóm & Nhập Vai Tiếng Anh (2–4 người)</p>
+      <p class="sub">v5.1 • Gọi Thoại Nhóm & Nhập Vai Tiếng Anh</p>
     </div>
 
     <!-- ==================== MÀN HÌNH CHÍNH ==================== -->
     <div id="homeView">
+      <!-- Tên hiển thị (dùng chung cho cả tạo phòng & vào phòng) -->
+      <div class="box">
+        <div class="box-title">
+          <span>Tên của bạn</span>
+          <span style="font-size:0.7rem; font-weight:500; text-transform:none; color:#64748b;">Tự chọn ngẫu nhiên nếu không nhập</span>
+        </div>
+        <div class="row-gap">
+          <input id="userNameInput" type="text" maxlength="20" placeholder="Nhập tên của bạn..." autocomplete="off" />
+          <button type="button" id="rerollNameBtn" class="btn-outline" title="Đổi chữ cái ngẫu nhiên" style="padding:10px 12px; font-size:0.95rem;">🎲</button>
+        </div>
+      </div>
+
+      <!-- Tạo phòng mới -->
       <div class="box">
         <div class="box-title">
           <span>Chọn bối cảnh</span>
@@ -347,6 +397,15 @@
         </select>
         <div id="driveStatus" class="small-note">Đang tải danh sách bối cảnh từ Google Drive...</div>
 
+        <div style="margin-top:11px; font-size:0.75rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.4px;">
+          Số người tối đa trong phòng
+        </div>
+        <div class="size-pills" id="roomSizePills">
+          <button type="button" class="size-pill selected" data-size="2">2 người</button>
+          <button type="button" class="size-pill" data-size="3">3 người</button>
+          <button type="button" class="size-pill" data-size="4">4 người</button>
+        </div>
+
         <div class="row-gap" style="margin-top:12px;">
           <input id="customCodeInput" class="code-input" type="text" maxlength="12" placeholder="MÃ PHÒNG (TÙY CHỌN)" autocomplete="off" />
           <button id="createBtn" class="btn btn-primary" style="flex:1.2;">Tạo phòng</button>
@@ -355,6 +414,7 @@
 
       <div class="divider">hoặc vào phòng có sẵn</div>
 
+      <!-- Vào phòng có sẵn -->
       <div class="box">
         <div class="box-title"><span>Nhập mã phòng để tham gia</span></div>
         <div class="row-gap">
@@ -378,7 +438,7 @@
         </div>
         <div class="call-meta">
           <div id="timer" class="timer">00:00</div>
-          <div id="connBadge" class="conn-badge">1/4 người</div>
+          <div id="connBadge" class="conn-badge">1/2 người</div>
         </div>
       </div>
 
@@ -387,7 +447,7 @@
       <!-- Bảng điều khiển bối cảnh dành riêng cho Host -->
       <div id="hostContextPanel" class="host-ctx-box hidden">
         <div class="host-ctx-head">
-          <span>CHỌN BỐI CẢNH (HOST)</span>
+          <span>CHỌN BỐI CẢNH (CHỦ PHÒNG)</span>
           <button type="button" id="roomRefreshDriveBtn" class="btn-outline" style="padding:2px 7px; font-size:0.7rem;">Tải lại Drive</button>
         </div>
         <div id="hostSwitchWrap" class="row-gap">
@@ -407,7 +467,7 @@
       <!-- Danh sách thành viên & phân vai / xoay vai -->
       <div class="members-box">
         <div class="members-head">
-          <span>THÀNH VIÊN (<span id="memberCountText">1/4</span>)</span>
+          <span>THÀNH VIÊN (<span id="memberCountText">1/2</span>)</span>
           <button type="button" id="toggleRotationBtn" class="rotate-btn hidden" disabled>🔄 Xoay vai: TẮT</button>
         </div>
         <div id="membersList"></div>
@@ -450,7 +510,7 @@
           <span id="myRoleBadge" class="role-tag">Vai của bạn: ---</span>
           <div class="mode-toggles">
             <button type="button" id="challengeToggle" class="toggle-chip" title="Ẩn tiếng Anh, chỉ hiện gợi ý tiếng Việt">Phản xạ (Ẩn EN)</button>
-            <button type="button" id="listenToggle" class="toggle-chip" title="Làm mờ câu đối phương vừa nói">Luyện nghe</button>
+            <button type="button" id="listenToggle" class="toggle-chip" title="Làm mờ câu mới nhất của người khác">Luyện nghe</button>
           </div>
         </div>
 
@@ -463,15 +523,14 @@
           <div id="ctxTagsBar" class="tag-list hidden"></div>
           <div id="systemNotice" class="system-notice hidden"></div>
 
-          <div id="partnerBubble" class="partner-bubble hidden">
-            <div class="who">
-              <span id="partnerWho">Vừa nói:</span>
-              <span id="blurHint" class="hidden" style="color:#a78bfa; cursor:pointer;">Chạm để hiện chữ</span>
+          <!-- Bảng Log cuộc trò chuyện trực tiếp cho TẤT CẢ mọi người trong phòng -->
+          <div class="live-log-wrap">
+            <div class="live-log-head">
+              <span>Nhật ký hội thoại</span>
+              <span id="liveLogCount">0 câu</span>
             </div>
-            <div id="partnerTextWrap">
-              <div id="partnerEn" class="en"></div>
-              <div id="partnerIpa" class="ipa"></div>
-              <div id="partnerVi" class="vi"></div>
+            <div id="liveLogList" class="live-log-list">
+              <div class="log-empty">Chưa có câu thoại nào — cuộc hội thoại sẽ hiện trực tiếp tại đây.</div>
             </div>
           </div>
 
@@ -520,8 +579,7 @@
     // 1. CẤU HÌNH API & MẪU CÂU CHỨC NĂNG CHUNG MẶC ĐỊNH
     // =========================================================================
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxeILbjho8qJJKgglKr_qAd7Wt4wfACk_KDrfOe0c4Y6khVVd_2JPMnmGrFwZGBpxY-/exec';
-    const APP_PREFIX = 'cf-roleplay-en-v5-';
-    const MAX_ROOM_USERS = 4;
+    const APP_PREFIX = 'cf-roleplay-en-v51-';
 
     const DEFAULT_COMMON_PHRASES = [
       { Action: 'UNDO', Role: 'ANY', Text_EN: 'Oops, my bad. Let me say that again.', IPA: '/ʊps maɪ bæd let mi seɪ ðæt əˈɡen/' },
@@ -534,7 +592,40 @@
     ];
 
     // =========================================================================
-    // 2. WEBRTC ICE & VOICE FX (4-GRAIN HANN PITCH SHIFTER)
+    // 2. TÊN NGƯỜI DÙNG NGẪU NHIÊN (A-Z) & CHỌN SỐ NGƯỜI PHÒNG (2, 3, 4)
+    // =========================================================================
+    const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let selectedMaxUsers = 2;
+
+    function genRandomLetter() {
+      return ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    }
+
+    const userNameInput = document.getElementById('userNameInput');
+    userNameInput.value = genRandomLetter();
+
+    document.getElementById('rerollNameBtn').addEventListener('click', () => {
+      userNameInput.value = genRandomLetter();
+    });
+
+    function getResolvedUserName() {
+      const cleaned = userNameInput.value.trim().slice(0, 20);
+      if (cleaned) return cleaned;
+      const fallback = genRandomLetter();
+      userNameInput.value = fallback;
+      return fallback;
+    }
+
+    document.getElementById('roomSizePills').addEventListener('click', (e) => {
+      const pill = e.target.closest('.size-pill');
+      if (!pill) return;
+      selectedMaxUsers = parseInt(pill.dataset.size, 10) || 2;
+      document.querySelectorAll('.size-pill').forEach(p => p.classList.remove('selected'));
+      pill.classList.add('selected');
+    });
+
+    // =========================================================================
+    // 3. WEBRTC ICE & VOICE FX (4-GRAIN HANN PITCH SHIFTER)
     // =========================================================================
     const BASE_ICE_SERVERS = [
       { urls: 'stun:stun.l.google.com:19302' },
@@ -737,20 +828,19 @@
     }
 
     // =========================================================================
-    // 3. BIẾN TRẠNG THÁI TOÀN CỤC (PHÒNG 2–4 NGƯỜI + ĐỒNG BỘ BỐI CẢNH)
+    // 4. BIẾN TRẠNG THÁI TOÀN CỤC & CHỐNG PHÒNG LỖI / PHÒNG MA
     // =========================================================================
+    let sessionToken = 0; // Tăng mỗi lần dọn phòng để chặn callback cũ chen ngang
     let isHost = false;
+    let inRoom = false;
     let myPeerId = '';
     let currentRoomCode = '';
     let hostPeerId = '';
     let peer = null;
 
-    // Kết nối dữ liệu (Mô hình sao: Host <-> các Guest)
-    const hostGuestConns = new Map(); // guestPeerId -> DataConnection
+    const hostGuestConns = new Map();
     let guestHostConn = null;
-
-    // Kết nối âm thanh (Mô hình lưới Mesh: mọi người nối trực tiếp nhau)
-    const remoteAudioPeers = new Map(); // peerId -> { call, dummyAudio, sourceNode, bytesKB, route }
+    const remoteAudioPeers = new Map();
 
     let rawMicStream = null;
     let outgoingStream = null;
@@ -762,34 +852,23 @@
     let statsInterval = null;
     let micAnimFrame = null;
     let seconds = 0;
-    let guestSequence = 1;
 
-    // Danh sách bối cảnh Drive
+    // Cơ chế xác thực phòng sống (Handshake Timeout + Heartbeat)
+    let joinTimeoutId = null;
+    let hostCreateTimeoutId = null;
+    let guestHeartbeatInterval = null;
+    let lastHostHeartbeatAt = 0;
+
     let driveScenariosList = [];
-
-    // Trạng thái phòng đồng bộ từ Host (Single Source of Truth)
     let roomState = null;
-    /* Cấu trúc roomState:
-      {
-        version: 1,
-        roomMode: 'FREE_CALL' | 'ROLEPLAY',
-        participants: [ { peerId, label, isHost, role } ], // role: roles[0] | roles[1] | 'SPECTATOR'
-        scenario: null | { fileId, fileName, firstSheet, sheets, roles: [r1, r2] },
-        gameState: null | {
-          currentSheet, currentID, navStack, tags, history, lastTurn,
-          systemNotice, status: 'ACTIVE'|'ENDED'|'EARLY_ENDED', endReason,
-          rotationMode: boolean, rotationIndex: number, activeSpeakerPeerId: string
-        }
-      }
-    */
-    let stateSnapshots = []; // Lưu lịch sử snapshot gameState trên Host để Undo chuẩn xác
+    let stateSnapshots = [];
 
-    // Chế độ học cục bộ trên máy cá nhân
     let challengeMode = false;
     let listenMode = false;
+    let lastRenderedHistoryLen = 0;
 
     // =========================================================================
-    // 4. THÔNG BÁO TOAST & ÂM THANH NHẸ KHI CÓ NGƯỜI VÀO / RA PHÒNG
+    // 5. THÔNG BÁO TOAST & ÂM THANH NHẸ KHI VÀO / RA PHÒNG
     // =========================================================================
     function showToast(message, type = '') {
       const stack = document.getElementById('toastStack');
@@ -829,7 +908,7 @@
     }
 
     // =========================================================================
-    // 5. TẢI DANH SÁCH & NỘI DUNG BỐI CẢNH TỪ GOOGLE DRIVE
+    // 6. TẢI DANH SÁCH & NỘI DUNG BỐI CẢNH TỪ GOOGLE DRIVE
     // =========================================================================
     const scenarioSelect = document.getElementById('scenarioSelect');
     const roomScenarioSelect = document.getElementById('roomScenarioSelect');
@@ -887,7 +966,7 @@
     fetchDriveScenarios();
 
     async function loadScenarioFromDrive(fileId) {
-      const cacheKey = 'roleplay_v5_cache_' + fileId;
+      const cacheKey = 'roleplay_v51_cache_' + fileId;
       try {
         const res = await fetch(`${APPS_SCRIPT_URL}?action=load&fileId=${encodeURIComponent(fileId)}`);
         const json = await res.json();
@@ -926,13 +1005,13 @@
     }
 
     // =========================================================================
-    // 6. LOGIC PHÂN VAI, XOAY VAI & CÂY KỊCH BẢN (CHẠY TẠI HOST)
+    // 7. LOGIC PHÂN VAI, XOAY VAI & CÂY KỊCH BẢN (CHẠY TẠI HOST)
     // =========================================================================
     function assignDefaultRolesForScenario(participants, roles) {
       participants.forEach((p, idx) => {
-        if (idx === 0) p.role = roles[0];      // Host mặc định Vai 1
-        else if (idx === 1) p.role = roles[1]; // Người thứ 2 mặc định Vai 2
-        else p.role = 'SPECTATOR';             // Người thứ 3, 4 mặc định Dự thính
+        if (idx === 0) p.role = roles[0];
+        else if (idx === 1) p.role = roles[1];
+        else p.role = 'SPECTATOR';
       });
     }
 
@@ -944,6 +1023,13 @@
       if (!hasR1) return r1;
       if (!hasR2) return r2;
       return 'SPECTATOR';
+    }
+
+    function getFirstNodeRole(scenario) {
+      const rows = (scenario.sheets && scenario.sheets[scenario.firstSheet]) || [];
+      const startRow = rows.find(r => String(r.ID || '').trim().toUpperCase() === 'START');
+      const role = startRow ? String(startRow.Role || '').trim().toUpperCase() : '';
+      return (role && role !== 'ANY') ? role : scenario.roles[0];
     }
 
     function createInitialGameState(scenario, participants, keepRotation = false) {
@@ -970,13 +1056,6 @@
         rotationIndex: Math.max(0, participants.indexOf(firstSpeaker)),
         activeSpeakerPeerId: firstSpeaker ? firstSpeaker.peerId : ''
       };
-    }
-
-    function getFirstNodeRole(scenario) {
-      const rows = (scenario.sheets && scenario.sheets[scenario.firstSheet]) || [];
-      const startRow = rows.find(r => String(r.ID || '').trim().toUpperCase() === 'START');
-      const role = startRow ? String(startRow.Role || '').trim().toUpperCase() : '';
-      return (role && role !== 'ANY') ? role : scenario.roles[0];
     }
 
     function parseTagList(str) {
@@ -1035,7 +1114,6 @@
       return sameSheetBranch ? sameSheetBranch.Next_ID : currentId;
     }
 
-    // Host xử lý khi 1 thành viên bấm chọn nhánh nói xong
     function applyChoiceOnHost(choiceRow, actorPeerId) {
       if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
       const gs = roomState.gameState;
@@ -1045,7 +1123,6 @@
       const actor = roomState.participants.find(p => p.peerId === actorPeerId);
       if (!actor) return;
 
-      // Xác thực đúng người có quyền bấm (chống bấm đè)
       const turnRole = getCurrentTurnRole(scen, gs);
       if (gs.rotationMode) {
         if (gs.activeSpeakerPeerId !== actorPeerId) return;
@@ -1055,7 +1132,6 @@
         if (rowRole && rowRole !== 'ANY' && actor.role !== rowRole) return;
       }
 
-      // Lưu snapshot trước khi bước tiếp (giữ nguyên rotationIndex & activeSpeakerPeerId để Undo quay đúng người)
       stateSnapshots.push(JSON.parse(JSON.stringify(gs)));
       if (stateSnapshots.length > 12) stateSnapshots.shift();
 
@@ -1108,7 +1184,6 @@
         }
       }
 
-      // Nếu đang bật Xoay vai và bối cảnh còn chạy -> xoay sang người kế tiếp
       if (gs.rotationMode && gs.status === 'ACTIVE' && roomState.participants.length > 0) {
         const curIdx = roomState.participants.findIndex(p => p.peerId === actorPeerId);
         const baseIdx = curIdx >= 0 ? curIdx : gs.rotationIndex;
@@ -1121,14 +1196,12 @@
       renderAll();
     }
 
-    // Host xử lý 3 nút chức năng chung (UNDO / REPEAT / EARLY_END)
     function processRemedyOnHost(payload) {
       if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
       const gs = roomState.gameState;
       const { action, byPeerId, byLabel, byRole, phrase } = payload;
 
       if (action === 'UNDO') {
-        // Chỉ cho phép đúng người vừa nói câu trước đó hoàn tác
         if (!gs.lastTurn || gs.lastTurn.peerId !== byPeerId) return;
         if (stateSnapshots.length === 0) return;
 
@@ -1137,7 +1210,7 @@
         prev.stepIndex = gs.stepIndex + 1;
         prev.rotationMode = curRotationMode;
 
-        // Giữ chắc chắn lượt nói lại thuộc về đúng người vừa bấm Undo (không xoay sang người tiếp theo!)
+        // Giữ nguyên người vừa bấm Undo để họ tự nói lại, không xoay sang người kế tiếp
         if (curRotationMode) {
           const speakerIdx = roomState.participants.findIndex(p => p.peerId === byPeerId);
           if (speakerIdx >= 0) {
@@ -1149,7 +1222,6 @@
         prev.systemNotice = `${byLabel} (${byRole}) đính chính: "${phrase.Text_EN}" — Mời ${byLabel} nói lại.`;
         roomState.gameState = prev;
       } else if (action === 'REPEAT') {
-        // Xin nghe lại: KHÔNG thay đổi lượt, KHÔNG xoay vai sang người tiếp theo
         gs.stepIndex++;
         gs.systemNotice = `${byLabel} xin nghe lại: "${phrase.Text_EN}"`;
       } else if (action === 'EARLY_END') {
@@ -1170,7 +1242,6 @@
       renderAll();
     }
 
-    // Host đổi vai cho từng thành viên (có thể đổi ngay giữa bài nói)
     function hostAssignRole(targetPeerId, newRole) {
       if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.scenario) return;
       const target = roomState.participants.find(p => p.peerId === targetPeerId);
@@ -1189,11 +1260,10 @@
         target.role = newRole;
       }
 
-      broadcastRoomState(`Chủ phòng đã cập nhật vai trò (${target.label} → ${newRole === 'SPECTATOR' ? 'Dự thính' : newRole})`);
+      broadcastRoomState(`Chủ phòng đổi vai: ${target.label} → ${newRole === 'SPECTATOR' ? 'Dự thính' : newRole}`);
       renderAll();
     }
 
-    // Host bật/tắt chế độ xoay vai khi có 3 hoặc 4 người
     document.getElementById('toggleRotationBtn').addEventListener('click', () => {
       if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
       if (roomState.participants.length < 3) return;
@@ -1215,7 +1285,6 @@
       renderAll();
     });
 
-    // Host đổi bối cảnh hoặc chuyển về cuộc gọi thông thường ngay trong phòng
     document.getElementById('applyContextBtn').addEventListener('click', async () => {
       if (!isHost || !roomState) return;
       const chosenVal = roomScenarioSelect.value;
@@ -1234,6 +1303,7 @@
         roomState.scenario = scen;
         assignDefaultRolesForScenario(roomState.participants, scen.roles);
         stateSnapshots = [];
+        lastRenderedHistoryLen = 0;
         roomState.gameState = createInitialGameState(scen, roomState.participants, false);
         broadcastRoomState(`Chủ phòng đã mở bối cảnh: ${scen.fileName}`);
         renderAll();
@@ -1251,13 +1321,13 @@
       roomState.scenario = null;
       roomState.gameState = null;
       stateSnapshots = [];
+      lastRenderedHistoryLen = 0;
       roomState.participants.forEach(p => { p.role = ''; });
       roomScenarioSelect.value = 'FREE_CALL';
       broadcastRoomState('Đã chuyển sang Cuộc gọi thông thường.');
       renderAll();
     }
 
-    // Host END bối cảnh hiện tại để có thể đổi bối cảnh khác
     document.getElementById('hostEndScenarioBtn').addEventListener('click', () => {
       if (!isHost || !roomState || !roomState.gameState) return;
       roomState.gameState.status = 'ENDED';
@@ -1266,7 +1336,6 @@
       renderAll();
     });
 
-    // Nút ở màn hình tổng kết (Debrief)
     document.getElementById('swapRolesBtn').addEventListener('click', () => {
       if (!isHost || !roomState || !roomState.scenario) return;
       const [r1, r2] = roomState.scenario.roles;
@@ -1276,6 +1345,7 @@
       });
       const keepRot = roomState.gameState ? roomState.gameState.rotationMode : false;
       stateSnapshots = [];
+      lastRenderedHistoryLen = 0;
       roomState.gameState = createInitialGameState(roomState.scenario, roomState.participants, keepRot);
       broadcastRoomState('Đã đổi vai và bắt đầu lại bối cảnh!');
       renderAll();
@@ -1285,6 +1355,7 @@
       if (!isHost || !roomState || !roomState.scenario) return;
       const keepRot = roomState.gameState ? roomState.gameState.rotationMode : false;
       stateSnapshots = [];
+      lastRenderedHistoryLen = 0;
       roomState.gameState = createInitialGameState(roomState.scenario, roomState.participants, keepRot);
       broadcastRoomState('Bắt đầu lại bối cảnh từ đầu!');
       renderAll();
@@ -1293,7 +1364,7 @@
     document.getElementById('backFreeCallBtn').addEventListener('click', switchHostToFreeCall);
 
     // =========================================================================
-    // 7. HIỂN THỊ GIAO DIỆN PHÒNG, THÀNH VIÊN & CÂY KỊCH BẢN
+    // 8. HIỂN THỊ GIAO DIỆN PHÒNG, THÀNH VIÊN & NHẬT KÝ HỘI THOẠI TRỰC TIẾP
     // =========================================================================
     function escapeHtml(str) {
       return String(str || '')
@@ -1342,22 +1413,23 @@
       const rotBtn = document.getElementById('toggleRotationBtn');
 
       const total = roomState.participants.length;
-      countEl.textContent = `${total}/${MAX_ROOM_USERS}`;
-      connBadge.textContent = total > 1 ? `Đang gọi (${total}/${MAX_ROOM_USERS})` : `Chờ người vào (1/${MAX_ROOM_USERS})`;
+      const maxU = roomState.maxUsers || 2;
+      countEl.textContent = `${total}/${maxU}`;
+      connBadge.textContent = total > 1 ? `Đang gọi (${total}/${maxU})` : `Chờ người vào (1/${maxU})`;
       connBadge.className = 'conn-badge ' + (total > 1 ? 'ok' : '');
 
       const isRoleplay = roomState.roomMode === 'ROLEPLAY' && roomState.scenario && roomState.gameState;
       const gs = roomState.gameState;
 
-      // Nút bật/tắt Xoay vai cho Host
-      if (isHost && isRoleplay && gs.status === 'ACTIVE') {
+      // Chỉ hiện nút Xoay vai khi phòng thiết lập >= 3 người và đang chạy bối cảnh
+      if (isHost && isRoleplay && gs.status === 'ACTIVE' && maxU >= 3) {
         rotBtn.classList.remove('hidden');
         const enoughUsers = total >= 3;
         rotBtn.disabled = !enoughUsers;
         rotBtn.classList.toggle('active', gs.rotationMode);
         rotBtn.textContent = enoughUsers
           ? (gs.rotationMode ? '🔄 Xoay vai: BẬT' : '🔄 Xoay vai: TẮT')
-          : '🔄 Xoay vai (cần 3–4 người)';
+          : '🔄 Xoay vai (cần đủ 3 người)';
       } else {
         rotBtn.classList.add('hidden');
       }
@@ -1381,7 +1453,13 @@
         nameSpan.textContent = p.peerId === myPeerId ? `${p.label} (Bạn)` : p.label;
         left.appendChild(nameSpan);
 
-        // Hiển thị trạng thái mạng / mic
+        if (p.isHost) {
+          const hTag = document.createElement('span');
+          hTag.className = 'host-tag';
+          hTag.textContent = 'Host';
+          left.appendChild(hTag);
+        }
+
         const netPill = document.createElement('span');
         if (p.peerId === myPeerId) {
           netPill.className = 'net-pill ok';
@@ -1415,7 +1493,6 @@
             }
             right.appendChild(chip);
           } else if (isHost) {
-            // Host có dropdown đổi chức năng từng người ngay giữa bài nói
             const [r1, r2] = roomState.scenario.roles;
             const sel = document.createElement('select');
             sel.className = 'role-select-sm';
@@ -1447,6 +1524,70 @@
       });
     }
 
+    function renderLiveConversationLog(gs) {
+      const logList = document.getElementById('liveLogList');
+      const logCount = document.getElementById('liveLogCount');
+      const history = gs.history || [];
+
+      logCount.textContent = `${history.length} câu`;
+      logList.innerHTML = '';
+
+      if (history.length === 0) {
+        logList.innerHTML = '<div class="log-empty">Chưa có câu thoại nào — cuộc hội thoại sẽ hiện trực tiếp tại đây.</div>';
+        lastRenderedHistoryLen = 0;
+        return;
+      }
+
+      history.forEach((h, idx) => {
+        const isMine = h.peerId === myPeerId;
+        const isLatestOther = (idx === history.length - 1) && !isMine;
+        const shouldBlur = listenMode && isLatestOther;
+
+        const item = document.createElement('div');
+        item.className = 'log-msg' + (isMine ? ' mine' : '');
+
+        const meta = document.createElement('div');
+        meta.className = 'log-msg-meta';
+        meta.innerHTML = `<span>#${idx + 1} • ${escapeHtml(h.speakerLabel || '')} (${escapeHtml(h.role)})</span>${shouldBlur ? '<span style="color:#a78bfa;">Chạm chữ để xem</span>' : ''}`;
+
+        const body = document.createElement('div');
+        if (shouldBlur) {
+          body.className = 'blurred-text';
+          body.addEventListener('click', () => body.classList.toggle('revealed'));
+        }
+
+        const enDiv = document.createElement('div');
+        enDiv.className = 'log-msg-en';
+        enDiv.textContent = h.en;
+        body.appendChild(enDiv);
+
+        if (h.ipa) {
+          const ipaDiv = document.createElement('div');
+          ipaDiv.className = 'log-msg-ipa';
+          ipaDiv.textContent = h.ipa;
+          body.appendChild(ipaDiv);
+        }
+
+        if (h.vi) {
+          const viDiv = document.createElement('div');
+          viDiv.className = 'log-msg-vi';
+          viDiv.textContent = h.vi;
+          body.appendChild(viDiv);
+        }
+
+        item.append(meta, body);
+        logList.appendChild(item);
+      });
+
+      // Tự cuộn xuống câu mới nhất
+      if (history.length !== lastRenderedHistoryLen) {
+        logList.scrollTop = logList.scrollHeight;
+        lastRenderedHistoryLen = history.length;
+      } else {
+        logList.scrollTop = logList.scrollHeight;
+      }
+    }
+
     function renderMainArea() {
       const freeCallArea = document.getElementById('freeCallArea');
       const roleplayWrapper = document.getElementById('roleplayWrapper');
@@ -1469,7 +1610,6 @@
       const myRole = me ? me.role : 'SPECTATOR';
       const turnRole = getCurrentTurnRole(scen, gs);
 
-      // Cập nhật nhãn vai trò hiện tại của bản thân
       const badgeEl = document.getElementById('myRoleBadge');
       if (gs.rotationMode) {
         badgeEl.textContent = gs.activeSpeakerPeerId === myPeerId
@@ -1479,7 +1619,6 @@
         badgeEl.textContent = myRole === 'SPECTATOR' ? 'Chế độ: Dự thính' : `Vai của bạn: ${myRole}`;
       }
 
-      // Kiểm tra đã kết thúc bối cảnh chưa
       if (gs.status === 'ENDED' || gs.status === 'EARLY_ENDED') {
         document.getElementById('scenarioStage').classList.add('hidden');
         document.getElementById('remedyBar').classList.add('hidden');
@@ -1530,34 +1669,12 @@
         noticeEl.classList.add('hidden');
       }
 
-      // Nút Undo: chỉ bật cho đúng người vừa nói lượt ngay trước đó
+      // Render bảng log cuộc trò chuyện cho TẤT CẢ mọi người
+      renderLiveConversationLog(gs);
+
       const btnUndo = document.getElementById('btnUndo');
       btnUndo.disabled = !(gs.lastTurn && gs.lastTurn.peerId === myPeerId);
 
-      // Bong bóng câu vừa nói gần nhất
-      const bubbleEl = document.getElementById('partnerBubble');
-      if (gs.lastTurn && gs.lastTurn.peerId !== myPeerId) {
-        bubbleEl.classList.remove('hidden');
-        document.getElementById('partnerWho').textContent = `${gs.lastTurn.speakerLabel} (${gs.lastTurn.role}) vừa nói:`;
-        document.getElementById('partnerEn').textContent = gs.lastTurn.en;
-        document.getElementById('partnerIpa').textContent = gs.lastTurn.ipa;
-        document.getElementById('partnerVi').textContent = gs.lastTurn.vi;
-
-        const wrap = document.getElementById('partnerTextWrap');
-        const hint = document.getElementById('blurHint');
-        if (listenMode) {
-          wrap.classList.add('blurred-text');
-          wrap.classList.remove('revealed');
-          hint.classList.remove('hidden');
-        } else {
-          wrap.classList.remove('blurred-text', 'revealed');
-          hint.classList.add('hidden');
-        }
-      } else {
-        bubbleEl.classList.add('hidden');
-      }
-
-      // Danh sách thẻ lựa chọn của lượt hiện tại
       const turnArea = document.getElementById('turnArea');
       turnArea.innerHTML = '';
 
@@ -1595,8 +1712,8 @@
         const waitDiv = document.createElement('div');
         waitDiv.className = 'wait-box';
         const specNote = (!gs.rotationMode && myRole === 'SPECTATOR')
-          ? '<br><small style="color:#60a5fa;">Bạn đang ở chế độ Dự thính — nghe và theo dõi hội thoại trực tiếp.</small>'
-          : '<br><small style="color:#64748b;">Hãy lắng nghe qua micro, màn hình sẽ tự lật khi đến lượt bạn.</small>';
+          ? '<br><small style="color:#60a5fa;">Bạn đang ở chế độ Dự thính — nghe và theo dõi nhật ký hội thoại phía trên.</small>'
+          : '<br><small style="color:#64748b;">Hãy lắng nghe qua micro, thẻ lựa chọn sẽ hiện ra khi đến lượt bạn.</small>';
         waitDiv.innerHTML = `Đang tới lượt của <strong>${escapeHtml(activeSpeakerName)}</strong> nói...${specNote}`;
         turnArea.appendChild(waitDiv);
         return;
@@ -1679,7 +1796,7 @@
     }
 
     // =========================================================================
-    // 8. MẪU CÂU CHỨC NĂNG CHUNG (UNDO / REPEAT / EARLY_END)
+    // 9. MẪU CÂU CHỨC NĂNG CHUNG (UNDO / REPEAT / EARLY_END)
     // =========================================================================
     function getEffectiveRoleForRemedy(action) {
       const gs = roomState && roomState.gameState;
@@ -1725,7 +1842,7 @@
             type: 'remedy',
             action,
             byPeerId: myPeerId,
-            byLabel: me ? me.label : 'Thành viên',
+            byLabel: me ? me.label : getResolvedUserName(),
             byRole: effRole,
             phrase: item
           };
@@ -1752,7 +1869,7 @@
     });
 
     // =========================================================================
-    // 9. ĐỒNG BỘ PHÒNG & GỌI THOẠI LƯỚI 2–4 NGƯỜI (PEERJS)
+    // 10. ĐỒNG BỘ PHÒNG & GỌI THOẠI LƯỚI + XÁC THỰC PHÒNG SỐNG (CHỐNG PHÒNG LỖI)
     // =========================================================================
     function broadcastRoomState(toastMsg = '', toastType = '') {
       if (!isHost || !roomState) return;
@@ -1879,8 +1996,32 @@
       statsInterval = null;
     }
 
+    function startGuestHeartbeat(myTok) {
+      stopGuestHeartbeat();
+      lastHostHeartbeatAt = Date.now();
+      guestHeartbeatInterval = setInterval(() => {
+        if (myTok !== sessionToken || !inRoom || isHost) {
+          stopGuestHeartbeat();
+          return;
+        }
+        if (Date.now() - lastHostHeartbeatAt > 12000) {
+          alert('Chủ phòng đã thoát hoặc mất kết nối.');
+          cleanupRoom();
+          return;
+        }
+        if (guestHostConn && guestHostConn.open) {
+          try { guestHostConn.send({ type: 'ping' }); } catch {}
+        }
+      }, 4000);
+    }
+
+    function stopGuestHeartbeat() {
+      if (guestHeartbeatInterval) clearInterval(guestHeartbeatInterval);
+      guestHeartbeatInterval = null;
+    }
+
     function handleGuestLeaveOnHost(guestId) {
-      if (!hostGuestConns.has(guestId)) return;
+      if (!roomState || !hostGuestConns.has(guestId)) return;
       hostGuestConns.delete(guestId);
       cleanupRemoteAudioPeer(guestId);
 
@@ -1907,9 +2048,17 @@
       renderAll();
     }
 
-    // 1. HOST TẠO PHÒNG
+    function setHomeButtonsState(disabled, createText = 'Tạo phòng', joinText = 'Vào') {
+      const cBtn = document.getElementById('createBtn');
+      const jBtn = document.getElementById('joinBtn');
+      cBtn.disabled = disabled;
+      jBtn.disabled = disabled;
+      cBtn.textContent = createText;
+      jBtn.textContent = joinText;
+    }
+
+    // 1. HOST TẠO PHÒNG (Chỉ vào roomView sau khi Peer mở thành công)
     document.getElementById('createBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('createBtn');
       const rawCustom = document.getElementById('customCodeInput').value;
       const customCode = sanitizeCode(rawCustom);
       if (rawCustom.trim() !== '' && customCode.length < 3) {
@@ -1917,10 +2066,11 @@
         return;
       }
 
+      const myName = getResolvedUserName();
       const chosenCtx = scenarioSelect.value || 'FREE_CALL';
-      btn.disabled = true;
-      btn.textContent = chosenCtx === 'FREE_CALL' ? 'Đang tạo phòng...' : 'Đang nạp bối cảnh...';
+      setHomeButtonsState(true, chosenCtx === 'FREE_CALL' ? 'Đang tạo phòng...' : 'Đang nạp bối cảnh...', 'Vào');
 
+      const myTok = ++sessionToken;
       let loadedScenario = null;
       try {
         if (chosenCtx !== 'FREE_CALL') {
@@ -1929,66 +2079,90 @@
         await initProcessedMic();
       } catch (err) {
         alert('Lỗi khởi tạo: ' + err.message);
-        btn.disabled = false;
-        btn.textContent = 'Tạo phòng';
+        cleanupRoom();
         return;
       }
 
+      if (myTok !== sessionToken) return;
+
       isHost = true;
-      guestSequence = 1;
       currentRoomCode = customCode.length >= 3 ? customCode : genCode();
       hostPeerId = APP_PREFIX + currentRoomCode;
       myPeerId = hostPeerId;
 
       const hostMember = {
         peerId: myPeerId,
-        label: 'Chủ phòng',
+        label: myName,
         isHost: true,
         role: loadedScenario ? loadedScenario.roles[0] : ''
       };
 
       stateSnapshots = [];
+      lastRenderedHistoryLen = 0;
       roomState = {
         version: 1,
+        maxUsers: selectedMaxUsers,
         roomMode: loadedScenario ? 'ROLEPLAY' : 'FREE_CALL',
         participants: [hostMember],
         scenario: loadedScenario,
         gameState: loadedScenario ? createInitialGameState(loadedScenario, [hostMember], false) : null
       };
 
-      roomScenarioSelect.value = chosenCtx;
-      document.getElementById('homeView').classList.add('hidden');
-      document.getElementById('roomView').classList.remove('hidden');
-      document.getElementById('codeDisplay').textContent = currentRoomCode;
-      renderAll();
-
       peer = new Peer(hostPeerId, getPeerConfig());
 
+      // Timeout bảo vệ nếu máy chủ PeerJS chậm phản hồi
+      hostCreateTimeoutId = setTimeout(() => {
+        if (myTok === sessionToken && !inRoom) {
+          alert('Không thể khởi tạo phòng lúc này. Vui lòng thử lại.');
+          cleanupRoom();
+        }
+      }, 9000);
+
       peer.on('open', () => {
+        if (myTok !== sessionToken) return;
+        clearTimeout(hostCreateTimeoutId);
+        inRoom = true;
+        setHomeButtonsState(false);
+
+        roomScenarioSelect.value = chosenCtx;
+        document.getElementById('homeView').classList.add('hidden');
+        document.getElementById('roomView').classList.remove('hidden');
+        document.getElementById('codeDisplay').textContent = currentRoomCode;
+
+        renderAll();
         startStatsLoop();
-        showToast(`Đã tạo phòng ${currentRoomCode}!`, 'join');
+        showToast(`Đã tạo phòng ${currentRoomCode} (tối đa ${selectedMaxUsers} người)!`, 'join');
       });
 
       peer.on('connection', (conn) => {
+        if (myTok !== sessionToken) return;
         const guestId = conn.peer;
 
         conn.on('data', (msg) => {
-          if (!msg || typeof msg !== 'object') return;
+          if (myTok !== sessionToken || !msg || typeof msg !== 'object') return;
+
+          if (msg.type === 'ping') {
+            if (conn.open) try { conn.send({ type: 'pong' }); } catch {}
+            return;
+          }
 
           if (msg.type === 'join') {
-            if (roomState.participants.length >= MAX_ROOM_USERS) {
-              try { conn.send({ type: 'room-full', max: MAX_ROOM_USERS }); } catch {}
-              setTimeout(() => { try { conn.close(); } catch {} }, 300);
+            if (roomState.participants.length >= roomState.maxUsers) {
+              try { conn.send({ type: 'room-full', max: roomState.maxUsers }); } catch {}
+              setTimeout(() => { try { conn.close(); } catch {} }, 250);
               return;
             }
 
             const existingGuestIds = Array.from(hostGuestConns.keys());
             hostGuestConns.set(guestId, conn);
 
-            guestSequence++;
+            const guestName = (typeof msg.name === 'string' && msg.name.trim())
+              ? msg.name.trim().slice(0, 20)
+              : genRandomLetter();
+
             const newMember = {
               peerId: guestId,
-              label: `Thành viên #${guestSequence}`,
+              label: guestName,
               isHost: false,
               role: roomState.roomMode === 'ROLEPLAY'
                 ? assignRoleForNewGuest(roomState.participants, roomState.scenario)
@@ -1997,7 +2171,6 @@
             roomState.participants.push(newMember);
             playChime('join');
 
-            // Gửi welcome cho khách mới kèm danh sách peer hiện có để nối audio lưới
             conn.send({
               type: 'welcome',
               peers: existingGuestIds,
@@ -2015,29 +2188,33 @@
           }
         });
 
-        conn.on('close', () => handleGuestLeaveOnHost(guestId));
-        conn.on('error', () => handleGuestLeaveOnHost(guestId));
+        conn.on('close', () => { if (myTok === sessionToken) handleGuestLeaveOnHost(guestId); });
+        conn.on('error', () => { if (myTok === sessionToken) handleGuestLeaveOnHost(guestId); });
       });
 
       peer.on('call', (call) => {
+        if (myTok !== sessionToken) return;
         call.answer(outgoingStream);
         bindMediaCall(call);
       });
 
       peer.on('disconnected', () => {
-        if (peer && !peer.destroyed) peer.reconnect();
+        if (myTok === sessionToken && inRoom && peer && !peer.destroyed) peer.reconnect();
       });
 
       peer.on('error', (err) => {
-        alert(err.type === 'unavailable-id' ? `Mã "${currentRoomCode}" đang có người dùng, hãy chọn mã khác!` : 'Lỗi kết nối: ' + err.type);
+        if (myTok !== sessionToken) return;
+        clearTimeout(hostCreateTimeoutId);
+        if (err.type === 'unavailable-id') {
+          alert(`Mã "${currentRoomCode}" đang có người dùng hoặc vừa mới đóng. Hãy chọn mã khác hoặc thử lại sau vài giây.`);
+        } else {
+          alert('Lỗi kết nối: ' + err.type);
+        }
         cleanupRoom();
       });
-
-      btn.disabled = false;
-      btn.textContent = 'Tạo phòng';
     });
 
-    // 2. GUEST VÀO PHÒNG
+    // 2. GUEST VÀO PHÒNG (Xác thực có Host sống trả 'welcome' mới cho vào roomView)
     document.getElementById('joinBtn').addEventListener('click', async () => {
       const code = sanitizeCode(document.getElementById('codeInput').value);
       if (code.length < 3) {
@@ -2045,44 +2222,73 @@
         return;
       }
 
+      const myName = getResolvedUserName();
+      setHomeButtonsState(true, 'Tạo phòng', 'Đang nối...');
+
+      const myTok = ++sessionToken;
       try {
         await initProcessedMic();
       } catch {
         alert('Cần cấp quyền Micro để tham gia phòng.');
+        cleanupRoom();
         return;
       }
+
+      if (myTok !== sessionToken) return;
 
       isHost = false;
       currentRoomCode = code;
       hostPeerId = APP_PREFIX + code;
 
-      document.getElementById('homeView').classList.add('hidden');
-      document.getElementById('roomView').classList.remove('hidden');
-      document.getElementById('codeDisplay').textContent = currentRoomCode;
-
       peer = new Peer(undefined, getPeerConfig());
 
+      // Chốt chặn phòng ma/phòng đã đóng: sau 7 giây không nhận welcome thì hủy ngay tại màn hình chính
+      joinTimeoutId = setTimeout(() => {
+        if (myTok === sessionToken && !inRoom) {
+          alert('Phòng không tồn tại hoặc chủ phòng đã thoát!');
+          cleanupRoom();
+        }
+      }, 7000);
+
       peer.on('open', (assignedId) => {
+        if (myTok !== sessionToken) return;
         myPeerId = assignedId;
-        startStatsLoop();
 
         const conn = peer.connect(hostPeerId, { reliable: true });
         guestHostConn = conn;
 
-        conn.on('open', () => conn.send({ type: 'join' }));
+        conn.on('open', () => {
+          if (myTok !== sessionToken) return;
+          conn.send({ type: 'join', name: myName });
+        });
 
         conn.on('data', (msg) => {
-          if (!msg || typeof msg !== 'object') return;
+          if (myTok !== sessionToken || !msg || typeof msg !== 'object') return;
+          lastHostHeartbeatAt = Date.now();
+
+          if (msg.type === 'pong') return;
 
           if (msg.type === 'room-full') {
+            clearTimeout(joinTimeoutId);
             alert(`Phòng đã đầy (tối đa ${msg.max} người).`);
             cleanupRoom();
-          } else if (msg.type === 'welcome') {
+          } else if (msg.type === 'welcome' && msg.roomState && Array.isArray(msg.roomState.participants)) {
+            clearTimeout(joinTimeoutId);
+            inRoom = true;
+            setHomeButtonsState(false);
+
             roomState = msg.roomState;
+            lastRenderedHistoryLen = 0;
+
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('roomView').classList.remove('hidden');
+            document.getElementById('codeDisplay').textContent = currentRoomCode;
+
             renderAll();
+            startStatsLoop();
+            startGuestHeartbeat(myTok);
             showToast(`Đã tham gia phòng ${currentRoomCode}!`, 'join');
 
-            // Gọi audio tới Host và toàn bộ thành viên cũ đang có trong phòng
             const hostCall = peer.call(hostPeerId, outgoingStream);
             bindMediaCall(hostCall);
 
@@ -2092,7 +2298,7 @@
                 bindMediaCall(c);
               }
             });
-          } else if (msg.type === 'sync-room') {
+          } else if (msg.type === 'sync-room' && inRoom) {
             if (!roomState || msg.roomState.version >= roomState.version) {
               roomState = msg.roomState;
               if (msg.toastMsg) {
@@ -2103,36 +2309,53 @@
               renderAll();
             }
           } else if (msg.type === 'host-closed') {
+            clearTimeout(joinTimeoutId);
             alert('Chủ phòng đã kết thúc cuộc gọi.');
             cleanupRoom();
           }
         });
 
         conn.on('close', () => {
-          if (peer && !peer.destroyed) {
-            alert('Mất kết nối với chủ phòng.');
-            cleanupRoom();
+          if (myTok !== sessionToken) return;
+          clearTimeout(joinTimeoutId);
+          if (inRoom) {
+            alert('Chủ phòng đã thoát hoặc mất kết nối.');
+          } else {
+            alert('Phòng không tồn tại hoặc chủ phòng đã thoát!');
           }
+          cleanupRoom();
+        });
+
+        conn.on('error', () => {
+          if (myTok !== sessionToken) return;
+          clearTimeout(joinTimeoutId);
+          alert('Không thể kết nối vào phòng này.');
+          cleanupRoom();
         });
       });
 
       peer.on('call', (call) => {
+        if (myTok !== sessionToken || !inRoom) return;
         call.answer(outgoingStream);
         bindMediaCall(call);
       });
 
       peer.on('disconnected', () => {
-        if (peer && !peer.destroyed) peer.reconnect();
+        if (myTok === sessionToken && inRoom && peer && !peer.destroyed) peer.reconnect();
       });
 
       peer.on('error', (err) => {
-        alert(err.type === 'peer-unavailable' ? 'Không tìm thấy mã phòng này hoặc Host chưa mở.' : 'Lỗi kết nối: ' + err.type);
+        if (myTok !== sessionToken) return;
+        clearTimeout(joinTimeoutId);
+        alert(err.type === 'peer-unavailable'
+          ? 'Phòng không tồn tại hoặc chủ phòng đã thoát!'
+          : 'Lỗi kết nối: ' + err.type);
         cleanupRoom();
       });
     });
 
     // =========================================================================
-    // 10. TIỆN ÍCH AUDIO, MIC, UI CONTROLS & DỌN DẸP
+    // 11. TIỆN ÍCH AUDIO, MIC, UI CONTROLS & DỌN DẸP PHÒNG TRIỆT ĐỂ
     // =========================================================================
     function unlockAudio() {
       try {
@@ -2148,7 +2371,7 @@
 
     function updateAudioResumeButton() {
       const btn = document.getElementById('resumeAudioBtn');
-      if (audioCtx && audioCtx.state === 'suspended' && !document.getElementById('roomView').classList.contains('hidden')) {
+      if (audioCtx && audioCtx.state === 'suspended' && inRoom) {
         btn.classList.remove('hidden');
       } else {
         btn.classList.add('hidden');
@@ -2206,6 +2429,7 @@
     }
 
     function notifyBeforeExit() {
+      if (!inRoom) return;
       if (isHost) {
         hostGuestConns.forEach((conn) => {
           if (conn.open) try { conn.send({ type: 'host-closed' }); } catch {}
@@ -2215,10 +2439,37 @@
       }
     }
 
-    window.addEventListener('beforeunload', notifyBeforeExit);
-
-    function cleanupRoom() {
+    function hardDestroyOnPageUnload() {
       notifyBeforeExit();
+      if (peer) {
+        try { peer.disconnect(); } catch {}
+        try { peer.destroy(); } catch {}
+      }
+    }
+
+    window.addEventListener('beforeunload', hardDestroyOnPageUnload);
+    window.addEventListener('pagehide', hardDestroyOnPageUnload);
+
+    function cleanupRoom(gracefulExit = false) {
+      sessionToken++;
+      clearTimeout(joinTimeoutId); joinTimeoutId = null;
+      clearTimeout(hostCreateTimeoutId); hostCreateTimeoutId = null;
+      stopGuestHeartbeat();
+
+      if (gracefulExit && inRoom) {
+        notifyBeforeExit();
+      }
+
+      const oldPeer = peer;
+      const oldHostConns = Array.from(hostGuestConns.values());
+      const oldGuestConn = guestHostConn;
+
+      inRoom = false;
+      isHost = false;
+      peer = null;
+      hostGuestConns.clear();
+      guestHostConn = null;
+
       if (timerInterval) clearInterval(timerInterval); timerInterval = null;
       stopStatsLoop();
       if (micAnimFrame) cancelAnimationFrame(micAnimFrame); micAnimFrame = null;
@@ -2226,28 +2477,39 @@
       remoteAudioPeers.forEach((_, pid) => cleanupRemoteAudioPeer(pid));
       remoteAudioPeers.clear();
 
-      hostGuestConns.forEach(c => { try { c.close(); } catch {} });
-      hostGuestConns.clear();
-      if (guestHostConn) { try { guestHostConn.close(); } catch {} guestHostConn = null; }
+      // Đợi nhẹ 120ms khi chủ động bấm Rời phòng để gói 'host-closed'/'leave' kịp tới máy kia rồi mới destroy Peer
+      const finalizePeerTeardown = () => {
+        oldHostConns.forEach(c => { try { c.close(); } catch {} });
+        if (oldGuestConn) { try { oldGuestConn.close(); } catch {} }
+        if (oldPeer) {
+          try { oldPeer.disconnect(); } catch {}
+          try { oldPeer.destroy(); } catch {}
+        }
+      };
 
-      if (peer) { try { peer.destroy(); } catch {} peer = null; }
+      if (gracefulExit) setTimeout(finalizePeerTeardown, 120);
+      else finalizePeerTeardown();
+
       if (voiceFX) { voiceFX.destroy(); voiceFX = null; }
       if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
       outgoingStream = null;
       roomState = null;
       stateSnapshots = [];
+      lastRenderedHistoryLen = 0;
 
       isMuted = false;
+      setHomeButtonsState(false);
       document.getElementById('timer').textContent = '00:00';
       document.getElementById('micBar').style.width = '0%';
       document.getElementById('muteBtn').textContent = 'Tắt mic';
       document.getElementById('muteBtn').classList.remove('active');
       document.getElementById('selfMonitorChk').checked = false;
+      document.getElementById('resumeAudioBtn').classList.add('hidden');
       document.getElementById('roomView').classList.add('hidden');
       document.getElementById('homeView').classList.remove('hidden');
     }
 
-    document.getElementById('hangupBtn').addEventListener('click', cleanupRoom);
+    document.getElementById('hangupBtn').addEventListener('click', () => cleanupRoom(true));
 
     document.getElementById('muteBtn').addEventListener('click', () => {
       if (!rawMicStream) return;
@@ -2279,10 +2541,6 @@
       listenMode = !listenMode;
       e.target.classList.toggle('on', listenMode);
       if (roomState) renderMainArea();
-    });
-
-    document.getElementById('partnerTextWrap').addEventListener('click', (e) => {
-      if (listenMode) e.currentTarget.classList.toggle('revealed');
     });
 
     // Voice FX controls
