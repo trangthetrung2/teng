@@ -94,9 +94,7 @@
       background: #1e293b; color: #94a3b8; font-size: 0.84rem; font-weight: 700;
       cursor: pointer; text-align: center; transition: 0.15s;
     }
-    .size-pill.selected {
-      background: #2563eb; border-color: #60a5fa; color: #fff;
-    }
+    .size-pill.selected { background: #2563eb; border-color: #60a5fa; color: #fff; }
 
     .opt-row {
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -147,6 +145,16 @@
     }
     .rotate-btn.active { background: #7c3aed; border-color: #a78bfa; color: #fff; }
     .rotate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .pending-role-banner {
+      background: #451a03; border: 1px solid #b45309; color: #fde68a;
+      border-radius: 9px; padding: 7px 10px; margin-bottom: 8px;
+      font-size: 0.76rem; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .pending-cancel-btn {
+      background: #78350f; border: 1px solid #f59e0b; color: #fef3c7;
+      border-radius: 6px; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; cursor: pointer;
+      white-space: nowrap;
+    }
     .member-row {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       padding: 7px 0; border-top: 1px solid #1e293b; font-size: 0.82rem; flex-wrap: wrap;
@@ -172,10 +180,12 @@
     .role-chip.spec { background: #334155; border-color: #475569; color: #cbd5e1; }
     .role-chip.turn-now { background: #7c3aed; border-color: #c4b5fd; color: #fff; }
     .role-chip.turn-next { background: #312e81; border-color: #6366f1; color: #c7d2fe; }
+    .role-chip.pending { background: #78350f; border-color: #f59e0b; color: #fde68a; margin-left: 4px; }
     .role-select-sm {
       width: auto; padding: 4px 8px; font-size: 0.74rem; border-radius: 8px;
       background: #1e293b; color: #f8fafc; border: 1px solid #475569; cursor: pointer;
     }
+    .role-select-sm.is-pending { border-color: #f59e0b; background: #451a03; color: #fde68a; }
 
     /* Collapsible Voice FX drawer */
     details.fx-drawer {
@@ -239,7 +249,6 @@
       background: #1e293b; color: #38bdf8; border: 1px solid #0369a1;
     }
 
-    /* Live Conversation Log (hiển thị cho tất cả mọi người trong phòng) */
     .live-log-wrap {
       background: #020617; border: 1px solid #1e293b; border-radius: 11px;
       padding: 9px 10px; margin-bottom: 12px;
@@ -260,14 +269,14 @@
       background: #1e293b; border-left: 3px solid #10b981; border-radius: 9px;
       padding: 8px 10px; font-size: 0.84rem;
     }
-    .log-msg.mine {
-      background: #172554; border-left-color: #3b82f6;
-    }
+    .log-msg.mine { background: #172554; border-left-color: #3b82f6; }
+    .log-msg.goodbye { background: #3b1f0b; border-left-color: #f59e0b; }
     .log-msg-meta {
       display: flex; justify-content: space-between; align-items: center; gap: 6px;
       font-size: 0.7rem; font-weight: 700; color: #34d399; margin-bottom: 3px;
     }
     .log-msg.mine .log-msg-meta { color: #60a5fa; }
+    .log-msg.goodbye .log-msg-meta { color: #fbbf24; }
     .log-msg-en { color: #f8fafc; font-weight: 600; line-height: 1.38; font-size: 0.9rem; }
     .log-msg-ipa { color: #94a3b8; font-size: 0.76rem; margin-top: 2px; }
     .log-msg-vi { color: #cbd5e1; font-size: 0.76rem; margin-top: 2px; font-style: italic; }
@@ -284,12 +293,15 @@
       font-size: 0.82rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;
       display: flex; justify-content: space-between; align-items: center;
     }
+    .turn-prompt.reply-mode { color: #fbbf24; }
     .choices-list { display: flex; flex-direction: column; gap: 9px; }
     .choice-card {
       background: #1e293b; border: 1px solid #334155; border-radius: 12px;
       padding: 11px 12px; text-align: left;
     }
     .choice-card:hover { border-color: #3b82f6; }
+    .choice-card.reply-card { border-color: #b45309; background: #271a0c; }
+    .choice-card.reply-card:hover { border-color: #f59e0b; }
     .choice-img {
       width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px;
       background: #020617; margin-bottom: 8px; border: 1px solid #334155;
@@ -303,6 +315,8 @@
       background: #2563eb; color: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer;
     }
     .btn-speak-select:hover { background: #1d4ed8; }
+    .btn-speak-select.reply-btn { background: #d97706; color: #fff; }
+    .btn-speak-select.reply-btn:hover { background: #b45309; }
     .btn-peek {
       padding: 8px 10px; border-radius: 8px; border: 1px solid #475569;
       background: #0f172a; color: #cbd5e1; font-size: 0.78rem; cursor: pointer;
@@ -368,12 +382,11 @@
   <div class="app-wrap">
     <div class="header-top">
       <h1>Roleplay Voice Studio</h1>
-      <p class="sub">v5.1 • Gọi Thoại Nhóm & Nhập Vai Tiếng Anh</p>
+      <p class="sub">v5.2 • Gọi Thoại Nhóm & Nhập Vai Tiếng Anh</p>
     </div>
 
     <!-- ==================== MÀN HÌNH CHÍNH ==================== -->
     <div id="homeView">
-      <!-- Tên hiển thị (dùng chung cho cả tạo phòng & vào phòng) -->
       <div class="box">
         <div class="box-title">
           <span>Tên của bạn</span>
@@ -385,7 +398,6 @@
         </div>
       </div>
 
-      <!-- Tạo phòng mới -->
       <div class="box">
         <div class="box-title">
           <span>Chọn bối cảnh</span>
@@ -414,7 +426,6 @@
 
       <div class="divider">hoặc vào phòng có sẵn</div>
 
-      <!-- Vào phòng có sẵn -->
       <div class="box">
         <div class="box-title"><span>Nhập mã phòng để tham gia</span></div>
         <div class="row-gap">
@@ -470,6 +481,10 @@
           <span>THÀNH VIÊN (<span id="memberCountText">1/2</span>)</span>
           <button type="button" id="toggleRotationBtn" class="rotate-btn hidden" disabled>🔄 Xoay vai: TẮT</button>
         </div>
+        <div id="pendingRoleBanner" class="pending-role-banner hidden">
+          <span id="pendingRoleText"></span>
+          <button type="button" id="cancelPendingRolesBtn" class="pending-cancel-btn hidden">Hủy đổi</button>
+        </div>
         <div id="membersList"></div>
       </div>
 
@@ -504,7 +519,7 @@
         <p id="freeCallHint">Mọi người đang trò chuyện tự do. Chủ phòng có thể chọn bối cảnh phía trên để chuyển sang nhập vai bất cứ lúc nào.</p>
       </div>
 
-      <!-- Khu vực Nhập vai (ẩn khi ở Cuộc gọi thông thường) -->
+      <!-- Khu vực Nhập vai -->
       <div id="roleplayWrapper" class="hidden">
         <div class="study-bar">
           <span id="myRoleBadge" class="role-tag">Vai của bạn: ---</span>
@@ -523,7 +538,7 @@
           <div id="ctxTagsBar" class="tag-list hidden"></div>
           <div id="systemNotice" class="system-notice hidden"></div>
 
-          <!-- Bảng Log cuộc trò chuyện trực tiếp cho TẤT CẢ mọi người trong phòng -->
+          <!-- Bảng Log cuộc trò chuyện trực tiếp cho TẤT CẢ mọi người -->
           <div class="live-log-wrap">
             <div class="live-log-head">
               <span>Nhật ký hội thoại</span>
@@ -576,10 +591,10 @@
 
   <script>
     // =========================================================================
-    // 1. CẤU HÌNH API & MẪU CÂU CHỨC NĂNG CHUNG MẶC ĐỊNH
+    // 1. CẤU HÌNH API & MẪU CÂU CHỨC NĂNG CHUNG (KÈM EARLY_END_REPLY 2 CHIỀU)
     // =========================================================================
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxeILbjho8qJJKgglKr_qAd7Wt4wfACk_KDrfOe0c4Y6khVVd_2JPMnmGrFwZGBpxY-/exec';
-    const APP_PREFIX = 'cf-roleplay-en-v51-';
+    const APP_PREFIX = 'cf-roleplay-en-v52-';
 
     const DEFAULT_COMMON_PHRASES = [
       { Action: 'UNDO', Role: 'ANY', Text_EN: 'Oops, my bad. Let me say that again.', IPA: '/ʊps maɪ bæd let mi seɪ ðæt əˈɡen/' },
@@ -588,7 +603,11 @@
       { Action: 'REPEAT', Role: 'ANY', Text_EN: "Sorry, I didn't catch that. Can you repeat?", IPA: '/ˈsɒri aɪ ˈdɪdnt kætʃ ðæt kæn ju rɪˈpiːt/' },
       { Action: 'EARLY_END', Role: 'ANY', Text_EN: 'Something just came up, I have to go now. Sorry!', IPA: '/ˈsʌmθɪŋ dʒʌst keɪm ʌp aɪ hæv tu ɡəʊ naʊ ˈsɒri/' },
       { Action: 'EARLY_END', Role: 'DOCTOR', Text_EN: "Sorry, I have an emergency. Let's continue next time.", IPA: '/ˈsɒri aɪ hæv ən ɪˈmɜːdʒənsi lets kənˈtɪnjuː nekst taɪm/' },
-      { Action: 'EARLY_END', Role: 'PATIENT', Text_EN: 'Sorry doctor, something urgent came up. I have to go.', IPA: '/ˈsɒri ˈdɒktə ˈsʌmθɪŋ ˈɜːdʒənt keɪm ʌp aɪ hæv tu ɡəʊ/' }
+      { Action: 'EARLY_END', Role: 'PATIENT', Text_EN: 'Sorry doctor, something urgent came up. I have to go.', IPA: '/ˈsɒri ˈdɒktə ˈsʌmθɪŋ ˈɜːdʒənt keɪm ʌp aɪ hæv tu ɡəʊ/' },
+      { Action: 'EARLY_END_REPLY', Role: 'ANY', Text_EN: 'No worries! Take care and talk to you later.', IPA: '/nəʊ ˈwʌriz teɪk keər ænd tɔːk tu ju ˈleɪtə/' },
+      { Action: 'EARLY_END_REPLY', Role: 'ANY', Text_EN: "Totally fine! Go ahead, hope everything's okay.", IPA: '/ˈtəʊtəli faɪn ɡəʊ əˈhed həʊp ˈevriθɪŋz əʊˈkeɪ/' },
+      { Action: 'EARLY_END_REPLY', Role: 'DOCTOR', Text_EN: "No problem at all. Take care, we'll continue next time.", IPA: '/nəʊ ˈprɒbləm æt ɔːl teɪk keə wiːl kənˈtɪnjuː nekst taɪm/' },
+      { Action: 'EARLY_END_REPLY', Role: 'PATIENT', Text_EN: 'Of course doctor, please go ahead. See you next time!', IPA: '/ɒv kɔːs ˈdɒktə pliːz ɡəʊ əˈhed siː ju nekst taɪm/' }
     ];
 
     // =========================================================================
@@ -830,7 +849,7 @@
     // =========================================================================
     // 4. BIẾN TRẠNG THÁI TOÀN CỤC & CHỐNG PHÒNG LỖI / PHÒNG MA
     // =========================================================================
-    let sessionToken = 0; // Tăng mỗi lần dọn phòng để chặn callback cũ chen ngang
+    let sessionToken = 0;
     let isHost = false;
     let inRoom = false;
     let myPeerId = '';
@@ -853,7 +872,6 @@
     let micAnimFrame = null;
     let seconds = 0;
 
-    // Cơ chế xác thực phòng sống (Handshake Timeout + Heartbeat)
     let joinTimeoutId = null;
     let hostCreateTimeoutId = null;
     let guestHeartbeatInterval = null;
@@ -861,7 +879,7 @@
 
     let driveScenariosList = [];
     let roomState = null;
-    let stateSnapshots = [];
+    let stateSnapshots = []; // Lưu { gameState, participantRoles } trên Host
 
     let challengeMode = false;
     let listenMode = false;
@@ -966,7 +984,7 @@
     fetchDriveScenarios();
 
     async function loadScenarioFromDrive(fileId) {
-      const cacheKey = 'roleplay_v51_cache_' + fileId;
+      const cacheKey = 'roleplay_v52_cache_' + fileId;
       try {
         const res = await fetch(`${APPS_SCRIPT_URL}?action=load&fileId=${encodeURIComponent(fileId)}`);
         const json = await res.json();
@@ -1005,7 +1023,7 @@
     }
 
     // =========================================================================
-    // 7. LOGIC PHÂN VAI, XOAY VAI & CÂY KỊCH BẢN (CHẠY TẠI HOST)
+    // 7. LOGIC PHÂN VAI 1-1, HÀNG CHỜ ĐỔI VAI, XOAY VAI & EARLY_END 2 CHIỀU
     // =========================================================================
     function assignDefaultRolesForScenario(participants, roles) {
       participants.forEach((p, idx) => {
@@ -1050,8 +1068,10 @@
         history: [],
         lastTurn: null,
         systemNotice: '',
-        status: 'ACTIVE',
+        status: 'ACTIVE', // ACTIVE | EARLY_END_PENDING | ENDED | EARLY_ENDED
         endReason: '',
+        earlyEndMeta: null, // { requesterPeerId, requesterLabel, requesterRole, replyPeerId, replyLabel, replyRole }
+        pendingRoles: null, // { [peerId]: role } chờ áp dụng sau khi xong câu hiện tại
         rotationMode: canRotate,
         rotationIndex: Math.max(0, participants.indexOf(firstSpeaker)),
         activeSpeakerPeerId: firstSpeaker ? firstSpeaker.peerId : ''
@@ -1114,6 +1134,139 @@
       return sameSheetBranch ? sameSheetBranch.Next_ID : currentId;
     }
 
+    // Lấy danh sách mẫu câu theo Action + Role (ưu tiên Sheet, tự bù bằng mặc định nếu Sheet thiếu Action đó)
+    function getCommonPhrasesForAction(action, effRole) {
+      const actUpper = String(action || '').trim().toUpperCase();
+      const roleUpper = String(effRole || 'ANY').trim().toUpperCase();
+      const sheetRows = (roomState && roomState.scenario && roomState.scenario.sheets && roomState.scenario.sheets['Common_Phrases'])
+        ? roomState.scenario.sheets['Common_Phrases']
+        : [];
+
+      const filterRows = (rows) => rows.filter((p) => {
+        const a = String(p.Action || '').trim().toUpperCase();
+        const r = String(p.Role || 'ANY').trim().toUpperCase();
+        return a === actUpper && (r === 'ANY' || r === roleUpper);
+      });
+
+      let matched = filterRows(sheetRows);
+      if (matched.length === 0) {
+        matched = filterRows(DEFAULT_COMMON_PHRASES);
+      }
+      return matched;
+    }
+
+    function formatRoleDisplay(role) {
+      return role === 'SPECTATOR' ? 'Dự thính' : role;
+    }
+
+    function buildPendingRoleSummary(participants, pendingRoles) {
+      if (!pendingRoles) return '';
+      const changes = [];
+      participants.forEach((p) => {
+        const target = pendingRoles[p.peerId];
+        if (target && target !== p.role) {
+          changes.push(`${p.label} → ${formatRoleDisplay(target)}`);
+        }
+      });
+      return changes.join(', ');
+    }
+
+    // Host đổi vai 1-1 không khuyết vai; chờ hết câu hiện tại mới áp dụng
+    function hostAssignRole(targetPeerId, newRole) {
+      if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.scenario || !roomState.gameState) return;
+      const gs = roomState.gameState;
+      if (gs.rotationMode || gs.status !== 'ACTIVE') return;
+
+      const participants = roomState.participants;
+      const [r1, r2] = roomState.scenario.roles;
+
+      // Dựng bảng vai dự kiến hiện tại (từ pendingRoles nếu đang chờ, hoặc từ vai thực tế)
+      const baseRoles = {};
+      participants.forEach((p) => {
+        baseRoles[p.peerId] = (gs.pendingRoles && gs.pendingRoles[p.peerId]) ? gs.pendingRoles[p.peerId] : p.role;
+      });
+
+      const oldRole = baseRoles[targetPeerId];
+      if (!oldRole || oldRole === newRole) return;
+
+      if (newRole === r1 || newRole === r2) {
+        const currentHolderId = Object.keys(baseRoles).find(pid => pid !== targetPeerId && baseRoles[pid] === newRole);
+        if (currentHolderId) {
+          // Hoán đổi trực tiếp 1-1: Vai 1 <-> Vai 2 hoặc Vai 1/2 <-> Dự thính
+          baseRoles[currentHolderId] = (oldRole === r1 || oldRole === r2) ? oldRole : 'SPECTATOR';
+        }
+        baseRoles[targetPeerId] = newRole;
+      } else if (newRole === 'SPECTATOR') {
+        // Phòng 2 người không được để Dự thính vì sẽ khuyết vai
+        if (participants.length < 3) {
+          showToast('Cần ít nhất 3 người mới có thể chuyển sang Dự thính.', 'leave');
+          renderMembersPanel();
+          return;
+        }
+        if (oldRole === r1 || oldRole === r2) {
+          const specId = Object.keys(baseRoles).find(pid => pid !== targetPeerId && baseRoles[pid] === 'SPECTATOR');
+          if (!specId) {
+            showToast('Không còn người Dự thính để thế vai này.', 'leave');
+            renderMembersPanel();
+            return;
+          }
+          // Đẩy người Dự thính lên giữ đúng vai vừa nhả ra
+          baseRoles[specId] = oldRole;
+          baseRoles[targetPeerId] = 'SPECTATOR';
+        } else {
+          baseRoles[targetPeerId] = 'SPECTATOR';
+        }
+      }
+
+      // Kiểm tra xem bộ vai dự kiến có khác vai hiện tại không
+      const hasAnyDiff = participants.some(p => baseRoles[p.peerId] !== p.role);
+      if (!hasAnyDiff) {
+        gs.pendingRoles = null;
+        broadcastRoomState('Đã hủy lịch đổi vai.');
+        renderAll();
+        return;
+      }
+
+      // Ngoại lệ chống kẹt: nếu vai đang tới lượt hiện không có ai giữ -> áp dụng ngay lập tức
+      const turnRole = getCurrentTurnRole(roomState.scenario, gs);
+      const currentTurnHasHolder = participants.some(p => p.role === turnRole);
+
+      if (!currentTurnHasHolder) {
+        participants.forEach((p) => { if (baseRoles[p.peerId]) p.role = baseRoles[p.peerId]; });
+        gs.pendingRoles = null;
+        broadcastRoomState('Đã cập nhật vai trò ngay lập tức để tiếp tục lượt.');
+        renderAll();
+        return;
+      }
+
+      // Bình thường: xếp hàng chờ, hết câu hiện tại sẽ tự áp dụng
+      gs.pendingRoles = baseRoles;
+      const summary = buildPendingRoleSummary(participants, baseRoles);
+      broadcastRoomState(`Hết câu hiện tại sẽ đổi vai: ${summary}`);
+      renderAll();
+    }
+
+    document.getElementById('cancelPendingRolesBtn').addEventListener('click', () => {
+      if (!isHost || !roomState || !roomState.gameState || !roomState.gameState.pendingRoles) return;
+      roomState.gameState.pendingRoles = null;
+      broadcastRoomState('Chủ phòng đã hủy đổi vai.');
+      renderAll();
+    });
+
+    // Áp dụng hàng chờ đổi vai ngay khi kết thúc câu hiện tại
+    function applyPendingRolesOnTurnComplete() {
+      const gs = roomState && roomState.gameState;
+      if (!gs || !gs.pendingRoles || gs.rotationMode) return '';
+
+      const summary = buildPendingRoleSummary(roomState.participants, gs.pendingRoles);
+      roomState.participants.forEach((p) => {
+        if (gs.pendingRoles[p.peerId]) p.role = gs.pendingRoles[p.peerId];
+      });
+      gs.pendingRoles = null;
+      return summary;
+    }
+
+    // Host xử lý khi 1 thành viên bấm chọn nhánh nói xong
     function applyChoiceOnHost(choiceRow, actorPeerId) {
       if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
       const gs = roomState.gameState;
@@ -1132,7 +1285,13 @@
         if (rowRole && rowRole !== 'ANY' && actor.role !== rowRole) return;
       }
 
-      stateSnapshots.push(JSON.parse(JSON.stringify(gs)));
+      // Lưu snapshot cả gameState lẫn vai trò hiện tại để Undo trả lại nguyên vẹn
+      const roleSnapshot = {};
+      roomState.participants.forEach((p) => { roleSnapshot[p.peerId] = p.role; });
+      stateSnapshots.push({
+        gameState: JSON.parse(JSON.stringify(gs)),
+        participantRoles: roleSnapshot
+      });
       if (stateSnapshots.length > 12) stateSnapshots.shift();
 
       const speakerRole = (choiceRow.Role && choiceRow.Role.toUpperCase() !== 'ANY')
@@ -1162,6 +1321,7 @@
       if (rawNextId.toUpperCase() === 'END' || rawNextSheet.toUpperCase() === 'END') {
         gs.status = 'ENDED';
         gs.endReason = 'Hoàn thành trọn vẹn bối cảnh giao tiếp.';
+        gs.pendingRoles = null;
       } else if (rawNextSheet.toUpperCase() === 'RETURN') {
         const backPos = gs.navStack.pop();
         if (backPos) {
@@ -1170,6 +1330,7 @@
         } else {
           gs.status = 'ENDED';
           gs.endReason = 'Kết thúc nhánh hội thoại.';
+          gs.pendingRoles = null;
         }
       } else if (rawNextSheet && rawNextSheet !== gs.currentSheet) {
         const returnId = findFallbackReturnId(scen, gs.currentSheet, gs.currentID);
@@ -1181,9 +1342,18 @@
         if (gs.currentID.toUpperCase() === 'END') {
           gs.status = 'ENDED';
           gs.endReason = 'Hoàn thành bối cảnh.';
+          gs.pendingRoles = null;
         }
       }
 
+      let toastAfter = '';
+      // Nếu đang có lịch đổi vai chờ -> kích hoạt ngay sau khi câu vừa rồi hoàn tất!
+      if (gs.status === 'ACTIVE' && gs.pendingRoles && !gs.rotationMode) {
+        const appliedSummary = applyPendingRolesOnTurnComplete();
+        if (appliedSummary) toastAfter = `Đã đổi vai: ${appliedSummary}`;
+      }
+
+      // Xoay vai tuần tự sang người kế tiếp nếu đang bật Xoay vai
       if (gs.rotationMode && gs.status === 'ACTIVE' && roomState.participants.length > 0) {
         const curIdx = roomState.participants.findIndex(p => p.peerId === actorPeerId);
         const baseIdx = curIdx >= 0 ? curIdx : gs.rotationIndex;
@@ -1192,13 +1362,47 @@
         gs.activeSpeakerPeerId = roomState.participants[nextIdx].peerId;
       }
 
-      broadcastRoomState();
+      broadcastRoomState(toastAfter);
       renderAll();
     }
 
+    // Tìm người còn lại để đáp lời khi có người báo EARLY_END
+    function findEarlyEndResponder(requesterPeerId, requesterRole) {
+      const participants = roomState.participants;
+      const [r1, r2] = roomState.scenario.roles;
+      const gs = roomState.gameState;
+      const otherRole = (requesterRole === r1) ? r2 : r1;
+
+      if (participants.length < 2) return null;
+
+      if (gs.rotationMode) {
+        const reqIdx = participants.findIndex(p => p.peerId === requesterPeerId);
+        const nextIdx = reqIdx >= 0 ? (reqIdx + 1) % participants.length : 0;
+        const nextP = participants[nextIdx];
+        if (!nextP || nextP.peerId === requesterPeerId) return null;
+        return { peerId: nextP.peerId, label: nextP.label, role: otherRole };
+      }
+
+      // Ưu tiên người giữ vai đối diện
+      let responder = participants.find(p => p.peerId !== requesterPeerId && p.role === otherRole);
+      if (!responder) {
+        responder = participants.find(p => p.peerId !== requesterPeerId && (p.role === r1 || p.role === r2));
+      }
+      if (!responder) {
+        responder = participants.find(p => p.peerId !== requesterPeerId);
+      }
+      if (!responder) return null;
+
+      const respRole = (responder.role && responder.role !== 'SPECTATOR') ? responder.role : otherRole;
+      return { peerId: responder.peerId, label: responder.label, role: respRole };
+    }
+
+    // Host xử lý 3 nút chức năng chung (UNDO / REPEAT / EARLY_END 2 chiều)
     function processRemedyOnHost(payload) {
       if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
       const gs = roomState.gameState;
+      if (gs.status !== 'ACTIVE') return;
+
       const { action, byPeerId, byLabel, byRole, phrase } = payload;
 
       if (action === 'UNDO') {
@@ -1206,11 +1410,20 @@
         if (stateSnapshots.length === 0) return;
 
         const curRotationMode = gs.rotationMode;
-        const prev = stateSnapshots.pop();
+        const snap = stateSnapshots.pop();
+        const prev = snap.gameState;
+
+        // Khôi phục lại vai trò trước lượt đó nếu vừa lỡ áp dụng đổi vai
+        if (snap.participantRoles && !curRotationMode) {
+          roomState.participants.forEach((p) => {
+            if (snap.participantRoles[p.peerId]) p.role = snap.participantRoles[p.peerId];
+          });
+        }
+
         prev.stepIndex = gs.stepIndex + 1;
         prev.rotationMode = curRotationMode;
 
-        // Giữ nguyên người vừa bấm Undo để họ tự nói lại, không xoay sang người kế tiếp
+        // Giữ chắc chắn lượt nói lại thuộc về đúng người vừa bấm Undo (không xoay sang người kế tiếp)
         if (curRotationMode) {
           const speakerIdx = roomState.participants.findIndex(p => p.peerId === byPeerId);
           if (speakerIdx >= 0) {
@@ -1226,51 +1439,85 @@
         gs.systemNotice = `${byLabel} xin nghe lại: "${phrase.Text_EN}"`;
       } else if (action === 'EARLY_END') {
         gs.stepIndex++;
-        gs.status = 'EARLY_ENDED';
-        gs.endReason = `${byLabel} (${byRole}) báo bận và xin phép dừng sớm: "${phrase.Text_EN}"`;
+        gs.pendingRoles = null;
         gs.history.push({
           peerId: byPeerId,
           speakerLabel: byLabel,
           role: byRole,
           en: phrase.Text_EN,
           ipa: phrase.IPA || '',
-          vi: '(Xin phép dừng sớm vì có việc bận)'
+          vi: '(Xin phép dừng sớm vì có việc bận)',
+          isGoodbye: true
         });
+        gs.lastTurn = gs.history[gs.history.length - 1];
+
+        const responder = findEarlyEndResponder(byPeerId, byRole);
+        if (responder) {
+          // Chuyển sang nhịp 2: chờ người còn lại đáp lời chào tạm biệt
+          gs.status = 'EARLY_END_PENDING';
+          gs.systemNotice = `${byLabel} (${byRole}) báo bận — Đang chờ ${responder.label} (${responder.role}) đáp lời để kết thúc.`;
+          gs.earlyEndMeta = {
+            requesterPeerId: byPeerId,
+            requesterLabel: byLabel,
+            requesterRole: byRole,
+            replyPeerId: responder.peerId,
+            replyLabel: responder.label,
+            replyRole: responder.role
+          };
+        } else {
+          // Chỉ có 1 người trong phòng -> kết thúc luôn
+          gs.status = 'EARLY_ENDED';
+          gs.endReason = `${byLabel} (${byRole}) báo bận và dừng sớm.`;
+        }
       }
 
       broadcastRoomState();
       renderAll();
     }
 
-    function hostAssignRole(targetPeerId, newRole) {
-      if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.scenario) return;
-      const target = roomState.participants.find(p => p.peerId === targetPeerId);
-      if (!target || target.role === newRole) return;
+    // Nhịp 2 của EARLY_END: Người còn lại đáp lời rồi mới chính thức khép bối cảnh
+    function processEarlyEndReplyOnHost(phrase, actorPeerId) {
+      if (!isHost || !roomState || !roomState.gameState) return;
+      const gs = roomState.gameState;
+      if (gs.status !== 'EARLY_END_PENDING' || !gs.earlyEndMeta) return;
 
-      const [r1, r2] = roomState.scenario.roles;
-      const oldRole = target.role;
+      const meta = gs.earlyEndMeta;
+      if (actorPeerId !== meta.replyPeerId && actorPeerId !== hostPeerId) return;
 
-      if (newRole === 'SPECTATOR') {
-        target.role = 'SPECTATOR';
-      } else if (newRole === r1 || newRole === r2) {
-        const existingHolder = roomState.participants.find(p => p.peerId !== targetPeerId && p.role === newRole);
-        if (existingHolder) {
-          existingHolder.role = (oldRole === r1 || oldRole === r2) ? oldRole : 'SPECTATOR';
-        }
-        target.role = newRole;
-      }
+      const actor = roomState.participants.find(p => p.peerId === actorPeerId);
+      const replyLabel = actor ? actor.label : meta.replyLabel;
+      const replyRole = (actor && actor.peerId === meta.replyPeerId) ? meta.replyRole : (actor && actor.role ? actor.role : meta.replyRole);
 
-      broadcastRoomState(`Chủ phòng đổi vai: ${target.label} → ${newRole === 'SPECTATOR' ? 'Dự thính' : newRole}`);
+      gs.history.push({
+        peerId: actorPeerId,
+        speakerLabel: replyLabel,
+        role: replyRole,
+        en: phrase.Text_EN || '',
+        ipa: phrase.IPA || '',
+        vi: '(Đáp lời chào tạm biệt)',
+        isGoodbye: true
+      });
+      gs.lastTurn = gs.history[gs.history.length - 1];
+      gs.stepIndex++;
+      gs.status = 'EARLY_ENDED';
+      gs.endReason = `${meta.requesterLabel} báo bận và ${replyLabel} đã đáp lời chào tạm biệt.`;
+      gs.earlyEndMeta = null;
+      gs.systemNotice = '';
+
+      broadcastRoomState('Hai bên đã chào tạm biệt và dừng bối cảnh.');
       renderAll();
     }
 
+    // Host bật/tắt chế độ xoay vai đều khi có 3 hoặc 4 người
     document.getElementById('toggleRotationBtn').addEventListener('click', () => {
       if (!isHost || !roomState || roomState.roomMode !== 'ROLEPLAY' || !roomState.gameState) return;
-      if (roomState.participants.length < 3) return;
+      if (roomState.participants.length < 3 || roomState.gameState.status !== 'ACTIVE') return;
 
       const gs = roomState.gameState;
+      const [r1, r2] = roomState.scenario.roles;
       const nextVal = !gs.rotationMode;
       gs.rotationMode = nextVal;
+      gs.pendingRoles = null;
 
       if (nextVal) {
         const turnRole = getCurrentTurnRole(roomState.scenario, gs);
@@ -1278,9 +1525,25 @@
         const startIdx = currentHolderIdx >= 0 ? currentHolderIdx : 0;
         gs.rotationIndex = startIdx;
         gs.activeSpeakerPeerId = roomState.participants[startIdx].peerId;
-        broadcastRoomState('Chủ phòng đã BẬT chế độ xoay vai tự động (không có dự thính).');
+        broadcastRoomState('Đã BẬT xoay vai đều cho tất cả thành viên (không dự thính).');
       } else {
-        broadcastRoomState('Chủ phòng đã TẮT chế độ xoay vai tự động.');
+        // Khi tắt xoay vai giữa chừng: giữ đúng người đang tới lượt ở vai hiện tại để không đứt mạch
+        const turnRole = getCurrentTurnRole(roomState.scenario, gs);
+        const otherRole = (turnRole === r1) ? r2 : r1;
+        const activeId = gs.activeSpeakerPeerId;
+        let assignedOther = false;
+
+        roomState.participants.forEach((p) => {
+          if (p.peerId === activeId) {
+            p.role = turnRole;
+          } else if (!assignedOther) {
+            p.role = otherRole;
+            assignedOther = true;
+          } else {
+            p.role = 'SPECTATOR';
+          }
+        });
+        broadcastRoomState('Đã TẮT xoay vai tự động (trở về phân vai thủ công).');
       }
       renderAll();
     });
@@ -1331,6 +1594,8 @@
     document.getElementById('hostEndScenarioBtn').addEventListener('click', () => {
       if (!isHost || !roomState || !roomState.gameState) return;
       roomState.gameState.status = 'ENDED';
+      roomState.gameState.earlyEndMeta = null;
+      roomState.gameState.pendingRoles = null;
       roomState.gameState.endReason = 'Chủ phòng đã kết thúc bối cảnh này.';
       broadcastRoomState('Chủ phòng đã kết thúc bối cảnh hiện tại.');
       renderAll();
@@ -1394,12 +1659,15 @@
 
       const switchWrap = document.getElementById('hostSwitchWrap');
       const endWrap = document.getElementById('hostEndWrap');
-      const isScenarioRunning = roomState.roomMode === 'ROLEPLAY' && roomState.gameState && roomState.gameState.status === 'ACTIVE';
+      const gs = roomState.gameState;
+      const isScenarioBusy = roomState.roomMode === 'ROLEPLAY' && gs && (gs.status === 'ACTIVE' || gs.status === 'EARLY_END_PENDING');
 
-      if (isScenarioRunning) {
+      if (isScenarioBusy) {
         switchWrap.classList.add('hidden');
         endWrap.classList.remove('hidden');
-        document.getElementById('activeCtxLabel').textContent = `Đang chạy: ${roomState.scenario.fileName}`;
+        document.getElementById('activeCtxLabel').textContent = gs.status === 'EARLY_END_PENDING'
+          ? `Đang chờ đáp lời dừng sớm...`
+          : `Đang chạy: ${roomState.scenario.fileName}`;
       } else {
         switchWrap.classList.remove('hidden');
         endWrap.classList.add('hidden');
@@ -1411,6 +1679,9 @@
       const countEl = document.getElementById('memberCountText');
       const connBadge = document.getElementById('connBadge');
       const rotBtn = document.getElementById('toggleRotationBtn');
+      const pendingBanner = document.getElementById('pendingRoleBanner');
+      const pendingText = document.getElementById('pendingRoleText');
+      const cancelPendingBtn = document.getElementById('cancelPendingRolesBtn');
 
       const total = roomState.participants.length;
       const maxU = roomState.maxUsers || 2;
@@ -1421,7 +1692,7 @@
       const isRoleplay = roomState.roomMode === 'ROLEPLAY' && roomState.scenario && roomState.gameState;
       const gs = roomState.gameState;
 
-      // Chỉ hiện nút Xoay vai khi phòng thiết lập >= 3 người và đang chạy bối cảnh
+      // Nút Xoay vai cho Host khi phòng thiết lập >= 3 người và đang chạy bối cảnh
       if (isHost && isRoleplay && gs.status === 'ACTIVE' && maxU >= 3) {
         rotBtn.classList.remove('hidden');
         const enoughUsers = total >= 3;
@@ -1432,6 +1703,20 @@
           : '🔄 Xoay vai (cần đủ 3 người)';
       } else {
         rotBtn.classList.add('hidden');
+      }
+
+      // Banner hiển thị lịch đổi vai đang chờ hết câu hiện tại
+      if (isRoleplay && !gs.rotationMode && gs.pendingRoles && gs.status === 'ACTIVE') {
+        const summary = buildPendingRoleSummary(roomState.participants, gs.pendingRoles);
+        if (summary) {
+          pendingBanner.classList.remove('hidden');
+          pendingText.textContent = `⏳ Hết câu này sẽ đổi vai: ${summary}`;
+          cancelPendingBtn.classList.toggle('hidden', !isHost);
+        } else {
+          pendingBanner.classList.add('hidden');
+        }
+      } else {
+        pendingBanner.classList.add('hidden');
       }
 
       const turnRole = isRoleplay ? getCurrentTurnRole(roomState.scenario, gs) : '';
@@ -1492,19 +1777,26 @@
               chip.textContent = 'Chờ lượt xoay';
             }
             right.appendChild(chip);
-          } else if (isHost) {
+          } else if (isHost && gs.status === 'ACTIVE') {
             const [r1, r2] = roomState.scenario.roles;
+            const queuedRole = (gs.pendingRoles && gs.pendingRoles[p.peerId]) ? gs.pendingRoles[p.peerId] : p.role;
+            const isQueuedChanged = queuedRole !== p.role;
+
             const sel = document.createElement('select');
-            sel.className = 'role-select-sm';
-            [
-              { val: r1, text: `Vai 1 (${r1})` },
-              { val: r2, text: `Vai 2 (${r2})` },
-              { val: 'SPECTATOR', text: 'Dự thính' }
-            ].forEach((opt) => {
+            sel.className = 'role-select-sm' + (isQueuedChanged ? ' is-pending' : '');
+            const roleOptions = [
+              { val: r1, text: `Vai 1 (${r1})`, disabled: false },
+              { val: r2, text: `Vai 2 (${r2})`, disabled: false }
+            ];
+            if (total >= 3) {
+              roleOptions.push({ val: 'SPECTATOR', text: 'Dự thính', disabled: false });
+            }
+
+            roleOptions.forEach((opt) => {
               const o = document.createElement('option');
               o.value = opt.val;
               o.textContent = opt.text;
-              if (p.role === opt.val) o.selected = true;
+              if (queuedRole === opt.val) o.selected = true;
               sel.appendChild(o);
             });
             sel.addEventListener('change', () => hostAssignRole(p.peerId, sel.value));
@@ -1516,6 +1808,14 @@
             else if (p.role === r2) { chip.className = 'role-chip r2'; chip.textContent = r2; }
             else { chip.className = 'role-chip spec'; chip.textContent = 'Dự thính'; }
             right.appendChild(chip);
+
+            const queuedRole = (gs.pendingRoles && gs.pendingRoles[p.peerId]) ? gs.pendingRoles[p.peerId] : p.role;
+            if (queuedRole !== p.role) {
+              const pChip = document.createElement('span');
+              pChip.className = 'role-chip pending';
+              pChip.textContent = `→ ${formatRoleDisplay(queuedRole)}`;
+              right.appendChild(pChip);
+            }
           }
         }
 
@@ -1544,7 +1844,7 @@
         const shouldBlur = listenMode && isLatestOther;
 
         const item = document.createElement('div');
-        item.className = 'log-msg' + (isMine ? ' mine' : '');
+        item.className = 'log-msg' + (h.isGoodbye ? ' goodbye' : (isMine ? ' mine' : ''));
 
         const meta = document.createElement('div');
         meta.className = 'log-msg-meta';
@@ -1579,13 +1879,8 @@
         logList.appendChild(item);
       });
 
-      // Tự cuộn xuống câu mới nhất
-      if (history.length !== lastRenderedHistoryLen) {
-        logList.scrollTop = logList.scrollHeight;
-        lastRenderedHistoryLen = history.length;
-      } else {
-        logList.scrollTop = logList.scrollHeight;
-      }
+      logList.scrollTop = logList.scrollHeight;
+      lastRenderedHistoryLen = history.length;
     }
 
     function renderMainArea() {
@@ -1626,7 +1921,7 @@
         document.getElementById('debriefStage').classList.remove('hidden');
 
         document.getElementById('debriefHeading').textContent =
-          gs.status === 'EARLY_ENDED' ? 'Đã tạm dừng bối cảnh' : 'Kết thúc bối cảnh!';
+          gs.status === 'EARLY_ENDED' ? 'Đã dừng bối cảnh sớm' : 'Kết thúc bối cảnh!';
         document.getElementById('debriefSummary').textContent = gs.endReason || '';
 
         const histEl = document.getElementById('historyList');
@@ -1647,7 +1942,6 @@
       }
 
       document.getElementById('scenarioStage').classList.remove('hidden');
-      document.getElementById('remedyBar').classList.remove('hidden');
       document.getElementById('debriefStage').classList.add('hidden');
 
       document.getElementById('crumbSheet').textContent = `${scen.fileName} › ${gs.currentSheet}`;
@@ -1669,14 +1963,84 @@
         noticeEl.classList.add('hidden');
       }
 
-      // Render bảng log cuộc trò chuyện cho TẤT CẢ mọi người
       renderLiveConversationLog(gs);
+
+      const turnArea = document.getElementById('turnArea');
+      turnArea.innerHTML = '';
+
+      // NHỊP 2 CỦA EARLY_END: Chờ người đối diện đáp lời chào tạm biệt
+      if (gs.status === 'EARLY_END_PENDING' && gs.earlyEndMeta) {
+        document.getElementById('remedyBar').classList.add('hidden');
+        document.getElementById('phrasePicker').classList.add('hidden');
+        const meta = gs.earlyEndMeta;
+
+        if (meta.replyPeerId === myPeerId) {
+          const promptHead = document.createElement('div');
+          promptHead.className = 'turn-prompt reply-mode';
+          promptHead.innerHTML = `<span>${escapeHtml(meta.requesterLabel)} vừa báo bận — Hãy nói câu đáp lời rồi bấm chọn:</span>`;
+          turnArea.appendChild(promptHead);
+
+          const replyList = getCommonPhrasesForAction('EARLY_END_REPLY', meta.replyRole);
+          const listDiv = document.createElement('div');
+          listDiv.className = 'choices-list';
+
+          replyList.forEach((phrase) => {
+            const card = document.createElement('div');
+            card.className = 'choice-card reply-card';
+            card.innerHTML = `
+              <div class="choice-en">${escapeHtml(phrase.Text_EN)}</div>
+              ${phrase.IPA ? `<div class="choice-ipa">${escapeHtml(phrase.IPA)}</div>` : ''}
+            `;
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'choice-actions';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-speak-select reply-btn';
+            btn.textContent = 'Đã đáp lời • Kết thúc bối cảnh ✓';
+            btn.addEventListener('click', () => {
+              if (isHost) {
+                processEarlyEndReplyOnHost(phrase, myPeerId);
+              } else if (guestHostConn && guestHostConn.open) {
+                guestHostConn.send({ type: 'early-end-reply', phrase });
+              }
+            });
+            actionsDiv.appendChild(btn);
+            card.appendChild(actionsDiv);
+            listDiv.appendChild(card);
+          });
+          turnArea.appendChild(listDiv);
+        } else {
+          const waitDiv = document.createElement('div');
+          waitDiv.className = 'wait-box';
+          waitDiv.innerHTML = `
+            Đang chờ <strong>${escapeHtml(meta.replyLabel)} (${escapeHtml(meta.replyRole)})</strong> đáp lời chào tạm biệt...
+            ${isHost ? '<div style="margin-top:10px;"><button type="button" id="forceEarlyEndNowBtn" class="btn btn-outline" style="width:auto; padding:7px 14px;">Kết thúc luôn (không cần chờ)</button></div>' : ''}
+          `;
+          turnArea.appendChild(waitDiv);
+          const forceBtn = document.getElementById('forceEarlyEndNowBtn');
+          if (forceBtn) {
+            forceBtn.addEventListener('click', () => {
+              gs.status = 'EARLY_ENDED';
+              gs.endReason = `${meta.requesterLabel} báo bận (Chủ phòng kết thúc ngay).`;
+              gs.earlyEndMeta = null;
+              gs.systemNotice = '';
+              broadcastRoomState('Chủ phòng đã kết thúc bối cảnh.');
+              renderAll();
+            });
+          }
+        }
+        return;
+      }
+
+      // Trạng thái ACTIVE bình thường
+      document.getElementById('remedyBar').classList.remove('hidden');
 
       const btnUndo = document.getElementById('btnUndo');
       btnUndo.disabled = !(gs.lastTurn && gs.lastTurn.peerId === myPeerId);
 
-      const turnArea = document.getElementById('turnArea');
-      turnArea.innerHTML = '';
+      // Dự thính không cần bấm Bận/Dừng sớm làm ngắt cuộc hội thoại của 2 người đang nhập vai
+      const isPureSpectator = !gs.rotationMode && myRole === 'SPECTATOR';
+      document.getElementById('btnEarlyEnd').disabled = isPureSpectator && !isHost;
 
       const choices = getAvailableChoices(scen, gs);
       if (choices.length === 0) {
@@ -1711,7 +2075,7 @@
       if (!isMyTurn) {
         const waitDiv = document.createElement('div');
         waitDiv.className = 'wait-box';
-        const specNote = (!gs.rotationMode && myRole === 'SPECTATOR')
+        const specNote = isPureSpectator
           ? '<br><small style="color:#60a5fa;">Bạn đang ở chế độ Dự thính — nghe và theo dõi nhật ký hội thoại phía trên.</small>'
           : '<br><small style="color:#64748b;">Hãy lắng nghe qua micro, thẻ lựa chọn sẽ hiện ra khi đến lượt bạn.</small>';
         waitDiv.innerHTML = `Đang tới lượt của <strong>${escapeHtml(activeSpeakerName)}</strong> nói...${specNote}`;
@@ -1796,7 +2160,7 @@
     }
 
     // =========================================================================
-    // 9. MẪU CÂU CHỨC NĂNG CHUNG (UNDO / REPEAT / EARLY_END)
+    // 9. CHỌN MẪU CÂU CHỨC NĂNG CHUNG (UNDO / REPEAT / EARLY_END)
     // =========================================================================
     function getEffectiveRoleForRemedy(action) {
       const gs = roomState && roomState.gameState;
@@ -1813,16 +2177,8 @@
 
     function openPhrasePicker(action, titleText) {
       if (!roomState || !roomState.scenario) return;
-      const sheetPhrases = (roomState.scenario.sheets && roomState.scenario.sheets['Common_Phrases'])
-        ? roomState.scenario.sheets['Common_Phrases']
-        : DEFAULT_COMMON_PHRASES;
       const effRole = getEffectiveRoleForRemedy(action);
-
-      const list = sheetPhrases.filter((p) => {
-        const act = String(p.Action || '').trim().toUpperCase();
-        const role = String(p.Role || 'ANY').trim().toUpperCase();
-        return act === action && (role === 'ANY' || role === effRole);
-      });
+      const list = getCommonPhrasesForAction(action, effRole);
 
       const picker = document.getElementById('phrasePicker');
       const titleEl = document.getElementById('phrasePickerTitle');
@@ -1869,7 +2225,7 @@
     });
 
     // =========================================================================
-    // 10. ĐỒNG BỘ PHÒNG & GỌI THOẠI LƯỚI + XÁC THỰC PHÒNG SỐNG (CHỐNG PHÒNG LỖI)
+    // 10. ĐỒNG BỘ PHÒNG & GỌI THOẠI LƯỚI + XÁC THỰC PHÒNG SỐNG
     // =========================================================================
     function broadcastRoomState(toastMsg = '', toastType = '') {
       if (!isHost || !roomState) return;
@@ -2026,7 +2382,9 @@
       cleanupRemoteAudioPeer(guestId);
 
       const idx = roomState.participants.findIndex(p => p.peerId === guestId);
-      const leftLabel = idx >= 0 ? roomState.participants[idx].label : 'Một thành viên';
+      const leftMember = idx >= 0 ? roomState.participants[idx] : null;
+      const leftLabel = leftMember ? leftMember.label : 'Một thành viên';
+      const leftRole = leftMember ? leftMember.role : '';
       if (idx >= 0) roomState.participants.splice(idx, 1);
 
       playChime('leave');
@@ -2034,6 +2392,27 @@
       let extraNote = '';
       if (roomState.roomMode === 'ROLEPLAY' && roomState.gameState) {
         const gs = roomState.gameState;
+        const [r1, r2] = roomState.scenario.roles;
+
+        // Xóa hàng chờ đổi vai nếu có thành viên thoát để tránh kẹt
+        if (gs.pendingRoles) gs.pendingRoles = null;
+
+        // Nếu đang chờ đáp EARLY_END mà người đáp lại thoát phòng -> chuyển người khác hoặc kết thúc luôn
+        if (gs.status === 'EARLY_END_PENDING' && gs.earlyEndMeta && gs.earlyEndMeta.replyPeerId === guestId) {
+          const alt = findEarlyEndResponder(gs.earlyEndMeta.requesterPeerId, gs.earlyEndMeta.requesterRole);
+          if (alt) {
+            gs.earlyEndMeta.replyPeerId = alt.peerId;
+            gs.earlyEndMeta.replyLabel = alt.label;
+            gs.earlyEndMeta.replyRole = alt.role;
+            gs.systemNotice = `${leftLabel} đã thoát — Mời ${alt.label} đáp lời chào tạm biệt.`;
+          } else {
+            gs.status = 'EARLY_ENDED';
+            gs.endReason = `${gs.earlyEndMeta.requesterLabel} báo bận (${leftLabel} đã rời phòng).`;
+            gs.earlyEndMeta = null;
+            gs.systemNotice = '';
+          }
+        }
+
         if (gs.rotationMode && roomState.participants.length < 3) {
           gs.rotationMode = false;
           extraNote = ' (dưới 3 người, đã tắt xoay vai)';
@@ -2041,6 +2420,13 @@
         } else if (gs.rotationMode && gs.activeSpeakerPeerId === guestId && roomState.participants.length > 0) {
           gs.rotationIndex = gs.rotationIndex % roomState.participants.length;
           gs.activeSpeakerPeerId = roomState.participants[gs.rotationIndex].peerId;
+        } else if (!gs.rotationMode && (leftRole === r1 || leftRole === r2)) {
+          // Tự động đẩy 1 người Dự thính (nếu có) lên thế vai vừa trống
+          const spec = roomState.participants.find(p => p.role === 'SPECTATOR');
+          if (spec) {
+            spec.role = leftRole;
+            extraNote = ` (${spec.label} tự động lên thay vai ${leftRole})`;
+          }
         }
       }
 
@@ -2057,7 +2443,7 @@
       jBtn.textContent = joinText;
     }
 
-    // 1. HOST TẠO PHÒNG (Chỉ vào roomView sau khi Peer mở thành công)
+    // 1. HOST TẠO PHÒNG
     document.getElementById('createBtn').addEventListener('click', async () => {
       const rawCustom = document.getElementById('customCodeInput').value;
       const customCode = sanitizeCode(rawCustom);
@@ -2110,7 +2496,6 @@
 
       peer = new Peer(hostPeerId, getPeerConfig());
 
-      // Timeout bảo vệ nếu máy chủ PeerJS chậm phản hồi
       hostCreateTimeoutId = setTimeout(() => {
         if (myTok === sessionToken && !inRoom) {
           alert('Không thể khởi tạo phòng lúc này. Vui lòng thử lại.');
@@ -2183,6 +2568,8 @@
             applyChoiceOnHost(msg.choice, guestId);
           } else if (msg.type === 'remedy') {
             processRemedyOnHost(msg);
+          } else if (msg.type === 'early-end-reply') {
+            processEarlyEndReplyOnHost(msg.phrase, guestId);
           } else if (msg.type === 'leave') {
             handleGuestLeaveOnHost(guestId);
           }
@@ -2214,7 +2601,7 @@
       });
     });
 
-    // 2. GUEST VÀO PHÒNG (Xác thực có Host sống trả 'welcome' mới cho vào roomView)
+    // 2. GUEST VÀO PHÒNG
     document.getElementById('joinBtn').addEventListener('click', async () => {
       const code = sanitizeCode(document.getElementById('codeInput').value);
       if (code.length < 3) {
@@ -2242,7 +2629,6 @@
 
       peer = new Peer(undefined, getPeerConfig());
 
-      // Chốt chặn phòng ma/phòng đã đóng: sau 7 giây không nhận welcome thì hủy ngay tại màn hình chính
       joinTimeoutId = setTimeout(() => {
         if (myTok === sessionToken && !inRoom) {
           alert('Phòng không tồn tại hoặc chủ phòng đã thoát!');
@@ -2318,11 +2704,7 @@
         conn.on('close', () => {
           if (myTok !== sessionToken) return;
           clearTimeout(joinTimeoutId);
-          if (inRoom) {
-            alert('Chủ phòng đã thoát hoặc mất kết nối.');
-          } else {
-            alert('Phòng không tồn tại hoặc chủ phòng đã thoát!');
-          }
+          alert(inRoom ? 'Chủ phòng đã thoát hoặc mất kết nối.' : 'Phòng không tồn tại hoặc chủ phòng đã thoát!');
           cleanupRoom();
         });
 
@@ -2477,7 +2859,6 @@
       remoteAudioPeers.forEach((_, pid) => cleanupRemoteAudioPeer(pid));
       remoteAudioPeers.clear();
 
-      // Đợi nhẹ 120ms khi chủ động bấm Rời phòng để gói 'host-closed'/'leave' kịp tới máy kia rồi mới destroy Peer
       const finalizePeerTeardown = () => {
         oldHostConns.forEach(c => { try { c.close(); } catch {} });
         if (oldGuestConn) { try { oldGuestConn.close(); } catch {} }
@@ -2530,7 +2911,6 @@
       } catch {}
     });
 
-    // Study toggles
     document.getElementById('challengeToggle').addEventListener('click', (e) => {
       challengeMode = !challengeMode;
       e.target.classList.toggle('on', challengeMode);
@@ -2543,7 +2923,6 @@
       if (roomState) renderMainArea();
     });
 
-    // Voice FX controls
     const FX_NAMES = { normal: 'Bình thường', female: 'Giọng Nữ', male: 'Giọng Nam', high: 'Trẻ con' };
     document.getElementById('fxGrid').addEventListener('click', (e) => {
       const btn = e.target.closest('.fx-btn');
